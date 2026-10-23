@@ -1,58 +1,25 @@
-# Handoff — 2026-10-24 (M4a merged; M4b split in two)
-
-**Since the M4a handoff below:**
-- M4a merged as af2e9fe (PR #127, 2026-10-23 20:56 UTC). www.mekonging.com serves `mk-v0.646.0`.
-- On 2026-10-24 the owner split M4b in two (`docs/EXCHANGE.md` §16 and §17):
-  - **M4b-1, browse:** the artwork, the new home, search and filters, the listing page and the closed-beta preview.
-  - **M4b-2, post:** the post forms, My listings and the live owner-and-tester check.
-  - Each is one PR and one fresh session; the prompts are below.
-- Nothing was built for M4b yet. The branch name `feat/m4b-market-ui` was not used: the prompts name `feat/m4b1-market-browse` and `feat/m4b2-market-post`.
-
-## The M4a handoff (2026-10-23, slice M4a: listings and search, server side)
+# Handoff — 2026-10-24 (slice M4b-1: the marketplace screens, browse side)
 
 ## Shipped
-- **Built and proven, awaiting the owner's merge:** M4a, branch `feat/m4a-listings`, [PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127) (`mk-v0.646.0`). The owner ran `002_listings.sql` and `supabase/tests/002_rls.sql` in the SQL editor, and the test's second run printed `PASS summary: 314 checks, 0 failed, nothing kept`; the output is in the PR ([comment](https://github.com/SamuelLClemens/Mekonging/pull/127#issuecomment-6374419083)). [PR #126](https://github.com/SamuelLClemens/Mekonging/pull/126) (docs and 001b) merged first, as 6742a29. The PR is marked ready once CI passes on the handoff commit.
-  - `supabase/migrations/002_listings.sql` (pure ASCII, one transaction, decisions in its header):
-    - the enums, `listings`, `reports`, `blocks` (table and policies only, nothing granted until M5) and `private.name_changes`;
-    - BEFORE triggers: the kind, intent, field, price and window rules (`NaN` refused), the §8 text check, the contact-detail check (phones of 8 or more digits with Thai, Lao and Khmer digits, emails, URLs, bare domains, `@handles`, messenger names), `updated_at`, the §9 rate limits (including a new account's lower limits) and the 3-a-day name-change limit;
-    - AFTER triggers: a flag term files a `filter` report; report weight counts distinct reporters whose accounts were 24 hours old plus system flags, one lock per listing, and the listing is hidden at 3;
-    - `private.today()`, `private.search_fold()` (a light fold for search: accents out, digits kept), `private.contact_hit()`, `private.listing_json()` (the one list of columns that leave the server: no `owner`), and the helpers `private.owns(id)`, `private.can_see(id)`, `private.can_post(kind)`, `private.owner_ok`, `private.blocked`;
-    - `market_search` and `market_listing` (callable by `anon`; they answer `market_closed` to visitors and non-testers until `market_open` is true) and `market_my_listings`;
-    - column grants that make `owner`, `report_weight`, `search` and `search_text` unreadable and unsettable by any role, and the §4 policies, which never name `owner`;
-    - "kush" and "gun" no longer block display names (`private.filter_terms.in_names`).
-  - `supabase/tests/002_rls.sql`: one rolled-back block, PASS or FAIL per check, then a summary line. About 300 checks (the summary line gives the exact number). Pure ASCII.
-  - `js/market-listings.js` (search, one listing, my listings, post, close, delete, report; imports only names `market-api.js` already exports, so an open app holding the old copy is safe) and `js/market-fixture-listings.js` (47 visible listings in 4 kinds and 17 cities, free, paid and no-price rows in 5 currencies, Thai, Vietnamese, Khmer and Lao titles, an 80-character title, and the rows that must never show: an ended listing, an under-review owner, and the traveller's own closed and hidden listings).
-  - `scripts/check-market-sql.py` (new guard; README row; `guards.yml`): see Verified.
-  - `docs/EXCHANGE.md`: §3 to §4 (the RPC table, the owner-free policies and the posting rule), §8 (the two names, the messenger list, the contact-detail rules), §16 (three rulings) and §17 (M4a built).
-- **Posting contract (it changes M4b):** `INSERT ... RETURNING` is refused, because PostgreSQL checks the SELECT policy against a row that does not exist yet and a policy that looks the row up cannot find it. `postListing` therefore picks the id (`newListingId()`), inserts with `Prefer: return=minimal` and reads the row back with `getListing(id)`. Every read must name its columns (`LISTING_COLUMNS`): `select=*` asks for `owner` and fails.
-- Owner rulings during M4a (2026-10-19, recorded in §16): the closed beta stays closed to visitors until M9; "kush" and "gun" are allowed in names and refused in listings; no native speaker is available to check the Thai, Vietnamese, Khmer and Lao terms (they ship unchecked).
-- Earlier and already merged: M3b (PR #125, `mk-v0.645.0`), M3a (#124), D5 Laos (#122).
+- **M4b-1, awaiting the owner's merge:** branch `feat/m4b1-market-browse`, [PR #129](https://github.com/SamuelLClemens/Mekonging/pull/129) (`mk-v0.647.0`, commit 3516848), into `feat/scaffold-bangkok-slice`. Stacked on 0072d85 (PR #128). The `guards` CI check was pending at handoff. Nothing changed on the server.
+  - `js/market-art.js`: 14 inline SVG drawings (4 kinds, 10 item categories), 6,198 bytes. Shapes carry classes that `css/market.css` maps to theme tokens, so all 11 skins repaint the art.
+  - `css/market.css` (355 lines): every Market rule, loaded lazily by `js/screens/market-parts.js`; `check-contrast` now reads it.
+  - `js/screens/market-home.js` (`#market` and the four kind routes): audience line, sticky search with live results, kind tabs, city and date chips, category tiles, count and sort (price sorts only with a city or a currency), removable filter chips, the filters sheet with a live count, card grid with skeletons, empty state, recent searches, the interim Post sheet and the board folded under "On this phone". The closed-beta preview replaces it whenever the server answers `market_closed`.
+  - `js/screens/market-listing.js` (`#market-l-<id>`): hero art, price, chips, body, member month, safety line, app links only, a ⋯ menu with Share and Report, Message with an honest sheet. Block is not drawn until M5.
+  - Sign-in on an action is a sheet; `#market-signin` returns to the route (`location.replace`) and the listing reopens the report sheet.
+  - `js/screens/exchange.js`: `boardSection()`; `#market-cash` keeps the whole-screen board. `main.js`: registration lines only (+4 lines, now 7,568).
+  - `scripts/validate.mjs`: artwork checks. `scripts/README.md`, `docs/EXCHANGE.md` §17 (M4b-1 built), `docs/PLAN.md`, two `CLAUDE.md` lines.
+- PR screenshots live on the `assets/m4b1-shots` branch (commit 229be7f, not app code). Deleting it breaks the images in PR #129.
+- Earlier and merged: M4a (PR #127, `mk-v0.646.0`), the M4b split docs (PR #128).
 
 ## Verified
-- **The SQL ran** (the owner, in the SQL editor of project `xnruspjauhmcrqxmjmxg`; no Postgres on this machine):
-  - `002_listings.sql`: "Success". `POST /rest/v1/rpc/market_search` and `market_listing` with only the publishable key now answer HTTP 400 `market_closed` (before: 404 `PGRST202`).
-  - `002_rls.sql`, first run (2026-10-20): 121 of 314 FAIL, every one a defect in the test, none in the migration.
-    - 116 came from the test's own inserts calling `private.today()` as role `authenticated`. 002 revokes that function from clients on purpose, and the test asserts the denial for `anon`.
-    - 5 came from three `lines || 'PASS ...'` appends. Postgres reads a bare literal after `||` on a `text[]` as an array literal ("malformed array literal"), which rolled back the rate-limit and report-limit loops, so the limit checks failed in turn.
-    - Fix (commit 21b2814, migration unchanged): the inserts use `(now() at time zone 'Asia/Bangkok')::date`, the three literals are cast to text.
-  - `002_rls.sql`, second run (2026-10-23): 314 of 314 PASS, 0 FAIL, nothing kept.
-  - Security Advisor after 002: the owner reports 0 Errors and only warnings. The warnings were not itemised; expected are the five from 001 plus `market_search`, `market_listing` (definer, `anon`, by design) and `market_my_listings`.
-- Checked by reading before the SQL ran:
-  - `python3 scripts/check-market-sql.py`: PASS on 5 SQL files. It checks ASCII only (from 002 on), balanced quotes, dollar quotes and brackets, `begin`/`end;` pairs, `begin;` and `commit;`, RLS on every table, `search_path` pinned on every function, every function named in a `revoke execute`, no policy naming `owner`, and runs `contact_hit`'s patterns in Python (30 phrases that must be refused, 28 that must pass). Its negative controls: a deleted quote or bracket is caught about 4 times in 5 (the rest fall in comments or strings); a policy naming `owner`, a table without RLS, a function never revoked, dropping `whatsapp` from the list and allowing leading-zero amounts are each caught.
-  - An independent read of both SQL files (a Sonnet reviewer, then each finding checked against the code) found six defects, all fixed: a variable in the test that clashed with a column alias (the run would have aborted at its last line); a race in the auto-hide count (now `pg_advisory_xact_lock` per listing); query words split differently from the stored text (now taken from the same parser); `NaN` accepted as a price; `@8am` read as a handle; a cash filter test that could not fail (a real cash row is now seeded).
-  - It could not settle whether a policy expression needs privilege on a column no role may select (the PostgreSQL documentation is silent; the regression tests have no case). So the policies no longer name `owner`: they call `private.owns(id)` and `private.can_see(id)`, which led to the posting contract above.
-  - The reviewer ran `contact_hit`'s regexes in Tcl's engine (the same Spencer engine as Postgres) and a 4,000-string fuzz: 3 outcomes differed from the Python mirror and in all 3 the mirror was stricter. The lookbehind constraints could not be run (Tcl 8.5 has none) and are verified by reading.
-- `jsc -m scripts/validate-jsc.mjs`: 19,252 of 19,252 checks, EXIT 0 (was 18,470). The new checks cover the fixture against the server's own rules (intent pairs, window caps, prices, seats, cities, no contact details), `fixtureSearch` (the gate, paging, every filter, every sort, typos, accents, scripts without spaces), `fixtureListing`, `fixtureMine`, and the pure helpers. Two deliberate breaks of the fixture search (ended rows visible; `owner` leaking) failed it with 10 and 4 errors.
-- All 17 guards pass (`js-syntax` 246 files, `imports`, `lazy-data`, `preloads`, `ui-strings`, `month-arrays`, `contrast`, `skins`, `spacing`, `place-dupes`, `undefined`, `net-gates`, `sources`, `secrets`, `market-sql`), as do `check-place-fields --assert`, `port-themes --check`, `check-cache-version` (manifest regenerated, 258 files) and `build-market-cities --check`. `jsc -m` parses every edited JS file (`main.js` and `sw.js` stop at the expected `navigator` and `self` ReferenceErrors).
-- Nothing on screen changed (M4a has no screens), so there is no 375 px proof.
-- From the owner's earlier session (M3b, recorded for the record): migration 001 and the repair 001b ran, `001_rls.sql` printed 65 of 65 PASS, and the Security Advisor showed 0 errors and 5 warnings on 2026-10-19: Supabase's own `rls_auto_enable` twice, and `market_delete_account`, `market_join` and `market_me` (definer by design).
-
-## Owner steps for M4a (all done except the merge)
-- [x] PR #126 merged (6742a29); #127's own diff shows only M4a.
-- [x] `002_listings.sql` run; the probe answers 400 `market_closed`.
-- [x] `002_rls.sql`: 314 of 314 PASS on the second run; the output is in PR #127.
-- [x] Security Advisor after 002: 0 Errors.
-- [x] #127 marked ready and merged by the owner (af2e9fe, 2026-10-23).
+- Headless Chrome over CDP, fresh profiles on 127.0.0.1, fixture mode, served from the worktree on port 8954. 72 states: home closed, tester and open-market visitor; results with a query, with filters and empty; the filters sheet; the listing page, its menu and the report sheet; the sign-in sheet; offline. Each at 375 px (mobile, DPR 2) and 1280 px, on Mekong Retro light, Mekong Retro dark and Night Market.
+  - `document.hidden` false on all 72; 0 overflow; 0 body controls under 44 px (1,860 measured); 0 CSP violations; 0 console errors; `css/market.css` loaded on all 72. The grid measured 2 columns at 375 px and 4 at 1280 px.
+  - Screenshots looked at: tester home (light, dark, Night Market), closed preview, listing (light, Night Market), filters sheet, desktop home.
+- Sign-in return, 6 of 6 steps: a visitor's Report opens the sign-in sheet; Sign in stores the route; after the code the listing shows with the report sheet open; the report sends; Back skips the spent sign-in screen.
+- `jsc -m scripts/validate-jsc.mjs`: 19,297 of 19,297, EXIT 0 (was 19,252). A planted `fill="#ffffff"` in one drawing failed it with 1 error.
+- All 17 guards pass, plus `check-place-fields --assert`, `port-themes --check`, `build-market-cities --check` and `check-cache-version` (9 code files: `css/market.css`, `js/main.js`, `js/market-art.js`, `js/screens/exchange.js`, `market-account.js`, `market-home.js`, `market-listing.js`, `market-parts.js`, `sw.js`; manifest 263 files). `jsc -m` parses every edited JS file.
+- Before (origin tip, same driver): the old `#market` had one body control under 44 px on 4 of 6 captures, the board's paste field (20 to 22 px tall). In the fold it is 48 px.
 
 ## Owner checks for M3b (carried; the first two are done)
 - [x] Migration 001 run, repaired by 001b (see the earlier handoff in git, `3f4d32f`), `001_rls.sql` 65 of 65 PASS.
@@ -62,7 +29,15 @@
 - [ ] From the first real email: whether `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has (the input takes 6 to 10).
 
 ## Not done / known issues
-- New in M4a:
+- New in M4b-1:
+  - Proven in fixture mode only. Production still answers `market_closed` (`market_open` is false) and holds no real listing.
+  - The driver is not in the repo: `~/Library/Caches/mk-m4b1/drive.py` and `cdp.py` (stdlib), with `signin_return.py`. Run with `MX_PORT=<port>`; `MX_THEME` and `MX_WIDTH` narrow it.
+  - "Reset everything" in Settings does not clear recent searches (`mk-market-recent` in `localStorage`).
+  - With a city chosen, price sorts still compare across currencies where one city's listings mix them (Cambodia: USD and KHR).
+  - The fixture's `&tester=1` opens search even signed out; the server needs a tester's session. The tester states were measured signed in.
+  - The new strings are English only. The ride drawing reads as a van more than a tuk-tuk.
+  - The preview entries `mekong-m4b1` (8954) and `mekong-m4b1-before` (8955) are in the parent folder's shared `.claude/launch.json`, uncommitted there like the others. The `m4b1-before` worktree was removed.
+- Carried from M4a:
   - The Advisor's warnings were not itemised (the owner reported 0 Errors). Whoever next opens `.../advisors/security` should confirm the expected list.
   - Nothing has been posted on production and `market_open` is false, so no real listing has been read back. M4b's live check ("the owner and a tester see each other's listings") needs the carried M3b checks first: the owner's user id in `private.admins` and `private.testers`.
   - The Thai, Vietnamese, Khmer and Lao block terms are unchecked by a native speaker (none available, owner 2026-10-19).
@@ -73,7 +48,6 @@
   - `service_role` keeps Supabase's default table grants and can read `owner`. By design; the migration does not revoke it.
   - Supabase's own `rls_auto_enable` shows as an Advisor warning. It is an event-trigger function, not callable through the API; the tests skip it and the migration leaves it alone.
   - The fixture's typo match and word splitting approximate the server's (`pg_trgm`, the default text-search parser): a dotted token such as "3.5" is two words in the fixture and one on the server.
-  - The router renders a route twice at start-up (carried): M4b's async screens must check `isConnected`.
 - Carried from M3b:
   - Renaming a profile now has its rate limit (3 a day), proven only once 002's test has run.
   - The Market's new strings are English only. "Send a new code" returns to the form, because each code needs a new robot check.
@@ -126,8 +100,8 @@
   - `fetch-place-photos.py` still exits 0 when lookups fail.
 - Carried from the exchange slices and earlier:
   - The top ~3 px of the tab bar show content scrolled beneath the retro stripe.
-  - Meetups have no chip until M4, and the unseen-notifications badge waits for M5.
-  - The Market chip labels (Items, Rooms, Rides, Cash) are English only. On `#market-items` two chips show as pressed.
+  - The unseen-notifications badge waits for M5.
+  - The on-phone board's chip labels (Items, Rooms, Rides, Cash) are English only. Inside its fold on `#market-items`, two board chips show as pressed.
   - "Traveller board" remains on the Travel circle card and the Near me chip. Malay "Laman utama" is truncated in the tab bar.
   - Two Vietnamese photos are archival black-and-white images. The Museum of Cham Sculpture credit reads "Unknown authorUnknown author".
   - Eight Vietnamese activity cards use their landmark's image.
@@ -151,71 +125,14 @@ The numbers below keep their old values.
 19. Install `pglast` (a PostgreSQL parser for Python, from PyPI, a few MB) so a future session can syntax-check SQL and PL/pgSQL before the owner pastes it? It parses only; it runs no database. Recommended: yes. It would have caught the type of mistake this slice's reviewer found by reading.
 
 ## Next session prompts
-Order (owner, 2026-10-19; M4b split on 2026-10-24): **M4a is merged; next M4b-1, then M4b-2, M4c, M5**, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
-
-### M4b-1: the marketplace redesign, browse side
-> Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §2, §11, §13, §16 (the 2026-10-19 and 2026-10-24 rulings) and §17 (M4 and M4b-1). Run /slice for slice M4b-1: the marketplace screens, browse side.
-> **Brief (owner, 2026-10-19).** The Market must look and feel like a modern marketplace: Facebook Marketplace, eBay, Amazon. It should be beautiful, modern, fun to look at and fun to use, with search, pictures and the app's own links. It is still a closed beta for testers. The post side (post forms, My listings) is M4b-2 (owner ruling 2026-10-24).
-> **Start.** `git fetch`; `gh pr list --state all`. PR #127 (M4a) and the `docs/m4b-split` PR must be merged, and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4b1-market-browse`.
-> **Scope.**
-> 1. Category artwork:
->    - one illustration per kind (item, meetup, room, ride) and per item category (`ITEM_CATEGORIES`, 10), 14 in all, in the house style (DESIGN_SYSTEM.md, Mekong Retro), self-hosted;
->    - an SVG loaded through `<img>` cannot read the skin's CSS variables, so build them as inline SVG in a new lazy module (for example `js/market-art.js`) whose fills are theme tokens, so all 11 skins read well;
->    - no stock photos and no hotlinking. Report the total bytes.
-> 2. Market home (`#market`):
->    - a sticky search bar, kind tabs (Items, Meetups, Rooms, Rides) and category tiles with artwork;
->    - city and date chips, and a prominent "Post" button. Until M4b-2 ships, it opens an honest sheet: posting to the shared market arrives next, and the board on this phone works now;
->    - a picture-led card grid, two columns at 375 px and more at 1280 px: artwork, the price through `money()`, "Free" instead of "฿0", a two-line title, the city and date window, the kind colour;
->    - skeleton cards while loading;
->    - the link-based board folded under "On this phone" (§11).
->    - Three audiences, all designed:
->      - a tester, who browses;
->      - a visitor, or a signed-in non-tester, while the market is closed. The server answers `market_closed`, so show an inviting, honest closed-beta preview built from the artwork, with sign-in for testers;
->      - anyone once the market opens (M9), when visitors browse without an account.
->    - Sign-in appears on actions, as a sheet that returns the traveller to what they were doing.
-> 3. Search:
->    - debounced live results;
->    - a filters sheet: kind, category, city, dates, a price range with its currency, free only;
->    - sorting: offer the price sorts only with a currency or a city, because the server compares amounts across currencies;
->    - a result count, and active-filter chips that clear in one tap;
->    - an empty state with suggestions;
->    - recent searches kept on the phone, as a convenience outside the store. Never store anything another traveller wrote.
-> 4. The listing page (`#market-l-<id>`):
->    - the hero artwork (photos come in M4c), the price, chips, the body, and the kind's safety line;
->    - "A traveller · member since …", as the month only. M4a notes it is a weak fingerprint across one person's listings;
->    - app links only: the city's guide, nearby places, and the scam and safety pages;
->    - Report in a ⋯ menu (`reportListing`, `REPORT_REASONS`, `listingErrorText`);
->    - Block left out until M5, where its RPC lands: no dead controls;
->    - "Message" shown with an honest line until M5.
-> 5. Motion: tasteful press and transition feedback that respects `prefers-reduced-motion`.
-> **Rules.**
-> - New lazy modules (for example `market-home.js`, `market-search.js`, `market-listing.js`, `market-art.js`), each under about 1,500 lines. `main.js` gets registration lines only.
-> - Tokens only (`check-spacing`, `check-contrast`), and 44 px targets.
-> - Remote text renders as text only. Personal values carry `data-no-i18n` and `data-no-mt`.
-> - Nothing another traveller wrote is stored on the phone (§2).
-> - Every gate still renders something (`check-net-gates`).
-> **Pitfalls.**
-> - The router renders a route twice at start-up: after every await, check `isConnected`, and share in-flight work.
-> - Fixture mode is `?market=fixture` on 127.0.0.1, with M4a's data (`js/market-fixture-listings.js`). The market is closed in the fixture as on the server: add `&open=1` for everyone, or `&tester=1` to make the signed-in traveller a tester.
-> - Make every listing call through `js/market-listings.js`: explicit columns (`LISTING_COLUMNS`), and print `listingErrorText(err)`, never a server message.
-> - Use the M3b CDP driver (`side-session-notes/local_45164220-ea74-40e6-851e-808583e5b9f4/m3b-cdp/`, a stdlib client) for real layout and screenshots. The Turnstile token is in `input[name=cf-turnstile-response]`.
-> - Anything the owner pastes goes through `LANG=en_US.UTF-8 pbcopy` and a byte compare. The Write tool decodes a typed backslash-u escape.
-> **Done when:**
-> - At 375 px and at 1280 px, in light and dark, on the default skin and one dark skin, these screens render:
->   - home: the closed preview, tester browsing, and the open-market visitor;
->   - results with a query, and with filters;
->   - the filters sheet, the listing page and the report sheet;
->   - the empty and offline states.
-> - Each has 0 overflow, 0 console errors, 0 CSP violations and 0 body controls under 44 px, and `check-contrast` passes.
-> - Before and after screenshots of `#market` are in the PR.
-> - Every guard and the validator pass, and the PR is open. Then run /handoff.
-> **Out of scope:** post forms and My listings (M4b-2), photos (M4c), messages and block (M5), matching (M6).
+Order (owner, 2026-10-19; M4b split on 2026-10-24): **M4b-1 is built (PR #129); next M4b-2 once it merges**, then M4c, M5, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
 
 ### M4b-2: the marketplace redesign, post side
-> Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §3, §8, §9, §16 and §17 (M4 and M4b-2). Run /slice for slice M4b-2: the marketplace screens, post side.
-> **Start.** `git fetch`; `gh pr list --state all`. M4b-1 must be merged, and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4b2-market-post`.
+> Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §3, §8, §9, §16 and §17 (M4, M4b-1 built, and M4b-2). Run /slice for slice M4b-2: the marketplace screens, post side.
+> **Start.** `git fetch`; `gh pr list --state all`. PR #129 (M4b-1) must be merged, and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4b2-market-post`.
+> **Where M4b-1 left the hooks.** The Post button (`.mxh-post` in `js/screens/market-home.js`) opens `postSoonSheet` from `js/screens/market-parts.js`: replace it with the forms. Reuse `listingCard` and `artNode` (`js/market-art.js`) for the live preview, `signInSheet('post', hash)` for a signed-out poster (it returns after sign-in), and `KIND_META`, `CATEGORY_LABEL`, `citySelect` and `CURRENCY_FOR` from `market-parts.js`. Styles go in `css/market.css`. The listing page's ⋯ menu says "My listings, coming in the next update" on the traveller's own listing: link it.
 > **Scope.**
-> 1. Post forms (`#market-new-<kind>`), reached from the home's "Post" button (replace M4b-1's interim sheet):
+> 1. Post forms (`#market-new-<kind>`), reached from the home's Post button:
 >    - a short stepper per kind (item, meetup, room, ride), with a live card preview built from M4b-1's card and artwork;
 >    - client checks that mirror the server's: the kind and intent pairs, the window caps, prices, seats, cities, and the contact-detail rule. Server errors map through `listingErrorText`;
 >    - the posting contract: `postListing` picks the id, inserts with `return=minimal` and reads the row back.
@@ -224,6 +141,7 @@ Order (owner, 2026-10-19; M4b split on 2026-10-24): **M4a is merged; next M4b-1,
 >    - the owner signs in on the iPhone Home Screen app;
 >    - their user id goes into `private.admins` and `private.testers`;
 >    - a second tester is available (EXCHANGE §16, from M4).
+> **Pitfalls.** Headless Chrome needs `--no-sandbox` and a profile outside `/private/tmp` (CLAUDE.md). M4b-1's driver, `~/Library/Caches/mk-m4b1/drive.py` with `cdp.py` beside it (not in the repo), measures every state at 375 and 1280 px on three themes; copy its pattern. The router renders twice at start-up: after every await, check `isConnected`.
 > **Done when:**
 > - The post form for each kind, and My listings, render at 375 px and at 1280 px, in light and dark, on the default skin and one dark skin.
 >   - Each has 0 overflow, 0 console errors, 0 CSP violations and 0 body controls under 44 px.

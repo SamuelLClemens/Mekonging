@@ -272,6 +272,16 @@ function codeForm(body, message) {
 }
 
 // ---- signed in ------------------------------------------------------------------------------------
+// Where a sign-in sheet on an action (js/screens/market-parts.js, setReturn) asked to come back to:
+// a Market route, once. sessionStorage, so it dies with the tab; anything else is ignored.
+function takeReturn() {
+  try {
+    const r = sessionStorage.getItem('mk-market-return') || '';
+    sessionStorage.removeItem('mk-market-return');
+    return /^#market(-[a-z0-9-]+)?$/.test(r) && !/^#market-(signin|me)$/.test(r) ? r : '';
+  } catch { return ''; }
+}
+
 async function afterSignIn(body) {
   show(body, busy('Signing you in…'));
   let me;
@@ -290,6 +300,9 @@ async function afterSignIn(body) {
   }
   if (!body.isConnected) return;   // a newer render owns the screen
   if (!me.profile) { show(body, joinForm(body)); return; }
+  // Back to what the traveller was doing; replace() keeps the spent sign-in screen off the Back stack.
+  const back = takeReturn();
+  if (back) { location.replace(back); return; }
   showAccount(body, me);
 }
 

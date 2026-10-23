@@ -21,6 +21,7 @@ import {
   searchBody, insertBody, listingErrorCode, listingErrorText, isListingId, newListingId, KINDS, ITEM_CATEGORIES, CURRENCIES,
   LISTING_COLUMNS, MAX_PAGE_SIZE,
 } from '../js/market-listings.js';
+import { ART_KEYS, artKey, artSVG, artBytes } from '../js/market-art.js';
 import {
   DIET_OPTIONS, DIET_EVALUABLE_BELIEFS, VERDICT_INERT_DIET, PHRASE_PENDING_ALLERGENS,
   PHRASE_RX, PHRASE_KEYS, ALCOHOL_TERMS,
@@ -509,6 +510,20 @@ for (const code of ['market_closed', 'not_member', 'cash_closed', 'account_too_n
 }
 ok(listingErrorText({ code: 'text_rejected' }) === 'This breaks the market rules.' && listingErrorText({ code: 'contact_details' }) === 'Keep contact details for messages.', 'market listings: the two section 8 sentences are exact');
 ok(!/[a-z]_[a-z]/.test(listingErrorText({ code: 'rate_limited:post' })) && !/server|exception|postgres/i.test(Object.values({ a: listingErrorText({ code: 'failed' }) }).join()), 'market listings: copy never shows a code or a server word');
+
+// The Market's artwork (js/market-art.js, slice M4b-1): one drawing per kind and per item
+// category, every colour a class that css/market.css maps to a theme token, nothing fetched.
+ok(ART_KEYS.length === KINDS.length + ITEM_CATEGORIES.length && KINDS.concat(ITEM_CATEGORIES).every((k) => ART_KEYS.includes(k)), 'market art: one drawing per kind and per item category');
+ok(artKey({ kind: 'item', category: 'bicycle' }) === 'bicycle' && artKey({ kind: 'item', category: 'weapons' }) === 'item' && artKey({ kind: 'ride', category: 'books' }) === 'ride'
+  && artKey({ kind: 'cash' }) === 'item' && artKey(null) === 'item', 'market art: artKey picks the category for items, the kind otherwise');
+for (const k of ART_KEYS) {
+  const svg = artSVG(k);
+  ok(!/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(|\b(fill|stroke|style|color)=/i.test(svg), `market art: "${k}" carries no literal colour (classes only)`);
+  ok(!/<script|href|url\(|<image|<foreignObject|\bon[a-z]+=/i.test(svg), `market art: "${k}" has no script, link or external reference`);
+  ok(/aria-hidden="true"/.test(svg) && [...svg.matchAll(/class="([^"]*)"/g)].every((m) => m[1].split(' ').every((c) => /^(mxa|b|s|p|a|w|i|o|k|g[1-4])$/.test(c))), `market art: "${k}" is decorative and uses only the mapped classes`);
+}
+ok(artBytes() > 0 && artBytes() < 16384, `market art: the 14 drawings stay small (${artBytes()} bytes)`);
+console.log(`market art: ${ART_KEYS.length} drawings, ${artBytes()} bytes of SVG`);
 
 // --- report ------------------------------------------------------------------
 if (warnings.length) {

@@ -215,6 +215,8 @@ const SCREEN_LOADERS = {
   circle: (b) => import('./screens/circle.js' + b),
   exchange: (b) => import('./screens/exchange.js' + b),
   marketaccount: (b) => import('./screens/market-account.js' + b),
+  markethome: (b) => import('./screens/market-home.js' + b),
+  marketlisting: (b) => import('./screens/market-listing.js' + b),
   produce: (b) => import('./screens/produce.js' + b),
   schedules: (b) => import('./screens/schedules.js' + b),
   trip: (b) => import('./screens/trip.js' + b),
@@ -261,7 +263,7 @@ const ROUTE_SCREENS = {
   export: ['export'],
   donate: ['giveback'],
   circle: ['circle'], add: ['circle'], in: ['circle'],
-  market: ['exchange', 'marketaccount'],   // #exchange and #swap redirect to it (js/market-routes.js)
+  market: ['exchange', 'marketaccount', 'markethome', 'marketlisting'],   // #exchange and #swap redirect to it (js/market-routes.js)
   inbox: ['circle'], thread: ['circle'], msg: ['circle'],
   produce: ['produce'], pantry: ['produce'], schedules: ['schedules'], bargain: ['bargain'],
   etiquette: ['etiquette'],
@@ -817,7 +819,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.646.0';
+export const APP_VERSION = 'mk-v0.647.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7185,9 +7187,11 @@ export function render() {
       case 'region': return screenMod('explore').regionScreen(arg);
       case 'nearby': return screenMod('nearby').nearbyScreen();
       case 'currency': return currencyScreen();
-      case 'market': return (arg === 'signin' || arg === 'me')   // accounts: js/screens/market-account.js
-        ? screenMod('marketaccount').marketAccountScreen(arg)
-        : screenMod('exchange').marketScreen(arg);   // arg is a kind from js/screens/exchange.js
+      case 'market':   // docs/EXCHANGE.md §11: accounts, the on-phone cash board, one listing, else the home
+        if (arg === 'signin' || arg === 'me') return screenMod('marketaccount').marketAccountScreen(arg);
+        if (arg === 'cash') return screenMod('exchange').marketScreen(arg);
+        if (arg.startsWith('l-')) return screenMod('marketlisting').marketListingScreen(arg.slice(2));
+        return screenMod('markethome').marketHomeScreen(arg);   // arg is a kind slug (items, rooms...) or ''
       case 'phrasebook': return screenMod('phrasebook').phrasebookScreen(arg);
       case 'dictionary': return screenMod('phrasebook').dictionaryScreen();
       case 'signtranslate': return screenMod('signtranslate').signTranslateScreen(arg);

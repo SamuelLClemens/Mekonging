@@ -39,6 +39,9 @@ import re
 import sys
 
 CSS = 'css/style.css'
+# Stylesheets that hold rules but no skin blocks: their text colours are checked on the same
+# surfaces. css/market.css loads with the Market's screens (slice M4b-1).
+EXTRA_CSS = ['css/market.css']
 THEME = 'js/theme.js'
 AA_TEXT = 4.5
 AA_LARGE = 3.0
@@ -269,8 +272,10 @@ def main():
         print('FAIL — PENDING names an id that js/theme.js does not define.')
         return 1
 
+    rule_css = css + '\n' + '\n'.join(strip_comments(read(p)) for p in EXTRA_CSS)
+    # A rule nested in @media is still matched on its own: the pattern cannot span a brace.
     rules = [(m.group(1).strip(), m.group(2))
-             for m in re.finditer(r'([^{}]+)\{([^{}]*)\}', css)]
+             for m in re.finditer(r'([^{}]+)\{([^{}]*)\}', rule_css)]
 
     # Selectors that a dark-scoped rule re-colours, so the base rule is light-only.
     dark_overridden = set()

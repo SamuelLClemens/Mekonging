@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.646.0';
+const CACHE_VERSION = 'mk-v0.647.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -360,6 +360,7 @@ const PRECACHE = [
 // DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
+  'css/market.css': 'd4a46cd8',
   'css/style.css': '0fbe9b4f',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
@@ -529,10 +530,11 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'faa2dc3c',
+  'js/main.js': 'ad9c5258',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'ff3ecd14',
   'js/market-api.js': '0f0d76c5',
+  'js/market-art.js': '8473a6c4',
   'js/market-config.js': 'd342b560',
   'js/market-fixture-listings.js': 'de2b3f7f',
   'js/market-fixture.js': '795f9126',
@@ -558,7 +560,7 @@ const MANIFEST = {
   'js/screens/contributions.js': 'f86462b4',
   'js/screens/country-info.js': 'ec713fe8',
   'js/screens/etiquette.js': '7fc329c4',
-  'js/screens/exchange.js': '54344215',
+  'js/screens/exchange.js': 'a1df3dfc',
   'js/screens/explore.js': 'c508c39b',
   'js/screens/export.js': '1429f50c',
   'js/screens/family.js': '97c566e5',
@@ -569,7 +571,10 @@ const MANIFEST = {
   'js/screens/home.js': '83670ab5',
   'js/screens/journal.js': '645b40e1',
   'js/screens/map.js': '6e706314',
-  'js/screens/market-account.js': 'd1244ba0',
+  'js/screens/market-account.js': '7024bb25',
+  'js/screens/market-home.js': 'd0289385',
+  'js/screens/market-listing.js': 'e46103f1',
+  'js/screens/market-parts.js': '91f2c17b',
   'js/screens/medical.js': '62c2ce75',
   'js/screens/nearby.js': 'e226bfea',
   'js/screens/nextstop.js': '657c8d05',

@@ -226,27 +226,18 @@ function buildBBForm(cat) {
   return card;
 }
 
-// The Market: the on-phone board, sorted by kind. A backendless bulletin board: cash swap, ride
-// share, stay/room share, kids & baby gear, bikes & gear, and a general bucket. `arg` is a kind
-// id from the route (#market-rides); anything else, #market included, shows every listing.
-export function marketScreen(arg) {
+// The on-phone board itself, sorted by kind: chips, the post form, the paste box and the
+// listings. `arg` is a kind id (rides, rooms, items, cash); anything else shows every listing.
+// The Market home (js/screens/market-home.js) folds it under "On this phone"; #market-cash
+// still opens it as a whole screen (marketScreen below).
+export function boardSection(arg) {
   let kind = marketKind(arg) ? arg : 'all';
   let itemCat = 'gear';   // which Items category the post form is for
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Market'));
-  wrap.append(marketStatusLine());   // the shared market's one state line (docs/EXCHANGE.md §11)
-  wrap.append(h('p', { class: 'lead' }, 'Swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit — post it, share the link, meet in person. No account, no server; nothing leaves your phone on its own.'));
-  const rates = getRates();
-  if (!rates.live) wrap.append(h('p', { class: 'tiny muted' }, 'Cash-swap values use offline baseline rates. Open Currency with internet once to refresh them.'));
-
-  // Invite a fellow traveller so the board actually has two sides. Shares the app link to
-  // the Market itself — no server, no account; they open it and can post their own listings.
-  wrap.append(shareButton('📣 Invite a traveller to this board', 'Mekonging Market', () => `${location.origin}${location.pathname}#market`, 'btn ghost block'));
-
+  const box = h('div', { class: 'mxb' });
   const chips = h('div', { class: 'chips bb-chips' });
   const formWrap = h('div', {});
   const listWrap = h('div', {});
-  wrap.append(chips, formWrap, pasteLinkBox('Paste a board link a traveller sent'), listWrap);
+  box.append(chips, formWrap, pasteLinkBox('Paste a board link a traveller sent'), listWrap);
 
   const chip = (id, label, color, pressed, onpick) => h('button', { class: 'chip bb-chip', dataset: { c: id }, style: color ? `--chip:${color}` : '', 'aria-pressed': pressed ? 'true' : 'false', onclick: onpick }, label);
 
@@ -285,5 +276,24 @@ export function marketScreen(arg) {
     items.forEach((it) => listWrap.append(listingCard(it)));
   }
   repaint();
+  return box;
+}
+
+// The board as a whole screen, as it was before the shared market: what #market-cash opens (cash
+// swap stays on the phone until legal clears it, docs/EXCHANGE.md §14). A backendless bulletin
+// board: cash swap, ride share, stay/room share, kids & baby gear, bikes & gear, and a general
+// bucket.
+export function marketScreen(arg) {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Market'));
+  wrap.append(marketStatusLine());   // the shared market's one state line (docs/EXCHANGE.md §11)
+  wrap.append(h('p', { class: 'lead' }, 'Swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit — post it, share the link, meet in person. No account, no server; nothing leaves your phone on its own.'));
+  const rates = getRates();
+  if (!rates.live) wrap.append(h('p', { class: 'tiny muted' }, 'Cash-swap values use offline baseline rates. Open Currency with internet once to refresh them.'));
+
+  // Invite a fellow traveller so the board actually has two sides. Shares the app link to
+  // the Market itself — no server, no account; they open it and can post their own listings.
+  wrap.append(shareButton('📣 Invite a traveller to this board', 'Mekonging Market', () => `${location.origin}${location.pathname}#market`, 'btn ghost block'));
+  wrap.append(boardSection(arg));
   mount(wrap, '#market');
 }

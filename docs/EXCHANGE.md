@@ -727,6 +727,14 @@ The original M4 done-when still holds across the three: the RLS tests show a str
   - The home (closed, tester, open), results with a query and with filters, the filters sheet, the listing page, the report sheet, and the empty and offline states render at 375 px and at 1280 px, in light and dark, on the default skin and one dark skin.
   - Each has no overflow, no console errors, no CSP violations and no controls under 44 px.
   - A before and after screenshot of `#market` is in the PR.
+- **Built (2026-10-24, `mk-v0.647.0`).**
+  - `js/market-art.js`: 14 inline SVG drawings (4 kinds, 10 item categories), 6,198 bytes, every shape a class that `css/market.css` maps to a theme token. The validator refuses a literal colour, a script or a link in any drawing.
+  - `css/market.css`: every Market rule, loaded with the first Market screen (`js/screens/market-parts.js`), so `css/style.css` does not grow. `check-contrast` reads it too. Kind colours are Market roles built from each skin's accents (`--mx-item` is `--teal`, meetup `--magenta`, room `--grape`, ride `--gold`), never the country colours.
+  - `js/screens/market-home.js` (`#market` and the kind routes): the audience line, a sticky search bar with live results (300 ms), kind tabs, city and date chips, category tiles, the result count and sort, removable filter chips, a card grid (2 columns at 375 px, 4 in the 720 px frame), skeletons, "Show more", the empty state with suggestions, the floating Post button (an honest sheet until M4b-2) and the board folded under "On this phone". The closed-beta preview replaces it whenever the server answers `market_closed`. Price sorts are offered only with a city or a currency.
+  - `js/screens/market-listing.js` (`#market-l-<id>`): hero artwork, price ("Free" for 0), chips, body, "A traveller · member since <month>", the kind's safety line, app links only (places in the city, the kind's page, scams, emergency help), and the ⋯ menu with Share and Report. Message opens an honest sheet; Block is not drawn until M5.
+  - Sign-in on an action is a sheet. It stores the route and the action in `sessionStorage`; `#market-signin` returns there with `location.replace`, and the listing page reopens the report sheet.
+  - `#market-cash` still opens the on-phone board as a whole screen (`boardSection` in `js/screens/exchange.js`).
+  - Recent searches are the traveller's own words, at most 6, in `localStorage` under `mk-market-recent`, outside the store. Results stay in memory only.
 
 #### M4b-2: The marketplace screens, post side
 - **Scope.** A post form per kind, as a stepper with a live card preview; client checks that mirror the server's; My listings with status chips, close and delete.
