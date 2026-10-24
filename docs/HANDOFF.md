@@ -1,19 +1,25 @@
-# Handoff — 2026-10-24 (status review and the traveller fixes F1 to F5, documents only)
+# Handoff — 2026-10-24 (status review, traveller fixes F1 to F5 and language work L1 to L5, documents only)
 
 ## Shipped
-- **Plan for five traveller fixes**, branch `docs/traveller-fixes-plan`, [PR #130](https://github.com/SamuelLClemens/Mekonging/pull/130), documents only (no version bump). `docs/PLAN.md` gains "Traveller fixes F1 to F5" with the owner's rulings of 2026-10-24 and the code facts behind each fix; the release order puts F1 to F5 before M4b-2.
+- **Plan for the traveller fixes and the language work**, branch `docs/traveller-fixes-plan`, [PR #130](https://github.com/SamuelLClemens/Mekonging/pull/130), documents only (no version bump). `docs/PLAN.md` gains "Traveller fixes and language work", with the owner's rulings of 2026-10-24 and the code facts behind each slice. The release order puts F1 to F5 and L1 to L4 before M4b-2, and L5 after M5.
   - F1: every town, village and island in the four countries in the place pickers (offline, from GeoNames).
   - F2: Your journey on a world map, every stop editable.
   - F3: location asked once on first open, then used everywhere.
   - F4: a post-trip recap screen with charts.
-  - F5: Thai in Talk (a reply direction), after the owner confirms the reading.
+  - F5: a check of every route in all 29 languages, and Thai, Vietnamese, Khmer and Lao made complete (machine-made, recorded for review).
+  - L1: Talk face to face on one phone, translating both sides.
+  - L2: the other 25 interface languages filled the same way.
+  - L3: local languages with 1 million or more speakers (cited), and a language map at the end of Talk.
+  - L4: phrasebooks for those local languages, from cited sources.
+  - L5 (after M5): Talk with someone far away, joined by invite link or code.
 - M4b-1 ([PR #129](https://github.com/SamuelLClemens/Mekonging/pull/129)) was merged by the owner on 2026-10-23 (6e5a7cc) and is live.
 
 ## Verified
 - `git fetch`, then `gh pr list --state all`: no PR was open before this branch; #129 merged at 2026-10-23 23:47 UTC.
 - The live `https://www.mekonging.com/sw.js` reads `CACHE_VERSION = 'mk-v0.647.0'`, the same as `origin/feat/scaffold-bangkok-slice` (6e5a7cc).
-- Every code fact in the F sections was read from 6e5a7cc with `git show` and `git grep`. None of the five problems was reproduced on a rendered screen in this session: each slice reproduces its problem first.
+- Every code fact in the F and L sections was read from 6e5a7cc with `git show` and `git grep`. No problem was reproduced on a rendered screen in this session, including the owner's undescribed Thai problem: each slice reproduces its problem first.
 - GeoNames dump sizes are HTTP `Content-Length` values (HEAD requests, nothing downloaded): TH 9.8 MB, VN 2.0 MB, KH 0.8 MB, LA 0.7 MB.
+- `check-ui-strings`: 29 languages, 369 keys each. The online translation pass is `autoTranslateTree` (`js/i18n.js:529`). This machine has desktop Safari 18.6 but no Xcode app (`xcode-select -p` gives the Command Line Tools), so there is no iOS Simulator; iPhone checks fall to the owner.
 
 ## Owner checks for M3b (carried; the first two are done)
 - [x] Migration 001 run, repaired by 001b (see the earlier handoff in git, `3f4d32f`), `001_rls.sql` 65 of 65 PASS.
@@ -108,7 +114,7 @@
 
 
 ## Open decisions (need the user)
-Closed on 2026-10-19: 9, 11 and 12 (earlier that day), 15 to 18 (D5 tidy after M5; the city-depth order; M5 right after M4c; visitors may browse, which gates on M9), and during M4a: "kush" and "gun" allowed in names, no native speaker available, the closed beta stays closed to visitors.
+Closed on 2026-10-24: 20 (the owner widened the Thai report into the language work F5 and L1 to L5). Closed on 2026-10-19: 9, 11 and 12 (earlier that day), 15 to 18 (D5 tidy after M5; the city-depth order; M5 right after M4c; visitors may browse, which gates on M9), and during M4a: "kush" and "gun" allowed in names, no native speaker available, the closed beta stays closed to visitors.
 
 The numbers below keep their old values.
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
@@ -117,27 +123,26 @@ The numbers below keep their old values.
 13. Relabel the 46 leftover "Lao National Tourism Administration" entries (and 4 "Ministry of Information, Culture and Tourism") on tourismlaos.org as "Tourism Laos"? This is data text only, and it bumps the version. Recommended: yes, inside D5 tidy.
 14. Add a coordinates check slice? D5 Laos checked 2 of 185 Lao pins, and both were wrong. Recommended: yes, one country per session, starting with Laos's remote sites, flagging any record more than 2 km from its OSM object.
 19. Install `pglast` (a PostgreSQL parser for Python, from PyPI, a few MB) so a future session can syntax-check SQL and PL/pgSQL before the owner pastes it? It parses only; it runs no database. Recommended: yes. It would have caught the type of mistake this slice's reviewer found by reading.
-20. What "thai isnt an option for a user that reporting the issues" means (owner, 2026-10-24). Recommended reading: on the Thai phrasebook, Talk leaves Thai out of its "translate from" list (`js/screens/phrasebook.js:1137`) and translates one way only, so a Thai speaker cannot reply. F5 confirms this with the owner before it starts.
 
 ## Next session prompts
-Order (owner, 2026-10-24): **F1, F2, F3, F4, F5 (the traveller fixes), then M4b-2**, then M4c, M5, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them. The F slices are written out in `docs/PLAN.md`, "Traveller fixes F1 to F5".
+Order (owner, 2026-10-24): **F1, F2, F3, F4, F5, L1, L2, L3, L4 (the traveller fixes and the language work), then M4b-2**, then M4c, M5, then L5, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them. The F and L slices are written out in `docs/PLAN.md`, "Traveller fixes and language work".
 
 ### F1: every place in the place pickers
-> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes F1 to F5" section of docs/PLAN.md (owner rulings, then F1). Run /slice for slice F1: every town, village and island in the four countries in the place pickers, offline.
+> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md (owner rulings, then F1). Run /slice for slice F1: every town, village and island in the four countries in the place pickers, offline.
 > **Start.** `git fetch`; `gh pr list --state all`. PR #130 (the F plan) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f1-place-list`.
 > **Reproduce first.** At 375 px, open each `locationSelect` caller listed in F1 and confirm Koh Chang and Koh Mak are absent.
 > **Data.** The owner chose GeoNames on 2026-10-24. Download TH, VN, KH and LA from `download.geonames.org/export/dump/` into a new empty folder in the scratchpad; process them with `python3 -I` from a script kept elsewhere. Measure counts and gzip bytes per feature code before choosing what to keep.
 > **Done when.** The F1 "Done when" in docs/PLAN.md holds, shown in headless Chrome over CDP at 375 px, with file and pack sizes reported before and after; every guard and `jsc -m scripts/validate-jsc.mjs` pass; the PR is open. Then run /handoff.
 > **Out of scope.** Content for the new places, the journey map (F2), automatic location (F3).
 
-### F2 to F5
-> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes F1 to F5" section of docs/PLAN.md. Run /slice for slice F<n>, as written there.
+### F2 to F5, then L1 to L4 (and L5 after M5)
+> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <F2 to F5 or L1 to L5>, as written there.
 > **Start.** `git fetch`; `gh pr list --state all`. The slice before it must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`. Reproduce the problem on a rendered screen before changing code.
-> F5 starts by asking the owner to confirm open decision 20.
+> F5, L1 and L5 end with a check by the owner on their iPhone in Safari, from a short checklist the slice writes. L5 starts only after M5 has merged.
 
 ### M4b-2: the marketplace redesign, post side
 > Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §3, §8, §9, §16 and §17 (M4, M4b-1 built, and M4b-2). Run /slice for slice M4b-2: the marketplace screens, post side.
-> **Start.** `git fetch`; `gh pr list --state all`. F5 must be merged (owner, 2026-10-24: the traveller fixes come first), and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4b2-market-post`.
+> **Start.** `git fetch`; `gh pr list --state all`. L4 must be merged (owner, 2026-10-24: the traveller fixes and the language work come first), and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4b2-market-post`.
 > **Where M4b-1 left the hooks.** The Post button (`.mxh-post` in `js/screens/market-home.js`) opens `postSoonSheet` from `js/screens/market-parts.js`: replace it with the forms. Reuse `listingCard` and `artNode` (`js/market-art.js`) for the live preview, `signInSheet('post', hash)` for a signed-out poster (it returns after sign-in), and `KIND_META`, `CATEGORY_LABEL`, `citySelect` and `CURRENCY_FOR` from `market-parts.js`. Styles go in `css/market.css`. The listing page's ⋯ menu says "My listings, coming in the next update" on the traveller's own listing: link it.
 > **Scope.**
 > 1. Post forms (`#market-new-<kind>`), reached from the home's Post button:
