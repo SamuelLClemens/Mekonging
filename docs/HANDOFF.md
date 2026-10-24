@@ -1,7 +1,7 @@
 # Handoff — 2026-10-24 (status review, traveller fixes F1 to F5 and language work L1 to L5, documents only)
 
 ## Shipped
-- **Plan for the traveller fixes and the language work**, branch `docs/traveller-fixes-plan`, [PR #130](https://github.com/SamuelLClemens/Mekonging/pull/130), documents only (no version bump). `docs/PLAN.md` gains "Traveller fixes and language work", with the owner's rulings of 2026-10-24 and the code facts behind each slice. The release order puts F1 to F5 and L1 to L4 before M4b-2, and L5 after M5.
+- **Plan for the traveller fixes and the language work**, documents only (no version bump): the fixes in [PR #130](https://github.com/SamuelLClemens/Mekonging/pull/130) (merged 2026-10-24, f1b3c30), the language work in [PR #131](https://github.com/SamuelLClemens/Mekonging/pull/131) (branch `docs/language-work-plan`). `docs/PLAN.md` gains "Traveller fixes and language work", with the owner's rulings of 2026-10-24 and the code facts behind each slice. The release order puts F1 to F5 and L1 to L4 before M4b-2, and L5 after M5.
   - F1: every town, village and island in the four countries in the place pickers (offline, from GeoNames).
   - F2: Your journey on a world map, every stop editable.
   - F3: location asked once on first open, then used everywhere.
@@ -129,7 +129,7 @@ Order (owner, 2026-10-24): **F1, F2, F3, F4, F5, L1, L2, L3, L4 (the traveller f
 
 ### F1: every place in the place pickers
 > Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md (owner rulings, then F1). Run /slice for slice F1: every town, village and island in the four countries in the place pickers, offline.
-> **Start.** `git fetch`; `gh pr list --state all`. PR #130 (the F plan) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f1-place-list`.
+> **Start.** `git fetch`; `gh pr list --state all`. PR #131 (the language plan) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f1-place-list`.
 > **Reproduce first.** At 375 px, open each `locationSelect` caller listed in F1 and confirm Koh Chang and Koh Mak are absent.
 > **Data.** The owner chose GeoNames on 2026-10-24. Download TH, VN, KH and LA from `download.geonames.org/export/dump/` into a new empty folder in the scratchpad; process them with `python3 -I` from a script kept elsewhere. Measure counts and gzip bytes per feature code before choosing what to keep.
 > **Done when.** The F1 "Done when" in docs/PLAN.md holds, shown in headless Chrome over CDP at 375 px, with file and pack sizes reported before and after; every guard and `jsc -m scripts/validate-jsc.mjs` pass; the PR is open. Then run /handoff.
