@@ -8,18 +8,82 @@
 - M1 (the board moved to `js/screens/exchange.js`) is PR #108, `mk-v0.633.0`, 2026-10-12.
 - M1 (PR #108) and M2 (the Market tab, PR #111, `mk-v0.635.0`) are merged. M3 is next on the exchange side. Its owner actions (`docs/EXCHANGE.md` §15, the M3 rows up to sending the public values) were done on 2026-10-19.
 
-### Release order (owner, 2026-10-19; updated after M3b)
+### Release order (owner, 2026-10-19; updated after M3b; fixes inserted 2026-10-24)
+- **Owner ruling, 2026-10-24: the traveller fixes F1 to F5 (section below) come before M4b-2**, in the order F1, F2, F3, F4, F5. They stack like any releasing slice. The Market's M4b-2, M4c, M5 and D5 tidy then follow as listed.
 - Merged on 2026-10-19: D5 Laos (PR #122, `mk-v0.643.0`), M3a (PR #124, `mk-v0.644.0`) and **M3b, accounts and sign-in** (PR #125, `mk-v0.645.0`). M3b's owner checks (migration 001, the RLS test, the Security Advisor, the iPhone sign-ins) are tracked in `docs/HANDOFF.md`.
 - **Owner ruling after M3b: Market first, one slice per session** (`docs/EXCHANGE.md` §16, 2026-10-19). Releasing slices stack, one at a time, each from the merged tip:
   1. **M4a**: listings and search, server side. Built on 2026-10-19; the owner's SQL run passed on 2026-10-23 (314 of 314) and the owner merged it on 2026-10-23 (af2e9fe, `mk-v0.646.0`) ([PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127), `mk-v0.646.0`; `docs/HANDOFF.md`).
   2. **M4b**: the marketplace redesign, split in two by the owner on 2026-10-24:
-     - **M4b-1**, browse: category artwork, the home, search and filters, the listing page, the closed-beta preview. Built on 2026-10-24 ([PR #129](https://github.com/SamuelLClemens/Mekonging/pull/129), `mk-v0.647.0`), awaiting the owner's merge;
+     - **M4b-1**, browse: category artwork, the home, search and filters, the listing page, the closed-beta preview. Merged on 2026-10-23 (6e5a7cc, [PR #129](https://github.com/SamuelLClemens/Mekonging/pull/129), `mk-v0.647.0`, live);
      - **M4b-2**, post: the post forms, My listings and the live owner-and-tester check.
   3. **M4c**: listing photos.
   4. **M5**: messages, block and live alerts, right after M4c (owner, 2026-10-19): a marketplace that cannot message cannot complete a hand-off. M6 onward follow later.
   5. **D5 tidy** (approved): relabel the 50 "Ministry of Tourism" entries on tourismcambodia.com and .org (34 in `places.kh.ext.js`, 6 in `places.kh.js`, 5 in `local.kh.js`, 3 in `itineraries.js`, 1 each in `info.kh.js` and `prices.kh.js`) as "Tourism Cambodia", with tourism.gov.kh as the ministry. Check Long Beach (Sok San) against Long Set Beach (4K Beach) and merge them if they are one beach (with a `place-merges.js` line). Open decision 13 (the Tourism Laos relabel) is recommended to ride along.
   6. **Bangkok B1 to B8** (below), then **city depth C1 onward** (below, order confirmed by the owner).
 - Q2, the audit driver under `tools/audit-375/` (tools only, no version bump), can run alongside any of these. Q3 to Q8 stack like any releasing slice.
+
+## Traveller fixes F1 to F5 (owner, 2026-10-24)
+The owner listed five fixes "we need to make for sure". Code facts below were measured at 6e5a7cc (`mk-v0.647.0`, the live version). Each slice is one session, run with `/slice`, and stacks on the merged tip of the one before. F2 and F3 use F1's place list.
+
+### Owner rulings, 2026-10-24
+- The five fixes come before M4b-2.
+- Place list: an offline list of every town, village and island in the four countries, from GeoNames (CC BY 4.0, credited in the app), stored in the app so it works without signal. Not online search alone, and not a hand-picked list.
+- Location: ask once on first open. After a yes, track silently on every launch and use the fix everywhere. A dismissed or denied request never re-raises the browser dialog; one banner offers it again.
+- Thai: the owner's words were "thai isnt an option for a user that reporting the issues". The reading in F5 is to be confirmed with the owner before F5 starts.
+
+### F1: every place in the place pickers
+- **Problem.** Koh Chang and Koh Mak are missing. A traveller anywhere in the four countries must be able to pick their place, check its weather and see it.
+- **Measured.** Every place picker is `locationSelect` (`js/ui-widgets.js:328`), which lists `WEATHER_SPOTS` only: 165 cities (th 53, vi 37, kh 35, la 40). Its callers are `js/main.js:1251` (`locationFixCard`), `js/main.js:2568`, `js/screens/country-info.js:43`, `js/screens/places.js:95` and `js/screens/journal.js:1103` (the journey's "Add a stop you missed"). No place record exists for Koh Chang or Koh Mak; only their piers are in `js/data/ferries.js`. Weather already fetches by coordinates (`js/weather.js:504`), so any place with coordinates can have a forecast.
+- **Source.** GeoNames country dumps at `download.geonames.org/export/dump/`: TH.zip 9.8 MB, VN.zip 2.0 MB, KH.zip 0.8 MB, LA.zip 0.7 MB (Content-Length, 2026-10-24). Use feature class P (leave out PPLX sections, PPLH historical and PPLQ abandoned places) and the islands (T: ISL, ISLS, ISLET). Download into a new empty folder; process with `python3 -I`.
+- **Scope.**
+  - `scripts/build-gazetteer.py` writes one lazily loaded file per country, listed in the service-worker manifest so it works offline. Fields: name, local-script name where GeoNames has one, coordinates (5 decimals), country, province, kind (town, village or island). Measure first. Keep each country's file under 250 KB after gzip; if the full set is larger, keep every island and every place with a population or an administrative role, and report what was dropped.
+  - A search-as-you-type picker replaces the `<select>` in every caller: the 165 curated cities first, then the place list. Keep the `onChange(key)` contract. A place-list key needs its own resolver beside `spotForKey`. Check what each `setFocusSpot` consumer reads from a spot (`city`, `country`, `lat`, `lng`, `hub`) before passing a place-list entry to it.
+  - Never add place-list entries to `WEATHER_SPOTS`: those are the Nearby anchors (CLAUDE.md).
+  - A picked place shows its forecast (within the cap of 8 saved forecasts), a map pin, and the nearest curated places by distance.
+  - Credit GeoNames where the app lists its data sources.
+- **Done when.** Koh Chang, Koh Mak and 10 sampled small places (at least two per country, including Koh Rong Samloem in Cambodia, Con Son in Vietnam and Don Khone in Laos) can be found in every picker and show a forecast and a pin at 375 px. The place list loads offline after the first visit. File and pack sizes are reported before and after. All guards and the validator pass.
+- **Out of scope.** Place records and guides for the new places (content for Koh Chang and Koh Mak is its own data slice), the journey map (F2), automatic location (F3).
+
+### F2: Your journey, the whole world, fully editable
+- **Problem.** "My journey" must be fully editable, and its map must cover the world so a traveller can tag where they are from anywhere.
+- **Measured.** `journeyScreen` (`js/screens/journal.js:762`) calls `initMap` (`journal.js:961`) without `worldBounds`, so the map is fenced to `REGION_BOUNDS` [[92, 2], [115, 27.5]] (`js/map.js:555`, applied at `map.js:901`). "Add a stop you missed" (`journal.js:1095`) offers only `WEATHER_SPOTS`. Edit and delete appear only on stops with a `trail.js` component (`journal.js:1044`); stops that come from journal entries, the trip plan or saved places cannot be edited on this screen.
+- **Scope.**
+  - Pass `worldBounds: true`. Check what the basemap draws outside the region at zooms 1 to 9, online and offline.
+  - Add a stop anywhere in three ways: F1's picker, a pin dropped by tapping the map anywhere in the world, or "I am here" from the live fix. Outside the four countries the traveller types the name. Add no new third-party host without the owner.
+  - Every stop can be renamed, re-dated, moved and removed from this screen. For a stop that comes from a journal entry, a trip stop or a saved place, store the change as a journey override in `js/trail.js`, keyed by that stop, and leave the source record untouched (the reason given at `journal.js:1044` still holds). The override store is a `js/state.js` schema change, so it bumps the store version.
+  - Order stays date-driven: re-dating a stop moves it.
+- **Done when.** A stop added in Singapore and one on Koh Mak show on the map in date order. A journal-derived stop is renamed, re-dated, moved and removed on the journey screen while its journal entry stays unchanged. 375 px, light and dark, 0 overflow, 0 console errors. All guards pass.
+- **Out of scope.** The share-journey file format beyond carrying the new stops; how the trail records points automatically.
+
+### F3: location known from the first open
+- **Problem.** The app must know where the traveller is from the first visit and use it everywhere, not only after they search or tap.
+- **Measured.** Once permission is granted, a location watch starts silently on every launch (`js/main.js:6371` to `6420`). While the permission is unanswered, the app waits for a tap on a "Use my location" control. This is by design, after an earlier "asks me every single time" report. The welcome flow's first step already shows `locationFixCard` (`js/screens/welcome.js:84`), but "Next" and "Skip — just explore" both pass it without asking, and travellers who finished setup earlier are never asked again.
+- **Scope.**
+  - Make the location request the welcome step's main action, with a one-line reason. "Next" still works.
+  - Travellers who were never asked (`prefs.geoAsked` false and permission still "prompt") get one Home card that asks on a tap.
+  - After a denial or a dismissal, show one dismissible Home banner. Never raise the browser dialog on load.
+  - With a fix, every "where am I" default (the `focusSpot()` consumers: Home, Weather, Nearby, Emergency, Places) uses the nearest place from F1's list instead of the browsed country's default. List the consumers and prove each one.
+  - iOS wrapper: check whether `Mekonging Xcode/` declares a location usage description. If it does not, tell the owner; do not edit the wrapper in this slice.
+- **Done when.** In a fresh profile, the first open asks once. With a granted, emulated position on Koh Chang (CDP `Browser.grantPermissions` and `Emulation.setGeolocationOverride`), Home and Weather show Koh Chang without any tap. In a denied profile, the banner shows once and no dialog appears on reload. 375 px. All guards pass.
+
+### F4: the post-trip recap, with charts
+- **Problem.** After a trip, Home should break down everything the traveller logged, with graphs and facts about the trip.
+- **Measured.** After a trip, Home shows `returnRecapCard` (`js/main.js`, about line 2860): counts of journal entries, places loved and rated and stops, plus one "Spent ≈" total. There is no breakdown and no chart anywhere in the app's screens.
+- **Scope.**
+  - A new lazy screen, `js/screens/trip-recap.js` (`#recap`), registered in `js/nav-groups.js` and the router. `returnRecapCard` moves out of `main.js` with it.
+  - Home's post-trip block shows a short summary and "See your whole trip".
+  - The screen covers what was logged: dates and nights; countries and cities, with nights per country; distance travelled and the route map (reuse the journey map); spending in the home currency by category, by country and by day, through `money()`, with unknown rates flagged; journal entries and photos; places visited, rated and loved, with the top-rated; transport legs by mode where logged. A section with no data is left out.
+  - Charts are inline SVG coloured from theme tokens (the `js/market-art.js` pattern), so all 11 skins repaint them. No chart library. Load the `dataviz` skill before the first chart.
+- **Done when.** A seeded post-trip persona (mutate the store in memory through `import('/js/state.js')`) shows every section at 375 px and 1280 px, in light, dark and one dark skin, with 0 overflow, 0 console errors and no body control under 44 px. A traveller with nothing logged sees an honest empty state. `check-contrast` passes on the chart colours, and all guards pass.
+
+### F5: Thai in Talk
+- **Owner report.** "thai isnt an option for a user that reporting the issues".
+- **Reading, to confirm with the owner before starting.** On the Thai phrasebook, Talk's "translate from" list leaves Thai out on purpose (`js/screens/phrasebook.js:1137`, `srcOptions`), and Talk translates one way only, from the traveller's language into Thai. A Thai speaker therefore cannot type or speak a reply.
+- **Scope, if confirmed.**
+  - A reply direction in Talk: one swap control lets the local speaker type or speak Thai (`th-TH` speech recognition), and the traveller reads and hears their own language. `translate(text, target, source)` in `js/translate.js` already accepts any pair. Keep the same-language guard.
+  - Vietnamese, Khmer and Lao get the same control, since it is one code path.
+  - Measure the Thai interface coverage: the Thai dictionary holds about 369 entries. Count untranslated visible strings on the ten most used screens with the app in Thai, and report them. Add no machine-made Thai to the dictionary without the owner (open decision 6: no native speaker is available).
+- **Done when.** On Talk with the Thai phrasebook, a Thai sentence typed in reply mode returns the traveller's language and plays it aloud, and swapping back works. 375 px. All guards pass.
 
 ## Data inventory (measured 2026-10-12 at fc4c9dc)
 Method: jsc over `loadAllCountries()`, plus `check-place-fields.py` and `check-sources.py`.

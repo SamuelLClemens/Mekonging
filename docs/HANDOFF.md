@@ -1,25 +1,19 @@
-# Handoff — 2026-10-24 (slice M4b-1: the marketplace screens, browse side)
+# Handoff — 2026-10-24 (status review and the traveller fixes F1 to F5, documents only)
 
 ## Shipped
-- **M4b-1, awaiting the owner's merge:** branch `feat/m4b1-market-browse`, [PR #129](https://github.com/SamuelLClemens/Mekonging/pull/129) (`mk-v0.647.0`, commit 3516848), into `feat/scaffold-bangkok-slice`. Stacked on 0072d85 (PR #128). The `guards` CI check was pending at handoff. Nothing changed on the server.
-  - `js/market-art.js`: 14 inline SVG drawings (4 kinds, 10 item categories), 6,198 bytes. Shapes carry classes that `css/market.css` maps to theme tokens, so all 11 skins repaint the art.
-  - `css/market.css` (355 lines): every Market rule, loaded lazily by `js/screens/market-parts.js`; `check-contrast` now reads it.
-  - `js/screens/market-home.js` (`#market` and the four kind routes): audience line, sticky search with live results, kind tabs, city and date chips, category tiles, count and sort (price sorts only with a city or a currency), removable filter chips, the filters sheet with a live count, card grid with skeletons, empty state, recent searches, the interim Post sheet and the board folded under "On this phone". The closed-beta preview replaces it whenever the server answers `market_closed`.
-  - `js/screens/market-listing.js` (`#market-l-<id>`): hero art, price, chips, body, member month, safety line, app links only, a ⋯ menu with Share and Report, Message with an honest sheet. Block is not drawn until M5.
-  - Sign-in on an action is a sheet; `#market-signin` returns to the route (`location.replace`) and the listing reopens the report sheet.
-  - `js/screens/exchange.js`: `boardSection()`; `#market-cash` keeps the whole-screen board. `main.js`: registration lines only (+4 lines, now 7,568).
-  - `scripts/validate.mjs`: artwork checks. `scripts/README.md`, `docs/EXCHANGE.md` §17 (M4b-1 built), `docs/PLAN.md`, two `CLAUDE.md` lines.
-- PR screenshots live on the `assets/m4b1-shots` branch (commit 229be7f, not app code). Deleting it breaks the images in PR #129.
-- Earlier and merged: M4a (PR #127, `mk-v0.646.0`), the M4b split docs (PR #128).
+- **Plan for five traveller fixes**, branch `docs/traveller-fixes-plan`, documents only (no version bump). `docs/PLAN.md` gains "Traveller fixes F1 to F5" with the owner's rulings of 2026-10-24 and the code facts behind each fix; the release order puts F1 to F5 before M4b-2.
+  - F1: every town, village and island in the four countries in the place pickers (offline, from GeoNames).
+  - F2: Your journey on a world map, every stop editable.
+  - F3: location asked once on first open, then used everywhere.
+  - F4: a post-trip recap screen with charts.
+  - F5: Thai in Talk (a reply direction), after the owner confirms the reading.
+- M4b-1 ([PR #129](https://github.com/SamuelLClemens/Mekonging/pull/129)) was merged by the owner on 2026-10-23 (6e5a7cc) and is live.
 
 ## Verified
-- Headless Chrome over CDP, fresh profiles on 127.0.0.1, fixture mode, served from the worktree on port 8954. 72 states: home closed, tester and open-market visitor; results with a query, with filters and empty; the filters sheet; the listing page, its menu and the report sheet; the sign-in sheet; offline. Each at 375 px (mobile, DPR 2) and 1280 px, on Mekong Retro light, Mekong Retro dark and Night Market.
-  - `document.hidden` false on all 72; 0 overflow; 0 body controls under 44 px (1,860 measured); 0 CSP violations; 0 console errors; `css/market.css` loaded on all 72. The grid measured 2 columns at 375 px and 4 at 1280 px.
-  - Screenshots looked at: tester home (light, dark, Night Market), closed preview, listing (light, Night Market), filters sheet, desktop home.
-- Sign-in return, 6 of 6 steps: a visitor's Report opens the sign-in sheet; Sign in stores the route; after the code the listing shows with the report sheet open; the report sends; Back skips the spent sign-in screen.
-- `jsc -m scripts/validate-jsc.mjs`: 19,297 of 19,297, EXIT 0 (was 19,252). A planted `fill="#ffffff"` in one drawing failed it with 1 error.
-- All 17 guards pass, plus `check-place-fields --assert`, `port-themes --check`, `build-market-cities --check` and `check-cache-version` (9 code files: `css/market.css`, `js/main.js`, `js/market-art.js`, `js/screens/exchange.js`, `market-account.js`, `market-home.js`, `market-listing.js`, `market-parts.js`, `sw.js`; manifest 263 files). `jsc -m` parses every edited JS file.
-- Before (origin tip, same driver): the old `#market` had one body control under 44 px on 4 of 6 captures, the board's paste field (20 to 22 px tall). In the fold it is 48 px.
+- `git fetch`, then `gh pr list --state all`: no PR was open before this branch; #129 merged at 2026-10-23 23:47 UTC.
+- The live `https://www.mekonging.com/sw.js` reads `CACHE_VERSION = 'mk-v0.647.0'`, the same as `origin/feat/scaffold-bangkok-slice` (6e5a7cc).
+- Every code fact in the F sections was read from 6e5a7cc with `git show` and `git grep`. None of the five problems was reproduced on a rendered screen in this session: each slice reproduces its problem first.
+- GeoNames dump sizes are HTTP `Content-Length` values (HEAD requests, nothing downloaded): TH 9.8 MB, VN 2.0 MB, KH 0.8 MB, LA 0.7 MB.
 
 ## Owner checks for M3b (carried; the first two are done)
 - [x] Migration 001 run, repaired by 001b (see the earlier handoff in git, `3f4d32f`), `001_rls.sql` 65 of 65 PASS.
@@ -29,7 +23,7 @@
 - [ ] From the first real email: whether `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has (the input takes 6 to 10).
 
 ## Not done / known issues
-- New in M4b-1:
+- Carried from M4b-1:
   - Proven in fixture mode only. Production still answers `market_closed` (`market_open` is false) and holds no real listing.
   - The driver is not in the repo: `~/Library/Caches/mk-m4b1/drive.py` and `cdp.py` (stdlib), with `signin_return.py`. Run with `MX_PORT=<port>`; `MX_THEME` and `MX_WIDTH` narrow it.
   - "Reset everything" in Settings does not clear recent searches (`mk-market-recent` in `localStorage`).
@@ -123,13 +117,27 @@ The numbers below keep their old values.
 13. Relabel the 46 leftover "Lao National Tourism Administration" entries (and 4 "Ministry of Information, Culture and Tourism") on tourismlaos.org as "Tourism Laos"? This is data text only, and it bumps the version. Recommended: yes, inside D5 tidy.
 14. Add a coordinates check slice? D5 Laos checked 2 of 185 Lao pins, and both were wrong. Recommended: yes, one country per session, starting with Laos's remote sites, flagging any record more than 2 km from its OSM object.
 19. Install `pglast` (a PostgreSQL parser for Python, from PyPI, a few MB) so a future session can syntax-check SQL and PL/pgSQL before the owner pastes it? It parses only; it runs no database. Recommended: yes. It would have caught the type of mistake this slice's reviewer found by reading.
+20. What "thai isnt an option for a user that reporting the issues" means (owner, 2026-10-24). Recommended reading: on the Thai phrasebook, Talk leaves Thai out of its "translate from" list (`js/screens/phrasebook.js:1137`) and translates one way only, so a Thai speaker cannot reply. F5 confirms this with the owner before it starts.
 
 ## Next session prompts
-Order (owner, 2026-10-19; M4b split on 2026-10-24): **M4b-1 is built (PR #129); next M4b-2 once it merges**, then M4c, M5, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
+Order (owner, 2026-10-24): **F1, F2, F3, F4, F5 (the traveller fixes), then M4b-2**, then M4c, M5, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them. The F slices are written out in `docs/PLAN.md`, "Traveller fixes F1 to F5".
+
+### F1: every place in the place pickers
+> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes F1 to F5" section of docs/PLAN.md (owner rulings, then F1). Run /slice for slice F1: every town, village and island in the four countries in the place pickers, offline.
+> **Start.** `git fetch`; `gh pr list --state all`. The F plan's docs PR (`docs/traveller-fixes-plan`) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f1-place-list`.
+> **Reproduce first.** At 375 px, open each `locationSelect` caller listed in F1 and confirm Koh Chang and Koh Mak are absent.
+> **Data.** The owner chose GeoNames on 2026-10-24. Download TH, VN, KH and LA from `download.geonames.org/export/dump/` into a new empty folder in the scratchpad; process them with `python3 -I` from a script kept elsewhere. Measure counts and gzip bytes per feature code before choosing what to keep.
+> **Done when.** The F1 "Done when" in docs/PLAN.md holds, shown in headless Chrome over CDP at 375 px, with file and pack sizes reported before and after; every guard and `jsc -m scripts/validate-jsc.mjs` pass; the PR is open. Then run /handoff.
+> **Out of scope.** Content for the new places, the journey map (F2), automatic location (F3).
+
+### F2 to F5
+> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes F1 to F5" section of docs/PLAN.md. Run /slice for slice F<n>, as written there.
+> **Start.** `git fetch`; `gh pr list --state all`. The slice before it must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`. Reproduce the problem on a rendered screen before changing code.
+> F5 starts by asking the owner to confirm open decision 20.
 
 ### M4b-2: the marketplace redesign, post side
 > Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §3, §8, §9, §16 and §17 (M4, M4b-1 built, and M4b-2). Run /slice for slice M4b-2: the marketplace screens, post side.
-> **Start.** `git fetch`; `gh pr list --state all`. PR #129 (M4b-1) must be merged, and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4b2-market-post`.
+> **Start.** `git fetch`; `gh pr list --state all`. F5 must be merged (owner, 2026-10-24: the traveller fixes come first), and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4b2-market-post`.
 > **Where M4b-1 left the hooks.** The Post button (`.mxh-post` in `js/screens/market-home.js`) opens `postSoonSheet` from `js/screens/market-parts.js`: replace it with the forms. Reuse `listingCard` and `artNode` (`js/market-art.js`) for the live preview, `signInSheet('post', hash)` for a signed-out poster (it returns after sign-in), and `KIND_META`, `CATEGORY_LABEL`, `citySelect` and `CURRENCY_FOR` from `market-parts.js`. Styles go in `css/market.css`. The listing page's ⋯ menu says "My listings, coming in the next update" on the traveller's own listing: link it.
 > **Scope.**
 > 1. Post forms (`#market-new-<kind>`), reached from the home's Post button:
