@@ -1,7 +1,7 @@
 # Handoff — 2026-10-24 (status review and the traveller fixes F1 to F5, documents only)
 
 ## Shipped
-- **Plan for five traveller fixes**, branch `docs/traveller-fixes-plan`, documents only (no version bump). `docs/PLAN.md` gains "Traveller fixes F1 to F5" with the owner's rulings of 2026-10-24 and the code facts behind each fix; the release order puts F1 to F5 before M4b-2.
+- **Plan for five traveller fixes**, branch `docs/traveller-fixes-plan`, [PR #130](https://github.com/SamuelLClemens/Mekonging/pull/130), documents only (no version bump). `docs/PLAN.md` gains "Traveller fixes F1 to F5" with the owner's rulings of 2026-10-24 and the code facts behind each fix; the release order puts F1 to F5 before M4b-2.
   - F1: every town, village and island in the four countries in the place pickers (offline, from GeoNames).
   - F2: Your journey on a world map, every stop editable.
   - F3: location asked once on first open, then used everywhere.
@@ -124,7 +124,7 @@ Order (owner, 2026-10-24): **F1, F2, F3, F4, F5 (the traveller fixes), then M4b-
 
 ### F1: every place in the place pickers
 > Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes F1 to F5" section of docs/PLAN.md (owner rulings, then F1). Run /slice for slice F1: every town, village and island in the four countries in the place pickers, offline.
-> **Start.** `git fetch`; `gh pr list --state all`. The F plan's docs PR (`docs/traveller-fixes-plan`) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f1-place-list`.
+> **Start.** `git fetch`; `gh pr list --state all`. PR #130 (the F plan) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f1-place-list`.
 > **Reproduce first.** At 375 px, open each `locationSelect` caller listed in F1 and confirm Koh Chang and Koh Mak are absent.
 > **Data.** The owner chose GeoNames on 2026-10-24. Download TH, VN, KH and LA from `download.geonames.org/export/dump/` into a new empty folder in the scratchpad; process them with `python3 -I` from a script kept elsewhere. Measure counts and gzip bytes per feature code before choosing what to keep.
 > **Done when.** The F1 "Done when" in docs/PLAN.md holds, shown in headless Chrome over CDP at 375 px, with file and pack sizes reported before and after; every guard and `jsc -m scripts/validate-jsc.mjs` pass; the PR is open. Then run /handoff.
