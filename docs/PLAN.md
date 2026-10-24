@@ -9,7 +9,7 @@
 - M1 (PR #108) and M2 (the Market tab, PR #111, `mk-v0.635.0`) are merged. M3 is next on the exchange side. Its owner actions (`docs/EXCHANGE.md` §15, the M3 rows up to sending the public values) were done on 2026-10-19.
 
 ### Release order (owner, 2026-10-19; updated after M3b; fixes inserted 2026-10-24)
-- **Owner ruling, 2026-10-24: the traveller fixes F1 to F5 (section below) come before M4b-2**, in the order F1, F2, F3, F4, F5. They stack like any releasing slice. The Market's M4b-2, M4c, M5 and D5 tidy then follow as listed.
+- **Owner rulings, 2026-10-24: the traveller fixes and the language work (section below) come before M4b-2**, in the order F1, F2, F3, F4, F5, L1, L2, L3, L4. They stack like any releasing slice. The Market's M4b-2, M4c and M5 then follow, then **L5** (Talk by invite, which reuses M5), then D5 tidy and the rest as listed.
 - Merged on 2026-10-19: D5 Laos (PR #122, `mk-v0.643.0`), M3a (PR #124, `mk-v0.644.0`) and **M3b, accounts and sign-in** (PR #125, `mk-v0.645.0`). M3b's owner checks (migration 001, the RLS test, the Security Advisor, the iPhone sign-ins) are tracked in `docs/HANDOFF.md`.
 - **Owner ruling after M3b: Market first, one slice per session** (`docs/EXCHANGE.md` §16, 2026-10-19). Releasing slices stack, one at a time, each from the merged tip:
   1. **M4a**: listings and search, server side. Built on 2026-10-19; the owner's SQL run passed on 2026-10-23 (314 of 314) and the owner merged it on 2026-10-23 (af2e9fe, `mk-v0.646.0`) ([PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127), `mk-v0.646.0`; `docs/HANDOFF.md`).
@@ -22,14 +22,18 @@
   6. **Bangkok B1 to B8** (below), then **city depth C1 onward** (below, order confirmed by the owner).
 - Q2, the audit driver under `tools/audit-375/` (tools only, no version bump), can run alongside any of these. Q3 to Q8 stack like any releasing slice.
 
-## Traveller fixes F1 to F5 (owner, 2026-10-24)
-The owner listed five fixes "we need to make for sure". Code facts below were measured at 6e5a7cc (`mk-v0.647.0`, the live version). Each slice is one session, run with `/slice`, and stacks on the merged tip of the one before. F2 and F3 use F1's place list.
+## Traveller fixes and language work (owner, 2026-10-24)
+The owner listed five fixes "we need to make for sure", then widened the language one. Code facts below were measured at 6e5a7cc (`mk-v0.647.0`, the live version). Each slice is one session, run with `/slice`, and stacks on the merged tip of the one before. F2 and F3 use F1's place list; L2 uses F5's check; L4 uses L3's list.
 
 ### Owner rulings, 2026-10-24
 - The five fixes come before M4b-2.
 - Place list: an offline list of every town, village and island in the four countries, from GeoNames (CC BY 4.0, credited in the app), stored in the app so it works without signal. Not online search alone, and not a hand-picked list.
 - Location: ask once on first open. After a yes, track silently on every launch and use the fix everywhere. A dismissed or denied request never re-raises the browser dialog; one banner offers it again.
-- Thai: the owner's words were "thai isnt an option for a user that reporting the issues". The reading in F5 is to be confirmed with the owner before F5 starts.
+- Languages (second round, the same day). The owner saw Thai go wrong in Safari on iPhone but did not describe it, and asked instead that every language be checked and made to work, the four host languages first; that every widely spoken local language be added; that Talk end with a map coloured by where each language is spoken; and that Talk let two people converse with the app translating both sides. Rulings:
+  - Machine translation may fill missing interface text in all 29 languages, each entry recorded as machine-made for a later native review. Thai, Vietnamese, Khmer and Lao go first. This overrides rule 2 in `js/data/ui-strings.js` ("an omitted entry is a feature"); F5 rewrites that comment to match.
+  - Local languages with 1 million or more speakers in the four countries are added, with cited speaker counts.
+  - Conversation: a face-to-face mode on one phone first (no server), then a remote chat joined by invite link or code only, after M5.
+  - F5 is now the language check and the host-language fixes. Open decision 20 is closed.
 
 ### F1: every place in the place pickers
 - **Problem.** Koh Chang and Koh Mak are missing. A traveller anywhere in the four countries must be able to pick their place, check its weather and see it.
@@ -76,14 +80,54 @@ The owner listed five fixes "we need to make for sure". Code facts below were me
   - Charts are inline SVG coloured from theme tokens (the `js/market-art.js` pattern), so all 11 skins repaint them. No chart library. Load the `dataviz` skill before the first chart.
 - **Done when.** A seeded post-trip persona (mutate the store in memory through `import('/js/state.js')`) shows every section at 375 px and 1280 px, in light, dark and one dark skin, with 0 overflow, 0 console errors and no body control under 44 px. A traveller with nothing logged sees an honest empty state. `check-contrast` passes on the chart colours, and all guards pass.
 
-### F5: Thai in Talk
-- **Owner report.** "thai isnt an option for a user that reporting the issues".
-- **Reading, to confirm with the owner before starting.** On the Thai phrasebook, Talk's "translate from" list leaves Thai out on purpose (`js/screens/phrasebook.js:1137`, `srcOptions`), and Talk translates one way only, from the traveller's language into Thai. A Thai speaker therefore cannot type or speak a reply.
-- **Scope, if confirmed.**
-  - A reply direction in Talk: one swap control lets the local speaker type or speak Thai (`th-TH` speech recognition), and the traveller reads and hears their own language. `translate(text, target, source)` in `js/translate.js` already accepts any pair. Keep the same-language guard.
-  - Vietnamese, Khmer and Lao get the same control, since it is one code path.
-  - Measure the Thai interface coverage: the Thai dictionary holds about 369 entries. Count untranslated visible strings on the ten most used screens with the app in Thai, and report them. Add no machine-made Thai to the dictionary without the owner (open decision 6: no native speaker is available).
-- **Done when.** On Talk with the Thai phrasebook, a Thai sentence typed in reply mode returns the traveller's language and plays it aloud, and swapping back works. 375 px. All guards pass.
+### F5: the language check, and the four host languages made complete
+- **Problem.** The owner saw Thai go wrong in Safari on iPhone (not described) and asked that everything be checked in every language, the host languages first.
+- **Measured.** The interface translates finished screens by exact English match (`js/i18n.js`). Each of the 29 dictionaries holds 369 keys (`check-ui-strings`), while the app shows thousands of distinct strings. While online, an optional pass (`autoTranslateTree`, `js/i18n.js:529`, gated by `mtEnabled()`) machine-translates what the dictionary lacks and caches it per language. Talk translates one way only, from the traveller's language into the phrasebook's; the phrasebook's own language is left out of the "translate from" list (`js/screens/phrasebook.js:1137`). This machine has desktop Safari 18.6 but no Xcode app, so no iOS Simulator.
+- **Scope.**
+  - A repeatable check under `tools/lang-check/` that loads every route in each of the 29 languages and records: visible strings still in English (leaving out place names, data text and the traveller's own content); text cut off or overflowing; missing glyphs (boxes); line breaking in Thai, Lao and Khmer, which have no spaces between words; right-to-left layout for Hebrew, Arabic, Persian and Urdu; and what the online pass changed. One command prints a table per language and route. Numbers come from headless Chrome over CDP; Thai, Lao and Khmer rendering is also checked in desktop Safari (WebKit).
+  - Find the owner's Thai problem in that table, reproduce it and fix it.
+  - Harvest every interface string the check found. Give each one a key in all 29 files: a value of `null` means "not translated yet, show English". `js/i18n.js` treats `null` as English, and `check-ui-strings` counts the nulls per language while keeping key parity.
+  - Fill Thai, Vietnamese, Khmer and Lao completely. The translations are machine-made by the session itself (no new service, key or cost), checked by translating a sample of 50 per language back into English, and recorded in a review register (`scripts/ui-strings-review.json`: language, key, machine-made, date). Strings on the Emergency, first-aid and medical screens are listed first in the register.
+  - The language picker marks a language with machine-made entries as "machine-translated, under review".
+  - Talk: confirm that translation, speech input and read-aloud work in each host language in Safari, and report any that do not.
+  - If the harvest is too large for one session, split F5 by screen group and say where it stopped.
+- **Done when.** The check's table shows 0 untranslated interface strings for th, vi, km and lo on every route, and no clipping or missing glyphs in those four. The owner's Thai problem is shown fixed. The owner confirms on their iPhone in Safari, using a short checklist the slice writes. All guards pass.
+
+### L1: Talk face to face, on one phone
+- **Problem.** Two people who share no language talk, and the app translates both sides.
+- **Measured.** `translate(text, target, source)` (`js/translate.js:291`) takes any pair. Talk already has speech input (stopped by the traveller with a Done button) and read-aloud (`js/tts.js`); each language in `LANGS` carries a `speech` locale.
+- **Scope.**
+  - A conversation mode in Talk. The screen splits in two, with the far half turned 180° for the person opposite. Each half has its own language (by default the traveller's and the phrasebook's), a microphone and a text box.
+  - Each turn is translated into the other half's language, shown there and, if chosen, read aloud. Every sound registers with `js/audio-control.js`.
+  - A running transcript is kept on the phone only and can be cleared.
+  - It needs a connection. Offline, it says so and offers the phrasebook. Where a phone has no speech recognition for a language, that half offers typing only, and says so.
+- **Done when.** In Safari, and on the owner's iPhone, a four-turn exchange between English and Thai works both ways by typing, and by voice where the phone supports it. Both halves are readable at 375 px in portrait. 0 console errors. All guards pass.
+
+### L2: the other 25 interface languages filled
+- **Scope.** Drive F5's `null` entries to 0 for the other 25 languages, in the same way: machine-made, recorded in the review register, with the safety screens first. Check right-to-left layout for Hebrew, Arabic, Persian and Urdu. Split by language group if one session cannot finish.
+- **Done when.** The F5 check shows 0 untranslated interface strings in every language on every route, with no clipping, overflow or missing glyphs. All guards pass.
+
+### L3: local languages with 1 million or more speakers, and the language map
+- **Scope.**
+  - A cited list of the local languages with 1 million or more speakers in the four countries, each with its speaker count and the provinces where it is spoken, each backed by a real source URL. Better to leave a language out than cite an aggregator's unsourced number. Candidates to check: Isan, Northern Thai, Southern Thai, Pattani Malay, Northern Khmer, Teochew, Tay, Tai Dam and Tai Don, Muong, Nung and Hmong. Khmer Krom is Khmer and is already covered.
+  - The language map, as the last card on Talk: an inline SVG of the four countries by province, built from Natural Earth admin-1 boundaries (public domain; the app's country outlines in `js/data/geo.js` are already Natural Earth-derived). Each province is coloured by its main local language, and smaller language areas show as dots or hatching. It has a legend, and tapping a language opens its phrasebook where one exists. It works offline.
+  - Colours come from theme tokens so all 11 skins repaint the map, and they must pass `check-contrast`. Load the `dataviz` skill first: a dozen categorical colours need care, and grouping by language family is one way to manage that.
+- **Done when.** The map renders at 375 px in light, dark and one dark skin. Every colour is labelled, and every language and region is cited. 0 console errors. All guards pass.
+
+### L4: phrasebooks for the local languages
+- **Scope.** Every L3 language without a phrasebook gets one of the essentials, in the existing format (`js/data/phrasebook.<code>.js`, registered in `js/data/phrasebooks.js`); Thai, Vietnamese, Khmer, Lao, Chinese, Malay, Burmese and Hmong already have one. Each phrase is in the language's script with a romanisation, and is cited. Translation services mostly do not cover these languages, so entries come from cited, published phrase lists, not machine translation. A language with no citable source stays out, and the handoff says which. Audio only where a voice exists. Each phrasebook is marked unreviewed.
+- **Done when.** Each new phrasebook opens from Talk and from the map, renders at 375 px with every entry cited, and all guards pass.
+
+### L5: Talk with someone far away, by invite (after M5)
+- **Problem.** Two people in different countries converse, each in their own language.
+- **Scope.**
+  - One person starts a conversation in Talk and shares a link or a code. The other opens it and signs in with a Market account. There is no way to find or message a stranger.
+  - Each message is stored once, in its sender's language, and translated on each reader's phone into theirs. There is no server-side translation and no new paid service. Voice input and read-aloud work as in L1.
+  - Block and report come from M5. Conversations are deleted after a period the owner sets at the start of L5 (recommended: 30 days).
+  - Reuse M5's live client and decide at M5's end whether these are M5 threads of a new kind or a table of their own. Read the Supabase Free Realtime limits at the start.
+  - Talk's translation depends on Google's free web endpoint, which can rate-limit or change without notice. Say so in the PR, and show a plain failure state rather than a wrong message.
+  - Legal, for Omer Hanegbi or Omri Siri (open decision 8): the privacy policy must say that the server stores conversation text.
+- **Done when.** The owner on an iPhone and a tester elsewhere exchange messages in two languages, each reading their own, delivered in under 5 seconds without a reload. Block stops both sides. The RLS test shows that a non-participant reads nothing. All guards pass.
 
 ## Data inventory (measured 2026-10-12 at fc4c9dc)
 Method: jsc over `loadAllCountries()`, plus `check-place-fields.py` and `check-sources.py`.
