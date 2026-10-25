@@ -26,8 +26,9 @@ WHAT IS KEPT, per country:
     traveller villages without a figure come from (Railay Beach, Nong Khiaw);
   * in Laos only (EVERY_VILLAGE), every other populated place too: GeoNames gives a population to
     108 of its 13,388 villages, so the rule above kept 294 places for the whole country. The village
-    (ban) is the administrative unit there, and all of them come to about 100 KB after gzip (owner,
-    2026-10-25, open decision 21).
+    (ban) is the administrative unit there, and all of them come to 182 KB after gzip, under the cap
+    (owner, 2026-10-25, open decision 21). Measured the same way, every village would be 213 KB in
+    Cambodia (fits), 478 KB in Vietnam and 1,474 KB in Thailand (do not).
 Left out: sections of towns (PPLX), historical, abandoned and destroyed places (PPLH, PPLQ, PPLW,
 PPLCH), and, outside Laos, villages with no population and no article.
 
