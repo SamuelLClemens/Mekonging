@@ -118,6 +118,15 @@ count the RLS test expects). A route endpoint that is not a place city must be n
 `ENDPOINTS` or `OUTSIDE` table, or the script stops. `--check` exits 1 when either output is stale.
 A migration runs once, so after 001 a new city reaches the database only through a new migration.
 
+`build-gazetteer.py <download-dir>` writes the offline place list behind every place picker
+(traveller fix F1), `js/data/gazetteer.{th,vi,kh,la}.js`, from GeoNames (CC BY 4.0, credited on Help).
+Download `{TH,VN,KH,LA}.zip` from `download.geonames.org/export/dump/` and the same four from its
+`alternatenames/` folder into a new empty folder, and run the script with `python3 -I`. It keeps
+islands, administrative seats, places with a population, populated subdistricts and communes,
+and places with a Wikipedia or Wikidata entry (owner, 2026-10-25), and fails if a country passes
+250 KB after gzip. `--report` prints the counts and sizes without writing. Then bump the version and
+run `build-sw-manifest.py --write`.
+
 `fetch-identify-photos.py` fills the identify guide's photos. `fetch-place-photos.py` fills place
 photos from each place's own Wikipedia article (plan slice D3), one country per session:
 `--suggest` lists candidate articles with their distance from the place, a person records the

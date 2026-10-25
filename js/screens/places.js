@@ -91,8 +91,8 @@ function openLocationPicker() {
   sheet.append(h('div', { class: 'sheet-grip', 'aria-hidden': 'true' }));
   sheet.append(h('h3', {}, '📍 Choose your location'));
   sheet.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Sets where the map, distances and “near me” match — works offline, no GPS needed.'));
-  const cur = focusSpot(getActiveCountry()).spot;
-  sheet.append(field('Your location', locationSelect(spotKey(cur), (key) => {
+  const f = focusSpot(getActiveCountry());
+  sheet.append(field('Your location', locationSelect(spotKey(f.place || f.spot), (key) => {
     const s = spotForKey(key);
     if (s) { close(); setFocusSpot(s); render(); }
   })));
@@ -144,7 +144,7 @@ export function placesScreen(arg) {
       cityEssentials(getActiveCountry(), scopeCity, scopeSlug),
     ]));
   }
-  let anchor, anchorLabel, usingGps = false;
+  let anchor, anchorLabel, usingGps = false, pinPlace = null;
   if (scopeCity && cSpot) {
     anchor = { lat: cSpot.lat, lng: cSpot.lng };
     anchorLabel = scopeCity;
@@ -152,8 +152,12 @@ export function placesScreen(arg) {
     const fsAnchor = focusSpot(getActiveCountry());
     const gpsFix = getLastFix();
     usingGps = !!gpsFix && fsAnchor.source === 'gps';
-    anchor = usingGps ? gpsFix : { lat: fsAnchor.spot.lat, lng: fsAnchor.spot.lng };
-    anchorLabel = scopeCity || fsAnchor.spot.city;
+    // A place picked from the offline place list (F1) anchors the distances itself, so the list
+    // reads "nearest to Ko Mak", not nearest to the curated city beside it.
+    const at = fsAnchor.place || fsAnchor.spot;
+    anchor = usingGps ? gpsFix : { lat: at.lat, lng: at.lng };
+    if (fsAnchor.source === 'focus') pinPlace = at;
+    anchorLabel = scopeCity || at.city;
   }
 
   // The living map sits at the very top of the section (below any city context) and is the
@@ -1023,6 +1027,7 @@ export function placesScreen(arg) {
       // Reconciled like borders, not gated on === true like the other opt-in layers above:
       // weather now defaults to visible, so an explicit "off" must be honoured too.
       c.setWeather(mapLayersPrefsP.weather !== false);
+      if (pinPlace) c.setPlacePin(pinPlace);
       // The map is constructed inside a <details>, so its container can still be settling its
       // real (340px) height when the controller first resolves. Drawing markers then leaves
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out

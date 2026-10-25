@@ -271,7 +271,10 @@ export function isWet(code) {
   return (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
 }
 
-export function spotKey(s) { return `${s.country}:${s.city}`; }
+// A place from the offline place list (`gz`, js/place-search.js) carries its coordinates in the
+// key: two GeoNames places can share a name in one country (there are three Ko Maks in Thailand),
+// and the key also names its saved forecast.
+export function spotKey(s) { return s.gz ? `${s.country}:${s.city}@${s.lat},${s.lng}` : `${s.country}:${s.city}`; }
 // HUBS ONLY, deliberately. Every caller of this is a bulk or browse operation — the forecast
 // map's dots, refreshMany's batched fetch, the manual location picker, nearestSpot() — and
 // each one would degrade if it saw all 165 entries: 100+ overlapping labels on the map, a

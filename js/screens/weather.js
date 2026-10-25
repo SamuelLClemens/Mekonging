@@ -10,9 +10,10 @@ import {
   wxTempU, wxWindU, wxLenU, wxPresU, fmtTemp, fmtWind, fmtPrecip, fmtSnow, fmtHeight, fmtDist, fmtPres,
   waveDesc, airBlock, uvLineNode,
 } from '../render-utils.js';
-import { field, online, screenHint } from '../ui-widgets.js';
+import { field, online, screenHint, spotForKey } from '../ui-widgets.js';
+import { findPlaces, loadPlaceList, placeListReady, placeLabel, placeSub, rememberPlace } from '../place-search.js';
 import {
-  WEATHER_SPOTS, wmo, spotKey, spotsForCountry, allSpotsForCountry, defaultSpot, getCachedWeather, getCachedMany, getCachedMarine,
+  wmo, spotKey, spotsForCountry, allSpotsForCountry, defaultSpot, getCachedWeather, getCachedMany, getCachedMarine,
   maybeRefreshWeather, maybeRefreshMany, maybeRefreshMarine, WX_MODELS, WX_MODEL_LABELS, sourceDay, sourceHour,
 } from '../weather.js';
 import { getCountry } from '../data/regions.js';
@@ -499,64 +500,23 @@ function planCityPanels() {
 // The search box under "Look up another city". It was a native <datalist> that acted only on an
 // exact full name, and only once the value was committed: "chiang", "saigon" or "Ko Samui" found
 // nothing and said nothing. It now lists matches as you type, the way the app's own Search does,
-// and forgives the usual differences: accents (Huế), spacing (Dalat, Chiangmai), Ko or Koh, a
-// name in brackets (Xayaboury), and the other names below.
-const CITY_AKA = {
-  'vi:Ho Chi Minh City': ['Saigon', 'HCMC'],
-  'th:Bangkok': ['Krung Thep'],
-  'kh:Sihanoukville': ['Kampong Som'],
-  'vi:Ha Long': ['Halong Bay'],
-};
-function foldCity(s) {
-  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd')
-    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\bkoh\b/g, 'ko').trim();
-}
-let cityIndex = null;
-function findCities(q) {
-  const fq = foldCity(q);
-  if (!fq) return [];
-  const tq = fq.replace(/ /g, '');
-  if (!cityIndex) {
-    cityIndex = WEATHER_SPOTS.map((s, i) => {
-      const inBrackets = (s.city.match(/\(([^)]+)\)/) || [])[1];
-      const names = [s.city.replace(/\(.*?\)/g, ''), inBrackets, ...(CITY_AKA[spotKey(s)] || [])]
-        .filter(Boolean).map(foldCity);
-      return { s, i, names, tight: names.map((n) => n.replace(/ /g, '')), country: foldCity((getCountry(s.country) || {}).name) };
-    });
-  }
-  const hits = [];
-  for (const c of cityIndex) {
-    // Lower is better, and at each level the city's own name beats its other names, so
-    // "kratie" puts Kratie ahead of Sambor (Kratie) and Enter takes the one meant.
-    const own = c.tight[0], other = c.tight.slice(1);
-    let rank = -1;
-    if (own === tq) rank = 0;
-    else if (other.includes(tq)) rank = 1;
-    else if (own.startsWith(tq)) rank = 2;
-    else if (other.some((t) => t.startsWith(tq))) rank = 3;
-    else if (c.names.some((n) => n.split(' ').some((w) => w.startsWith(fq)))) rank = 4;
-    else if (tq.length >= 3 && c.tight.some((t) => t.includes(tq))) rank = 5;
-    else if (fq.length >= 3 && c.country.startsWith(fq)) rank = 6;
-    if (rank >= 0) hits.push({ rank, s: c.s, i: c.i });
-  }
-  // Ties go to the hubs, then to the list's own order, which names each country's main
-  // cities first (so "laos" leads with Vientiane, not alphabetically with Luang Prabang).
-  hits.sort((a, b) => a.rank - b.rank || (b.s.hub ? 1 : 0) - (a.s.hub ? 1 : 0) || a.i - b.i);
-  return hits.map((x) => x.s);
-}
+// and forgives the usual differences (accents, spacing, Ko or Koh, other names). The matching
+// moved to js/place-search.js for traveller fix F1, which added every town, village and island
+// in the offline place list after the curated cities, so an island's own forecast is one search away.
 function cityFinder(onPick) {
   const SHOW = 5;
   const hitsBox = h('div', { class: 'wx-find-results' });
   const note = h('p', { class: 'muted wx-find-note', role: 'status' });
   const input = h('input', {
-    type: 'search', class: 'search', placeholder: 'e.g. Hoi An, Siem Reap, Pai', enterkeyhint: 'search',
+    type: 'search', class: 'search', placeholder: 'e.g. Hoi An, Siem Reap, Koh Mak', enterkeyhint: 'search',
     autocomplete: 'off', autocorrect: 'off', spellcheck: 'false', oninput: () => list(),
+    onfocus: () => { if (!placeListReady()) loadPlaceList(); },
   });
-  const pick = (s) => { input.value = ''; list(); input.blur(); onPick(s); };
+  const pick = (s) => { rememberPlace(s); input.value = ''; list(); input.blur(); onPick(s); };
   // Enter, or the Search key on a phone's keyboard, takes the top match.
   const form = h('form', {
     role: 'search', 'data-no-units': '',
-    onsubmit: (e) => { e.preventDefault(); const top = findCities(input.value)[0]; if (top) pick(top); },
+    onsubmit: (e) => { e.preventDefault(); const top = findPlaces(input.value, 1).results[0]; if (top) pick(top.spot); },
   }, [field('Search any city', input), hitsBox, note]);
   const card = h('div', { class: 'card' }, form);
   function list() {
@@ -564,16 +524,22 @@ function cityFinder(onPick) {
     note.textContent = '';
     const q = input.value.trim();
     if (!q) return;
-    const hits = findCities(q);
-    hits.slice(0, SHOW).forEach((s) => {
-      const c = getCountry(s.country) || {};
-      hitsBox.append(h('button', { type: 'button', class: 'btn ghost block srch wx-find-hit', onclick: () => pick(s) }, [
-        h('span', { 'data-no-i18n': '' }, c.flag ? `${c.flag} ${s.city}` : s.city),
-        h('span', { class: 'muted wx-find-cc' }, c.name || s.country),
+    const { results, more } = findPlaces(q, SHOW);
+    results.forEach(({ spot: s }) => {
+      hitsBox.append(h('button', { type: 'button', class: 'btn ghost block srch wx-find-hit loc-hit', onclick: () => pick(s) }, [
+        h('span', { class: 'loc-hit-name', 'data-no-i18n': '', 'data-no-mt': '' }, placeLabel(s)),
+        h('span', { class: 'muted wx-find-cc' }, placeSub(s)),
       ]));
     });
-    if (!hits.length) note.textContent = `No match for “${q}” among the ${WEATHER_SPOTS.length} cities in Thailand, Vietnam, Cambodia and Laos.`;
-    else if (hits.length > SHOW) note.textContent = `${hits.length - SHOW} more, keep typing`;
+    if (!placeListReady()) {
+      note.textContent = 'Loading every town, village and island…';
+      loadPlaceList().then((ok) => {
+        if (!form.isConnected || input.value.trim() !== q) return;
+        if (ok) list();
+        else note.textContent = 'Only the main cities are on this phone until you are next online.';
+      });
+    } else if (!results.length) note.textContent = `No match for “${q}” in Thailand, Vietnam, Cambodia and Laos.`;
+    else if (more) note.textContent = `${more} more, keep typing`;
     retranslate(form);
     reveal();
   }
@@ -603,9 +569,12 @@ export function weatherScreen(country) {
   // every render (e.g. a city-chip click, which calls render()) would overwrite the user's
   // choice back to the focus city. That was the "weather buttons do nothing" bug.
   const curHash = location.hash || '#weather';
-  if (country && weatherSeededHash !== curHash) { seedWeatherKey(spotKey(focusSpot(country).spot)); weatherSeededHash = curHash; }
-  if (!currentWeatherKey()) seedWeatherKey(spotKey(focusSpot().spot));
-  let spot = WEATHER_SPOTS.find((s) => spotKey(s) === currentWeatherKey()) || defaultSpot('th');
+  // A focused place from the offline place list (F1) opens on its own forecast.
+  const focusKey = (f) => spotKey(f.place || f.spot);
+  if (country && weatherSeededHash !== curHash) { seedWeatherKey(focusKey(focusSpot(country))); weatherSeededHash = curHash; }
+  if (!currentWeatherKey()) seedWeatherKey(focusKey(focusSpot()));
+  let spot = spotForKey(currentWeatherKey());
+  if (!spot) { spot = defaultSpot('th'); seedWeatherKey(spotKey(spot)); }
 
   // Units switch where they are printed — tap °C, km/h, mm, m or hPa anywhere below (tapUnits,
   // above). How to use the screen lives behind the ⓘ, not in front of the forecast.
@@ -808,7 +777,7 @@ export function weatherScreen(country) {
   }
   function changeSpot(key) {
     seedWeatherKey(key);
-    spot = WEATHER_SPOTS.find((s) => spotKey(s) === currentWeatherKey()) || spot;
+    spot = spotForKey(currentWeatherKey()) || spot;
     // Switching (unlike the map's own country) can jump to a city in a different country —
     // the map must then redraw for THAT country, and its cities' current temps need their
     // own fetch (the cached "many" batch was fetched for the old country's cities).
@@ -853,7 +822,7 @@ export function weatherScreen(country) {
     // anchor rather than a hub, get a chip. Hubs lead, so they win the room where chips collide.
     const selKey = currentWeatherKey();
     const hubs = spotsForCountry(curCountry);
-    const sel = WEATHER_SPOTS.find((s) => spotKey(s) === selKey);
+    const sel = spotForKey(selKey);
     const labelled = (sel && sel.country === curCountry && !sel.hub) ? hubs.concat([sel]) : hubs;
     const labelKeys = new Set(labelled.map(spotKey));
     const cities = labelled.concat(allSpotsForCountry(curCountry).filter((s) => !labelKeys.has(spotKey(s))));

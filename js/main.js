@@ -112,7 +112,7 @@ import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode, nearestRouteNode, canonicalRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, maybeRefreshRates, convert, currencyFlag, currencySymbol } from './currency.js';
-import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany, recNowIso, setForecastKeep } from './weather.js';
+import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, allSpotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany, recNowIso, setForecastKeep } from './weather.js';
 import {
   COUNTRIES, INTERESTS, COLLECTION_PRESETS,
   getCountry, allPlaces, getPlace,
@@ -819,7 +819,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.647.0';
+export const APP_VERSION = 'mk-v0.648.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1248,7 +1248,8 @@ export function locationFixCard(opts = {}) {
   }
   card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' },
     'Not right, or GPS unavailable? Set your city instead — used for weather and distances until GPS updates it:'));
-  card.append(locationSelect(spotKey(focusSpot().spot), (key) => {
+  const cur = focusSpot();
+  card.append(locationSelect(spotKey(cur.place || cur.spot), (key) => {
     const s = spotForKey(key);
     if (s) { setFocusSpot(s); if (onChange) onChange(); }
   }));
@@ -1704,7 +1705,8 @@ export function contextNow() {
     // No GPS: fall back to the city the traveller is focused on (last scoped or planned),
     // so "right now" reflects where they are actually looking — never a blank capital default.
     const fs = focusCitySpot();
-    if (fs) { near = { spot: fs, km: 0, displayCity: fs.city }; fix = { lat: fs.lat, lng: fs.lng }; approx = true; }
+    const pl = focusPlace(fs);
+    if (fs) { near = { spot: fs, km: 0, displayCity: pl ? pl.city : fs.city, place: pl }; fix = pl ? { lat: pl.lat, lng: pl.lng } : { lat: fs.lat, lng: fs.lng }; approx = true; }
   }
   if (!near) {
     // Fresh profile — no GPS and nothing focused yet: seed the country's default city so the
@@ -1721,7 +1723,7 @@ export function contextNow() {
   const part = partOfDay(hour);
   const country = near ? near.spot.country : getActiveCountry();
   let wx = null, raining = false;
-  if (near) { const rec = getCachedWeather(spotKey(near.spot)); if (rec && rec.current) { wx = rec.current; raining = isWet(wx.code); } }
+  if (near) { const rec = getCachedWeather(spotKey(near.place || near.spot)); if (rec && rec.current) { wx = rec.current; raining = isWet(wx.code); } }
   const wet = (WET_MONTHS[country] || []).includes(rn.month);
   const dayName = rn.at.toLocaleDateString(dateLocale(), { weekday: 'long', timeZone: 'UTC' });
   return { fix, near, approx, seeded, hasGps: !!gps, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
@@ -1832,7 +1834,7 @@ function forecastKeepSpots() {
 }
 setForecastKeep(() => {
   const keys = forecastKeepSpots().map(spotKey);
-  try { keys.push(spotKey(focusSpot().spot)); } catch { /* nothing focused yet */ }
+  try { const f = focusSpot(); keys.push(spotKey(f.spot)); if (f.place) keys.push(spotKey(f.place)); } catch { /* nothing focused yet */ }
   return keys;
 });
 export function prefetchForecasts() {
@@ -1881,12 +1883,36 @@ function focusCitySpot() {
   const fk = store.profile.prefs.focusSpotKey;
   return fk ? (WEATHER_SPOTS.find((s) => spotKey(s) === fk) || null) : null;
 }
+// A place picked from the offline place list (traveller fix F1, js/place-search.js) is not an
+// anchor: the screens that look content up by city name (Nearby, routes, the city guide, events)
+// only know WEATHER_SPOTS. So the focus stays the NEAREST ANCHOR in the place's country, and the
+// place itself is stored beside it (prefs.focusPlace, tagged with that anchor's key). focusSpot()
+// returns it as `place`, and its name as `displayCity`; the weather, the map pin and the distance
+// anchor read the place. Picking a curated city, or a GPS fix choosing one, clears it.
+function nearestAnchor(place) {
+  let best = null, bestKm = Infinity;
+  for (const s of allSpotsForCountry(place.country)) {
+    const km = haversineKm(place, s);
+    if (km != null && km < bestKm) { bestKm = km; best = s; }
+  }
+  return best || defaultSpot(place.country);
+}
+function focusPlace(anchor) {
+  const p = store.profile.prefs.focusPlace;
+  return p && anchor && p.anchor === spotKey(anchor) ? p : null;
+}
 export function setFocusSpot(spot) {
   if (!spot) return;
-  const k = spotKey(spot);
-  if (store.profile.prefs.focusSpotKey === k && getActiveCountry() === spot.country) return;
-  store.profile.prefs.focusSpotKey = k;
-  if (spot.country) setActiveCountry(spot.country);
+  const prefs = store.profile.prefs;
+  const anchor = spot.gz ? nearestAnchor(spot) : spot;
+  const k = spotKey(anchor);
+  const place = spot.gz ? { gz: true, country: spot.country, city: spot.city, lat: spot.lat, lng: spot.lng,
+    local: spot.local || '', prov: spot.prov || '', kind: spot.kind || '', anchor: k } : null;
+  const same = (prefs.focusPlace ? spotKey(prefs.focusPlace) : '') === (place ? spotKey(place) : '');
+  if (prefs.focusSpotKey === k && getActiveCountry() === anchor.country && same) return;
+  prefs.focusSpotKey = k;
+  prefs.focusPlace = place;
+  if (anchor.country) setActiveCountry(anchor.country);
   save();
 }
 // F-05 — DISPLAY LABEL ONLY, never the anchor. A `satelliteOf` entry (a small river-island/
@@ -1930,12 +1956,18 @@ export function focusSpot(explicitCountry) {
     if (near && near.spot && near.spot.country === explicitCountry) {
       return { spot: near.spot, source: 'gps', km: near.km, displayCity: satelliteDisplayCity(gps, near) };
     }
-    if (focus && focus.country === explicitCountry) return { spot: focus, source: 'focus', displayCity: focus.city };
+    if (focus && focus.country === explicitCountry) {
+      const place = focusPlace(focus);
+      return { spot: focus, source: 'focus', displayCity: place ? place.city : focus.city, place };
+    }
     const ds = defaultSpot(explicitCountry);
     return { spot: ds, source: 'default', displayCity: ds.city };
   }
   if (near && near.spot) return { spot: near.spot, source: 'gps', km: near.km, displayCity: satelliteDisplayCity(gps, near) };
-  if (focus) return { spot: focus, source: 'focus', displayCity: focus.city };
+  if (focus) {
+    const place = focusPlace(focus);
+    return { spot: focus, source: 'focus', displayCity: place ? place.city : focus.city, place };
+  }
   const ds = defaultSpot(getActiveCountry() || 'th');
   return { spot: ds, source: 'default', displayCity: ds.city };
 }
@@ -2561,7 +2593,8 @@ export function knownForRow(tags) {
 // prices all match — no GPS required. Used inline on the hub and full-screen at #setcity.
 export function whereAmICard(cc) {
   const c = getCountry(cc);
-  const cur = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
+  const f = focusSpot(cc && getCountry(cc) ? cc : undefined);
+  const cur = f.place || f.spot;
   return h('div', { class: 'card' }, [
     h('h2', {}, '📍 Where are you?'),
     h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, `Set your city so distances, weather and “near me” match where you are${c ? ' in ' + c.name : ''}. Works offline — no GPS needed.`),
@@ -7447,7 +7480,7 @@ const WX_SCREENS = ['#weather', '#today', '#home'];
 function syncWeather(force = false) {
   if (!online()) return;
   let spot = null;
-  try { spot = focusSpot().spot; } catch { return; }
+  try { const f = focusSpot(); spot = f.place || f.spot; } catch { return; }
   if (!spot) return;
   maybeRefreshWeather(spot, force).then((rec) => {
     if (!rec) return;                        // already current — nothing repainted, nothing fetched

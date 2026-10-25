@@ -37,8 +37,10 @@ function setCityScreen(cc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Set your location', cc && getCountry(cc) ? `#country-${cc}` : '#home'));
   wrap.append(screenHint('Choose where you are so distances, weather, “near me” and local prices all match — even with no signal or GPS off.'));
-  // One dropdown, defaulting to your current (or last-set) location, grouped by country.
-  const cur = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
+  // One search box, opening on your current (or last-set) location: a curated city or any town,
+  // village or island in the offline place list (traveller fix F1).
+  const f = focusSpot(cc && getCountry(cc) ? cc : undefined);
+  const cur = f.place || f.spot;
   wrap.append(h('div', { class: 'card' }, [
     field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s); go(`#country-${s.country}`); } })),
     h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, `Currently: ${cur.city}. Works offline — no GPS needed.`),

@@ -175,9 +175,13 @@ export function mapScreen() {
   // region-wide maxBounds this map already sets still lets them pinch/scroll out to see
   // every country, this just decides where it starts.
   const focus = focusSpot();
+  // A place picked from the offline place list (F1) is the centre. Any place the traveller picked
+  // by hand gets a pin (a GPS fix already has its own dot; the untouched default gets none).
+  const at = focus.place || focus.spot;
+  const picked = focus.source === 'focus';
   import('../map.js').then((m) => m.initMap(canvas, {
-    center: { lng: focus.spot.lng, lat: focus.spot.lat },
-    zoom: 9.5,
+    center: { lng: at.lng, lat: at.lat },
+    zoom: focus.place ? 11 : 9.5,
     onLocate: (fix) => setLastFix(fix),
     // Only consumed while the walking card is actively waiting for a destination, so a normal
     // tap on the map keeps its existing meaning.
@@ -196,6 +200,7 @@ export function mapScreen() {
     // traveller's real persisted layer prefs now that the controller exists.
     c.setSatellite(satOn);
     c.setBorders(mapLayersPrefs.borders !== false);
+    if (picked) c.setPlacePin(at);
     if (mapLayersPrefs.hospitals === true) c.setHospitals(true);
     if (mapLayersPrefs.atms === true) c.setAtms(true);
     if (mapLayersPrefs.buses === true) c.setBus(true);

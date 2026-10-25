@@ -1,25 +1,33 @@
-# Handoff — 2026-10-24 (status review, traveller fixes F1 to F5 and language work L1 to L5, documents only)
+# Handoff — 2026-10-25 (slice F1, every town, village and island in the place pickers)
 
 ## Shipped
-- **Plan for the traveller fixes and the language work**, documents only (no version bump): the fixes in [PR #130](https://github.com/SamuelLClemens/Mekonging/pull/130) (merged 2026-10-24, f1b3c30), the language work in [PR #131](https://github.com/SamuelLClemens/Mekonging/pull/131) (branch `docs/language-work-plan`). `docs/PLAN.md` gains "Traveller fixes and language work", with the owner's rulings of 2026-10-24 and the code facts behind each slice. The release order puts F1 to F5 and L1 to L4 before M4b-2, and L5 after M5.
-  - F1: every town, village and island in the four countries in the place pickers (offline, from GeoNames).
-  - F2: Your journey on a world map, every stop editable.
-  - F3: location asked once on first open, then used everywhere.
-  - F4: a post-trip recap screen with charts.
-  - F5: a check of every route in all 29 languages, and Thai, Vietnamese, Khmer and Lao made complete (machine-made, recorded for review).
-  - L1: Talk face to face on one phone, translating both sides.
-  - L2: the other 25 interface languages filled the same way.
-  - L3: local languages with 1 million or more speakers (cited), and a language map at the end of Talk.
-  - L4: phrasebooks for those local languages, from cited sources.
-  - L5 (after M5): Talk with someone far away, joined by invite link or code.
-- M4b-1 ([PR #129](https://github.com/SamuelLClemens/Mekonging/pull/129)) was merged by the owner on 2026-10-23 (6e5a7cc) and is live.
+- **F1**, branch `feat/f1-place-list`, [PR #132](https://github.com/SamuelLClemens/Mekonging/pull/132), `mk-v0.648.0`, stacked on #131 (merged 2026-10-24, 1a1c8ef). Screenshots are on the orphan branch `assets/f1-shots` (0cda8bc), safe to delete after the PR merges.
+  - The five place pickers (Home's location sheet, Explore's "Where are you?", `#setcity-<cc>`, the Places sheet, the journey's "Add a stop you missed") are one search-as-you-type box: `locationSelect()` in `js/ui-widgets.js`, at most six matches, `onChange(key)` unchanged.
+  - `js/place-search.js` searches the 165 curated cities first and then the offline place list: accents, Ko or Koh, word prefixes, one letter of tolerance on words of 5 letters or more, and Thai, Khmer or Lao script. It also took over the Weather finder's matching ("Look up another city" now finds the list too).
+  - `scripts/build-gazetteer.py` writes `js/data/gazetteer.{th,vi,kh,la}.js` from GeoNames (CC BY 4.0, credited on Help): 13,204 places (th 9,092, vi 1,626, kh 2,192, la 294). Precached by `sw.js`.
+  - The place set is the owner's ruling of 2026-10-25, "only places with a population", as complete as possible without a long list. It holds every island, administrative seat and place with a population, the subdistricts and communes with a population, and the 425 populated places with a Wikipedia or Wikidata entry.
+  - A list place is never in `WEATHER_SPOTS`. `setFocusSpot()` pairs it with its nearest anchor and stores it as `prefs.focusPlace`, and `focusSpot()` returns it as `place` (its name is `displayCity`). Four things read the place itself: Home's and Weather's forecast, the forecast keep-set, the distance anchor on Places, and the pin `setPlacePin` draws on the Map and Places maps (any place picked by hand). `spotKey()` adds coordinates for a list place.
 
 ## Verified
-- `git fetch`, then `gh pr list --state all`: no PR was open before this branch; #129 merged at 2026-10-23 23:47 UTC.
-- The live `https://www.mekonging.com/sw.js` reads `CACHE_VERSION = 'mk-v0.647.0'`, the same as `origin/feat/scaffold-bangkok-slice` (6e5a7cc).
-- Every code fact in the F and L sections was read from 6e5a7cc with `git show` and `git grep`. No problem was reproduced on a rendered screen in this session, including the owner's undescribed Thai problem: each slice reproduces its problem first.
-- GeoNames dump sizes are HTTP `Content-Length` values (HEAD requests, nothing downloaded): TH 9.8 MB, VN 2.0 MB, KH 0.8 MB, LA 0.7 MB.
-- `check-ui-strings`: 29 languages, 369 keys each. The online translation pass is `autoTranslateTree` (`js/i18n.js:529`). This machine has desktop Safari 18.6 but no Xcode app (`xcode-select -p` gives the Command Line Tools), so there is no iOS Simulator; iPhone checks fall to the owner.
+Headless Chrome over CDP, 375 x 812 at DPR 2, fresh profiles on `127.0.0.1`, `document.hidden` false on every load. The driver is `~/Library/Caches/mk-f1/drive.py` (`before`, `after`, `warm`, `offline`) with `cdp.py`; screenshots are under `~/Library/Caches/mk-f1/`.
+- Reproduced on the base branch (worktree since removed): all five pickers were `<select>`s of 45 cities, with no Koh Chang or Koh Mak.
+- After, 25 of 25 states pass:
+  - **Pickers.** Each of the five pickers, searched for "Koh Chang" and for "Koh Mak", leads with the curated Koh Chang and with Ko Mak (Island, Trat). There is 0 overflow and 0 picker controls under 44 px.
+  - **Twelve places.** Each was picked in the Places sheet. Each showed a 16-day forecast named after the place on `#weather` and a titled pin inside the map on `#map`, with 0 console errors:
+    - Koh Chang, Ko Mak, Railay Beach and Ko Kut;
+    - Côn Sơn and Bạch Long Vĩ;
+    - Koh Rong Sanloem (typed "Samloem"), Kampong Khleang and Kaoh Tonsay;
+    - Don Khon (typed "Don Khone"), Don Det Tok and Ban Hatxao.
+  - **Home and Places on Ko Mak.** Home reads "Ko Mak · Sun, Oct 25" with Ko Mak's 28°C. Places reads "Near Ko Mak", and its 4 Nearby places are sorted by distance (Koh Mak's beach card, Koh Kood, two Koh Chang places).
+  - **1280 px.** The picker and the forecast show 0 overflow.
+- **Offline.** After one online visit, the four list files and `js/place-search.js` were in the worker's cache. Then the server was stopped (curl: HTTP 000), and both the location sheet and the Places sheet still found Ko Mak, with 0 errors.
+- **Search speed** in jsc over 13,204 places: median 13 ms, worst 36 ms; the list loads in 66 ms.
+- **Sizes.**
+  - `PRECACHE` grew from 214 files, 11,661 KB raw and 3,373 KB gzip to 219 files, 12,487 KB and 3,652 KB.
+  - The manifest grew from 263 files, 20,150 KB raw and 6,496 KB gzip to 268 files, 20,976 KB and 6,775 KB.
+  - `PACK_BYTES` is unchanged.
+  - New files, raw and gzip: th 588 and 195 KB, vi 76 and 28 KB, kh 132 and 45 KB, la 16 and 6 KB, `place-search.js` 9 and 4 KB.
+- **Guards.** Every CI guard passes (js-syntax, imports, lazy-data, preloads, ui-strings, month-arrays, contrast, skins, spacing, place-dupes, undefined, net-gates, sources, secrets and market-sql). So do place-fields, port-themes and cache-version against `origin/feat/scaffold-bangkok-slice`. `jsc -m scripts/validate-jsc.mjs` gives 19,297 of 19,297. CI on #132 was pending when this was written.
 
 ## Owner checks for M3b (carried; the first two are done)
 - [x] Migration 001 run, repaired by 001b (see the earlier handoff in git, `3f4d32f`), `001_rls.sql` 65 of 65 PASS.
@@ -29,6 +37,19 @@
 - [ ] From the first real email: whether `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has (the input takes 6 to 10).
 
 ## Not done / known issues
+- New in F1:
+  - **Laos and Vietnam are thin under the owner's rule.** GeoNames gives a population to 108 of 13,388 Lao villages and to 28 of 10,579 Vietnamese communes, so the list keeps 294 Lao places and 1,626 Vietnamese ones. Every Lao village would be 91 KB compressed; every Vietnamese populated place, 275 KB. See open decision 21.
+  - The journey screen shows "Add a stop you missed" only once it has a stop (its empty state returns early). The F1 run seeded a Bangkok stop. This is F2's ground.
+  - The curated "Trat" anchor (11.82, 102.47) is 1.6 km from Ko Mak and 47.4 km from Trat town (GeoNames 12.2436, 102.5151), so Ko Mak's anchor is "Trat". See decision 22.
+  - Found on the way, identical on the base branch:
+    - The forecast calendar inside its closed `<details>` lays out 68 px columns to 495 px at 375 px.
+    - `check-offline-boot` fails: `js/market-routes.js` and `js/market-link.js` are on the eager path but not in `PRECACHE`. The guard is not in CI; see decision 23.
+    - The `#map` `getSource` race (Q1) showed once in four runs, on a fast hop from Places to the journey.
+  - A GPS fix still outranks a place picked by hand, as before; F3 owns location.
+  - The Today, Arrival and transport screens still read the anchor, not the picked place.
+  - The new strings are English only.
+  - A picked place is saved through the store's debounced save: a CDP `Browser.close` without a reload lost it in a probe. Real launches flush on `pagehide`.
+  - The preview entry `mekong-f1` (8961) is in the parent folder's shared `.claude/launch.json`, uncommitted there like the others. `mekong-f1-before` (8962) points at a removed worktree.
 - Carried from M4b-1:
   - Proven in fixture mode only. Production still answers `market_closed` (`market_open` is false) and holds no real listing.
   - The driver is not in the repo: `~/Library/Caches/mk-m4b1/drive.py` and `cdp.py` (stdlib), with `signin_return.py`. Run with `MX_PORT=<port>`; `MX_THEME` and `MX_WIDTH` narrow it.
@@ -114,7 +135,7 @@
 
 
 ## Open decisions (need the user)
-Closed on 2026-10-24: 20 (the owner widened the Thai report into the language work F5 and L1 to L5). Closed on 2026-10-19: 9, 11 and 12 (earlier that day), 15 to 18 (D5 tidy after M5; the city-depth order; M5 right after M4c; visitors may browse, which gates on M9), and during M4a: "kush" and "gun" allowed in names, no native speaker available, the closed beta stays closed to visitors.
+Closed on 2026-10-25: which places F1 keeps (the owner: places with a population, as complete as possible without a long list). Closed on 2026-10-24: 20 (the owner widened the Thai report into the language work F5 and L1 to L5). Closed on 2026-10-19: 9, 11 and 12 (earlier that day), 15 to 18 (D5 tidy after M5; the city-depth order; M5 right after M4c; visitors may browse, which gates on M9), and during M4a: "kush" and "gun" allowed in names, no native speaker available, the closed beta stays closed to visitors.
 
 The numbers below keep their old values.
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
@@ -123,20 +144,31 @@ The numbers below keep their old values.
 13. Relabel the 46 leftover "Lao National Tourism Administration" entries (and 4 "Ministry of Information, Culture and Tourism") on tourismlaos.org as "Tourism Laos"? This is data text only, and it bumps the version. Recommended: yes, inside D5 tidy.
 14. Add a coordinates check slice? D5 Laos checked 2 of 185 Lao pins, and both were wrong. Recommended: yes, one country per session, starting with Laos's remote sites, flagging any record more than 2 km from its OSM object.
 19. Install `pglast` (a PostgreSQL parser for Python, from PyPI, a few MB) so a future session can syntax-check SQL and PL/pgSQL before the owner pastes it? It parses only; it runs no database. Recommended: yes. It would have caught the type of mistake this slice's reviewer found by reading.
+21. Widen the place list for Laos to every village (13,388 places, 91 KB compressed, under the 250 KB cap)? The picker shows at most six matches at a time, whatever the list holds, so a longer list does not mean more scrolling, which was the concern behind the ruling. Recommended: yes for Laos, where villages (ban) are the administrative unit and GeoNames gives almost none a population. Leave Vietnam (275 KB for every populated place, over the cap) until a traveller reports a missing place. It is one rule in `scripts/build-gazetteer.py`.
+22. The curated "Trat" anchor sits on Ko Mak, 47.4 km from Trat town. Recommended: check it inside the coordinates slice (decision 14), together with the records filed under city "Trat", before moving or renaming it, because a rename changes which records Nearby shows.
+23. Add `js/market-routes.js` and `js/market-link.js` to `PRECACHE` and `check-offline-boot` to CI? Recommended: yes, riding along with F2 (two lines in `sw.js`, one in `guards.yml` and the scripts README).
 
 ## Next session prompts
-Order (owner, 2026-10-24): **F1, F2, F3, F4, F5, L1, L2, L3, L4 (the traveller fixes and the language work), then M4b-2**, then M4c, M5, then L5, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them. The F and L slices are written out in `docs/PLAN.md`, "Traveller fixes and language work".
+Order (owner, 2026-10-24): **F1 (built, PR #132), F2, F3, F4, F5, L1, L2, L3, L4 (the traveller fixes and the language work), then M4b-2**, then M4c, M5, then L5, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them. The F and L slices are written out in `docs/PLAN.md`, "Traveller fixes and language work".
 
-### F1: every place in the place pickers
-> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md (owner rulings, then F1). Run /slice for slice F1: every town, village and island in the four countries in the place pickers, offline.
-> **Start.** `git fetch`; `gh pr list --state all`. PR #131 (the language plan) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f1-place-list`.
-> **Reproduce first.** At 375 px, open each `locationSelect` caller listed in F1 and confirm Koh Chang and Koh Mak are absent.
-> **Data.** The owner chose GeoNames on 2026-10-24. Download TH, VN, KH and LA from `download.geonames.org/export/dump/` into a new empty folder in the scratchpad; process them with `python3 -I` from a script kept elsewhere. Measure counts and gzip bytes per feature code before choosing what to keep.
-> **Done when.** The F1 "Done when" in docs/PLAN.md holds, shown in headless Chrome over CDP at 375 px, with file and pack sizes reported before and after; every guard and `jsc -m scripts/validate-jsc.mjs` pass; the PR is open. Then run /handoff.
-> **Out of scope.** Content for the new places, the journey map (F2), automatic location (F3).
+### F2: Your journey, the whole world, fully editable (next)
+> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md (owner rulings, then F2). Run /slice for slice F2: Your journey on a world map, every stop editable.
+> **Start.** `git fetch`; `gh pr list --state all`. PR #132 (F1) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f2-journey-world`. Reproduce first: at 375 px the journey map is fenced to the region, and a stop from a journal entry has no edit control.
+> **What F1 left for F2.**
+> - "Add a stop you missed" already uses F1's picker. `spotForKey(key)` returns a list place `{ gz: true, country, city, lat, lng, local, prov, kind }`, and `addTrailStop()` takes its `lat`, `lng`, `city` and `country` as they are.
+> - The journey's empty state returns before that button exists. Offer it there too.
+> - `setPlacePin(spot)` on the `initMap` controller (`js/map.js`) draws one titled pin. The search box is `locationSelect()`, and the matching is `findPlaces()` in `js/place-search.js`.
+> - Decision 23 (two `PRECACHE` lines and the offline-boot guard in CI) is recommended to ride along.
+> **Pitfalls.**
+> - CDP clip coordinates are page coordinates: after scrolling, capture from `scrollY`.
+> - `Browser.close` fires no `pagehide`, so reload before closing a profile that a later run reuses.
+> - `mount()` folds sections: open the `<details>` around a control before measuring it.
+> - The F1 driver is `~/Library/Caches/mk-f1/drive.py`. Copy its pattern.
+> **Done when.** The F2 "Done when" in docs/PLAN.md holds in headless Chrome over CDP at 375 px, light and dark; every guard and `jsc -m scripts/validate-jsc.mjs` pass; the PR is open. Then run /handoff.
+> **Out of scope.** The share-journey file format beyond carrying the new stops, automatic location (F3), the recap (F4).
 
-### F2 to F5, then L1 to L4 (and L5 after M5)
-> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <F2 to F5 or L1 to L5>, as written there.
+### F3 to F5, then L1 to L4 (and L5 after M5)
+> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <F3 to F5 or L1 to L5>, as written there.
 > **Start.** `git fetch`; `gh pr list --state all`. The slice before it must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`. Reproduce the problem on a rendered screen before changing code.
 > F5, L1 and L5 end with a check by the owner on their iPhone in Safari, from a short checklist the slice writes. L5 starts only after M5 has merged.
 

@@ -6,8 +6,9 @@
 import { h } from './util.js';
 import { store, save } from './state.js';
 import { speak, stop as stopSpeak } from './tts.js';
-import { WEATHER_SPOTS, spotKey, spotsForCountry } from './weather.js';
-import { COUNTRIES } from './data/regions.js';
+import { WEATHER_SPOTS, spotKey } from './weather.js';
+import { findPlaces, loadPlaceList, placeListReady, placeForKey, rememberPlace, placeLabel, placeSub } from './place-search.js';
+import { retranslate } from './i18n.js';
 import { CURRENCY_CODES, currencyFlag, currencySymbol } from './currency.js';
 
 // ---- Read-aloud reader ------------------------------------------------------
@@ -315,25 +316,68 @@ export function selectEl(options, current, onchange, ariaLabel) {
     opts.map(([val, lbl]) => h('option', { value: val, selected: val === current ? '' : null }, lbl)));
 }
 
-export function spotForKey(key) { return WEATHER_SPOTS.find((s) => spotKey(s) === key) || null; }
+// A curated city by key, or a place picked from the offline place list (js/place-search.js).
+export function spotForKey(key) { return WEATHER_SPOTS.find((s) => spotKey(s) === key) || placeForKey(key); }
 
-// A single location dropdown (cities grouped by country) that defaults to the given
-// spotKey — used everywhere a traveller picks "where they are" instead of a wall of
-// chips. Pass the resolved focus/weather key so it always opens on the current location.
+// The place picker every "where are you" control uses: type a few letters and pick from the best
+// matches, the curated cities first, then every town, village and island in the offline place list
+// (traveller fix F1). It replaced a <select> of the 46 hub cities, which had no Koh Chang, no
+// Koh Mak and no village. At most PICK_SHOW matches show at once, so nobody scrolls a long list
+// (owner, 2026-10-25); Enter, or a phone keyboard's Search key, takes the top one. It keeps the
+// old contract: onChange(key), where spotForKey(key) gives the spot back.
 //
-// `data-no-mt` on each option: a city name is a proper noun, not prose, and the optional
+// `data-no-mt` on each name: a city name is a proper noun, not prose, and the optional
 // machine-translation pass (js/i18n.js) cannot tell the difference — the audit caught "Pai"
 // coming back as the German for "plasminogen activator inhibitors" (a PAI acronym collision)
 // and "Mae Hong Son" coming back as "Hong Kong".
+const PICK_SHOW = 6;
 export function locationSelect(currentKey, onChange) {
-  const sel = h('select', { class: 'loc-select', 'aria-label': 'Choose your location', onchange: (e) => onChange(e.target.value) });
-  COUNTRIES.forEach((c) => {
-    const spots = spotsForCountry(c.id);
-    if (!spots.length) return;
-    sel.append(h('optgroup', { label: `${c.flag} ${c.name}` },
-      spots.map((s) => h('option', { value: spotKey(s), selected: spotKey(s) === currentKey ? '' : null, 'data-no-mt': '' }, s.city))));
+  const cur = spotForKey(currentKey);
+  const now = h('p', { class: 'loc-now', 'data-no-mt': '' }, cur ? `📍 ${placeLabel(cur)}` : '');
+  const hits = h('div', { class: 'wx-find-results' });
+  const note = h('p', { class: 'muted wx-find-note', role: 'status' });
+  const input = h('input', {
+    type: 'search', class: 'search loc-search', placeholder: 'Town, village or island', enterkeyhint: 'search',
+    autocomplete: 'off', autocorrect: 'off', spellcheck: 'false', oninput: () => list(),
+    // Start loading the place list as soon as the box is touched, so the first letters find it.
+    onfocus: () => { if (!placeListReady()) loadPlaceList(); },
   });
-  return sel;
+  let top = null;
+  const choose = (r) => {
+    rememberPlace(r.spot);
+    now.textContent = `📍 ${placeLabel(r.spot)}`;
+    input.value = '';
+    list();
+    onChange(r.key);
+  };
+  const form = h('form', {
+    class: 'loc-pick', role: 'search', 'data-no-units': '',
+    onsubmit: (e) => { e.preventDefault(); if (top) choose(top); },
+  }, [now, input, hits, note]);
+  function list() {
+    hits.textContent = '';
+    note.textContent = '';
+    top = null;
+    const q = input.value.trim();
+    if (!q) return;
+    const { results, more } = findPlaces(q, PICK_SHOW);
+    top = results[0] || null;
+    results.forEach((r) => hits.append(h('button', { type: 'button', class: 'btn ghost block srch wx-find-hit loc-hit', onclick: () => choose(r) }, [
+      h('span', { class: 'loc-hit-name', 'data-no-mt': '', 'data-no-i18n': '' }, placeLabel(r.spot)),
+      h('span', { class: 'muted wx-find-cc' }, placeSub(r.spot)),
+    ])));
+    if (!placeListReady()) {
+      note.textContent = 'Loading every town, village and island…';
+      loadPlaceList().then((ok) => {
+        if (!form.isConnected || input.value.trim() !== q) return;
+        if (ok) list();
+        else note.textContent = 'Only the main cities are on this phone until you are next online.';
+      });
+    } else if (!results.length) note.textContent = `No match for “${q}”.`;
+    else if (more) note.textContent = `${more} more, keep typing`;
+    retranslate(form);
+  }
+  return form;
 }
 
 // ---- NETWORK MODE ----------------------------------------------------------
