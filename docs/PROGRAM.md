@@ -103,7 +103,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | M8: generate the VAPID key pair; the private half stored as a secret only | M8 | open |
 | Native-speaker review of "Market" (decision 6; least sure: Korean, Polish, Turkish, Filipino, Chinese, Japanese) and the Thai, Vietnamese, Khmer and Lao block terms | none; quality | open; no native speaker available (owner, 2026-10-19) |
 | F3: report whether `Mekonging Xcode/` declares a location usage description | none; F3 reports it | for F3 (read only, no edit) |
-| **New:** approve removing the spent worktrees and branches listed in 4.6 | none | open |
+| **New (decision 25):** approve removing the spent worktrees and branches listed in 4.6 | none | open; recommended yes, after #135 merges |
 
 ### 4.3 Open decisions (numbers as in `docs/HANDOFF.md`)
 
