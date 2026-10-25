@@ -1036,6 +1036,21 @@ export async function initMap(containerEl, opts = {}) {
     el.style.cssText = 'font-size:18px;width:30px;height:30px;line-height:30px;text-align:center;background:#FFF6E2;border:2px solid #C0431A;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
     stayMarker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([coords.lng, coords.lat]).addTo(map);
   }
+  // The place the traveller picked by hand (traveller fix F1): a town, village or island from the
+  // offline place list has no curated marker at all, so it gets this pin, styled by .place-pin in
+  // css/style.css. The Map and Places screens pin a picked curated city the same way.
+  let placePin = null;
+  function setPlacePin(p) {
+    if (!p) { if (placePin) { placePin.remove(); placePin = null; } return; }
+    const el = placePin ? placePin.getElement() : document.createElement('div');
+    el.className = 'place-pin';
+    el.textContent = '📍';
+    el.title = p.city;
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', p.city);
+    if (placePin) placePin.setLngLat([p.lng, p.lat]);
+    else placePin = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([p.lng, p.lat]).addTo(map);
+  }
   // Nearest known city to a point (within ~0.8°), else null — used for a default
   // saved-area name.
   function nearestCity(coords) {
@@ -2249,6 +2264,8 @@ export async function initMap(containerEl, opts = {}) {
     setFerries,
     // My-stay home marker: set/move/clear live, and centre on it.
     setMyStay: (coords) => placeStayMarker(coords),
+    // The picked place's pin (F1): pass a { city, lat, lng } spot, or null to clear.
+    setPlacePin,
     goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
     // Draw / clear the "way back" guide line from `from` to `to` (pass nulls to clear).
     setWayback: (from, to) => setWayback(from, to),

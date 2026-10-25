@@ -3140,16 +3140,27 @@ html[data-theme="dark"] .place-qrow { background: rgba(255,255,255,0.045); box-s
   padding: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-2); min-height: 44px;
 }
 
-/* F-08: the location <select> (locationSelect(), js/ui-widgets.js — onboarding's "Choose your
-   location" GPS fallback, and locationFixCard()'s manual pick everywhere else) shipped with no
-   context class styling, same as the language/translate selects above once did: a ~147×17px
-   native box, well under the 44px WCAG tap-target minimum. Identical treatment. */
-.loc-select {
+/* The place picker (locationSelect(), js/ui-widgets.js — onboarding's "Choose your location"
+   GPS fallback, and every manual pick of where you are): a search box with at most six matches
+   under it (traveller fix F1). It replaced the F-08 .loc-select, a native <select>, and keeps that
+   box's 44px minimum. The matches reuse the Weather finder's .wx-find-* rules; .loc-hit lets a
+   long name with its local script wrap at 375px instead of pushing the province off the edge. */
+.loc-pick .search {
   display: block; width: 100%; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
   border: 1px solid var(--line); background: var(--card); border-radius: var(--r-md);
   padding: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-2); min-height: 44px;
 }
-.loc-select:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+.loc-pick .search:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+.loc-now { margin: 0 0 var(--sp-2); font-weight: 700; color: var(--ink); }
+.loc-now:empty { display: none; }
+/* Two classes, so they beat .btn.block's centring once a long name wraps onto its own line. */
+.btn.loc-hit { flex-wrap: wrap; justify-content: flex-start; min-height: 44px; }
+.loc-hit-name { min-width: 0; overflow-wrap: anywhere; text-align: start; }
+/* The picked place's own pin on the maps (setPlacePin in js/map.js). */
+.place-pin {
+  font-size: var(--fs-lg); width: 34px; height: 34px; line-height: 30px; text-align: center;
+  background: var(--card); border: 2px solid var(--orange); border-radius: 50%; cursor: default;
+}
 .translate-card select:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
 
 /* --- right-to-left ---------------------------------------------------------------------- */

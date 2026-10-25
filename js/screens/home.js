@@ -183,9 +183,11 @@ export function homeScreen() {
 
   // On the first online visit, pull the relevant city's forecast once (respects offline &
   // consent, de-duplicated) so the outlook and the "right now" forecast line populate.
+  // A place picked from the offline place list (F1) gets its own forecast, not its anchor's.
+  const lead = focusSpot(getCountry(leadCC) ? leadCC : undefined);
   const phaseSpot = onGround
-    ? (ctx.near ? ctx.near.spot : focus.spot)
-    : focusSpot(getCountry(leadCC) ? leadCC : undefined).spot;
+    ? (ctx.near ? (ctx.near.place || ctx.near.spot) : (focus.place || focus.spot))
+    : (lead.place || lead.spot);
   ensureHomeWeather(phaseSpot);
   // Planning also needs the forecast for each PLANNED stop, not just the focus city, or the
   // per-stop outlook below falls back to seasonal normals for dates that are well inside the
@@ -458,7 +460,7 @@ function quickAccessRow(phase, stored, ctx) {
     if (temp) {
       wxIc = (wmo(ctx.wx.code) || [])[1] || '🌤';
       let rainNote = '';
-      const spot = ctx.near ? ctx.near.spot : null;
+      const spot = ctx.near ? (ctx.near.place || ctx.near.spot) : null;
       if (spot) {
         const rec = getCachedWeather(spotKey(spot));
         const today = rec && Array.isArray(rec.daily) ? rec.daily[0] : null;

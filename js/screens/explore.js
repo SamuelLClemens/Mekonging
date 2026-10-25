@@ -242,7 +242,9 @@ export function exploreScreen(argCc) {
   if (fcity) {
     const here = allPlaces({ country: cc }).filter((p) => citySlug(p.city || '') === fslug).length;
     wrap.append(h('div', { class: 'card access-focus' }, [
-      h('h2', {}, `📍 You’re around ${fcity}`),
+      // The heading names a place picked from the offline place list (F1); the count and the
+      // "Places in" button stay on its anchor city, which is what the records are filed under.
+      h('h2', {}, `📍 You’re around ${fs.displayCity || fcity}`),
       h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' },
         here ? `${here} place${here > 1 ? 's' : ''} here — start local, then widen out when you want.` : 'Start with what’s around you, then widen out.'),
       here ? h('button', { class: 'btn block', onclick: () => go(`#places-${cc}-${fslug}`) }, `Places in ${fcity}`) : null,
