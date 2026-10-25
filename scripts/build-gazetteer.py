@@ -23,12 +23,16 @@ WHAT IS KEPT, per country:
   * every subdistrict or commune (ADM3) that GeoNames gives a population: Thailand's tambon and
     Cambodia's communes, which cover each country evenly where the villages carry no figure;
   * every populated place that GeoNames links to Wikipedia or Wikidata ("notable"), which is where
-    traveller villages without a figure come from (Railay Beach, Nong Khiaw).
+    traveller villages without a figure come from (Railay Beach, Nong Khiaw);
+  * in Laos only (EVERY_VILLAGE), every other populated place too: GeoNames gives a population to
+    108 of its 13,388 villages, so the rule above kept 294 places for the whole country. The village
+    (ban) is the administrative unit there, and all of them come to about 100 KB after gzip (owner,
+    2026-10-25, open decision 21).
 Left out: sections of towns (PPLX), historical, abandoned and destroyed places (PPLH, PPLQ, PPLW,
-PPLCH), and villages with no population and no article.
+PPLCH), and, outside Laos, villages with no population and no article.
 
 ORDER IS RANK. Rows are written best first (towns by population, islands, villages by
-population, notable villages, then subdistricts and communes by population; within one of
+population, notable villages, Laos's other villages, then subdistricts and communes by population; within one of
 those, a place with a Wikipedia or Wikidata entry, then one with a province), so the picker ranks
 equal matches by file order and never needs the population itself. That is what puts Trat's
 Ko Mak ahead of the two other islands of the name.
@@ -58,7 +62,8 @@ SEATS = {'PPLC', 'PPLA', 'PPLA2', 'PPLA3', 'PPLA4'}
 POPULATED = SEATS | {'PPL', 'PPLL', 'PPLS', 'PPLF', 'PPLR', 'PPLG'}
 ISLANDS = {'ISL', 'ISLS', 'ISLET'}
 # Kind codes the app reads (js/gazetteer.js KIND_LABEL): town, island, village, subdistrict, commune.
-TIER = {'t': 0, 'i': 1, 'v': 2, 'n': 3, 's': 4}
+TIER = {'t': 0, 'i': 1, 'v': 2, 'n': 3, 'w': 3.5, 's': 4}   # 'n' notable and 'w' every-village rows ship as 'v'
+EVERY_VILLAGE = {'LA'}
 PROVINCE_PREFIX = re.compile(r'^(Changwat|Tỉnh|Thành phố|Khouèng)\s+')
 PROVINCE_NOTE = re.compile(r'\s*\([^)]*\)$')   # "Ho Chi Minh City (HCMC)" -> "Ho Chi Minh City"
 SIZE_CAP = 250 * 1024   # the plan's per-country cap, after gzip
@@ -130,6 +135,8 @@ def build(src, cc_up, cc, lang):
             kind = 't' if pop >= 5000 else 'v'
         elif cls == 'P' and code in POPULATED and notable(r):
             kind = 'n'
+        elif cls == 'P' and code in POPULATED and cc_up in EVERY_VILLAGE:
+            kind = 'w'
         elif cls == 'A' and code == 'ADM3' and pop > 0:
             kind = 's'
         else:
@@ -155,7 +162,7 @@ def build(src, cc_up, cc, lang):
     prov_index = {c: i for i, c in enumerate(prov_codes)}
     lines = []
     for p in out:
-        kind = 'v' if p['kind'] == 'n' else p['kind']
+        kind = 'v' if p['kind'] in ('n', 'w') else p['kind']
         if kind == 's' and cc != 'th':
             kind = 'm'
         fields = [p['name'], p['local'], f"{p['lat']:.5f}".rstrip('0').rstrip('.'),
