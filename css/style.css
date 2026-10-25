@@ -1827,6 +1827,26 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
    38px left-indent roughly matches .jr-row-n's 26px badge plus its row gap, so the chips line
    up under the label rather than the number. */
 .jr-row-actions { display: flex; gap: var(--sp-2); padding: 0 0 var(--sp-2) 38px; }
+/* Every stop has these now, so the sub-row is plain chips. The stop form (js/screens/journey-edit.js) adds a
+   stop or edits one; an edit sits in the stops list, so it has no card of its own. */
+.jr-form { margin-top: var(--sp-2); }
+.jr-form-nested { margin: var(--sp-2) 0; padding: var(--sp-3) 0 0; border-top: 1px solid var(--line); }
+.jr-form h3 { margin: 0 0 var(--sp-2); }
+.jr-form-note { margin: 0 0 var(--sp-2); }
+/* The picker prints the chosen place itself; the form says where the stop is once, in .jr-form-where. */
+.jr-form .loc-now { display: none; }
+.jr-form-where { margin: 0 0 var(--sp-2); font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+.jr-form-where:empty, .jr-form-status:empty, .jr-form-err:empty { display: none; }
+.jr-form-status, .jr-form-err { margin: var(--sp-1) 0 0; }
+.jr-form-actions { margin-top: var(--sp-2); }
+/* While a form waits for a tap on the journey map: a banner above it, a frame and a crosshair on it. */
+.jr-pick-hint { margin: 0 0 var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md);
+  background: var(--teal-deep); color: var(--on-fill); font-size: var(--fs-sm); font-weight: 700; }
+.jr-pick-hint[hidden] { display: none; }
+.jr-map-live.is-picking { outline: 3px solid var(--orange); outline-offset: 2px; cursor: crosshair; }
+.jr-map-live.is-picking .maplibregl-canvas { cursor: crosshair; }
+/* A pin under the finger (the blue "you are here" disc, a numbered stop) would swallow the tap. */
+.jr-map-live.is-picking .maplibregl-marker { pointer-events: none; }
 
 .journey-wrap { display: flex; justify-content: center; margin-bottom: var(--sp-3); }
 .journey-svg { width: 100%; max-width: 360px; background: var(--sunburst), var(--card); border-radius: var(--r-lg); }

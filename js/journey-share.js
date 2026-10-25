@@ -25,6 +25,7 @@ import { COUNTRIES, getCountry, getPlace } from './data/regions.js';
 import { WEATHER_SPOTS } from './weather.js';
 import { getBlob } from './idb.js';
 import { myVisits } from './visits.js';
+import { trailPoints } from './trail.js';
 
 // What a journey can contain. Everything defaults ON except spending, which people rarely
 // mean to hand to a wider circle even when they are happy to share the trip itself.
@@ -93,6 +94,11 @@ export function journeyPoints(include = DEFAULT_INCLUDE, journalIds = null) {
     (store.trip.stops || []).forEach((s) => {
       const c = stopCoords(s);
       if (c) pts.push({ lat: c.lat, lng: c.lng, label: s.title || '', date: s.date || '', kind: 'stop' });
+    });
+    // A stop the traveller added by hand on the journey screen (js/trail.js, `manual`) was placed on
+    // purpose, so it travels with the stops, wherever in the world it is. The automatic pins do not.
+    trailPoints().forEach((p) => {
+      if (p.manual) pts.push({ lat: p.lat, lng: p.lng, label: p.city || '', date: p.first || '', kind: 'stop' });
     });
   }
   pts.sort((a, b) => (a.date || '') < (b.date || '') ? -1 : (a.date || '') > (b.date || '') ? 1 : 0);

@@ -73,6 +73,26 @@ The owner listed five fixes "we need to make for sure", then widened the languag
 - **Out of scope.** Landmarks (T3 in `docs/PROGRAM.md`), Vietnam (T13).
 
 ### F2: Your journey, the whole world, fully editable
+- **Built** 2026-10-26 ([PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136), `mk-v0.650.0`). Proof: headless Chrome over CDP at 375 px, light and dark, `document.hidden` false,
+  driver `~/Library/Caches/mk-f2/drive.py`. Before: the map's bounds were `[92, 2, 115, 27.5]` (a jump to Singapore landed at
+  latitude 3.65) and 1 of 3 stops had an Edit control (Bangkok, from the trail; Chiang Mai from the plan and Hanoi from a
+  journal entry had none). After: no bounds (floor at zoom 1), 3 of 3 stops have Edit and Remove, and 26 of 26 checks pass in
+  each theme (the empty state: 4 of 4).
+  - **Three ways to place a stop** (`js/screens/journey-edit.js`, one form for adding and for moving): the F1 picker; a pin
+    dropped by a real tap on the map (a banner and a frame show while it waits, and the markers let the tap through); "I am
+    here" (one reading from the phone, the app's last fix if the phone refuses). Outside the four countries the traveller types
+    the name; inside, a name is offered only for an exact town (within 6 km of a place, or 15 km of a hub), never a far guess.
+  - **Overrides** (`js/trail.js`, `profile.trail.over`, `js/state.js` version 17): a journal entry's or trip stop's stop is
+    renamed, re-dated, moved or hidden by a record keyed `entry:<id>` or `trip:<id>`; `journeyStops()` reads it. The journal
+    entry and the trip plan are byte for byte unchanged (checked). A trail stop is rewritten in place, as before. "Bring back
+    removed stops" clears the hidden flags.
+  - **Empty state** keeps the map and the add form. The share-journey route also carries the stops the traveller added by hand
+    (`manual`), under the existing "stops" box; automatic pins still never go.
+  - **Decision 23** rode along: `js/market-routes.js` and `js/market-link.js` in `PRECACHE`; `check-offline-boot` in CI and the
+    scripts README.
+  - **Basemap outside the region** (measured, zooms 1 to 9): online, the Esri imagery is worldwide: 75 tiles loaded across 18
+    views (Singapore, Koh Mak, London) and none failed. Offline with every external host unresolvable, 0 of 124 requested tiles
+    loaded and the map is bare sea: the self-hosted land geometry covers the four countries only, so at Singapore it draws nothing from zoom 5 and at London nothing at any zoom. See `docs/PROGRAM.md` 4.4.
 - **Problem.** "My journey" must be fully editable, and its map must cover the world so a traveller can tag where they are from anywhere.
 - **Measured.** `journeyScreen` (`js/screens/journal.js:762`) calls `initMap` (`journal.js:961`) without `worldBounds`, so the map is fenced to `REGION_BOUNDS` [[92, 2], [115, 27.5]] (`js/map.js:555`, applied at `map.js:901`). "Add a stop you missed" (`journal.js:1095`) offers only `WEATHER_SPOTS`. Edit and delete appear only on stops with a `trail.js` component (`journal.js:1044`); stops that come from journal entries, the trip plan or saved places cannot be edited on this screen.
 - **Scope.**

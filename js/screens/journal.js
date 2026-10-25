@@ -30,20 +30,22 @@ import {
 import { getActiveCountry, setLiveCleanup, getLiveCleanup } from '../app-state.js';
 import { h } from '../util.js';
 import { fmtTemp } from '../render-utils.js';
-import { field, confirmAction, locationSelect, spotForKey, openModal, collapsibleCard } from '../ui-widgets.js';
+import { field, confirmAction, openModal, collapsibleCard, online } from '../ui-widgets.js';
 import { getCountry, getPlace } from '../data/regions.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { getBlob, putBlob, delBlob } from '../idb.js';
 import {
   trailPoints, trailStats, trailEnabled, setTrailEnabled, clearTrail,
-  addTrailStop, updateTrailStops, deleteTrailStops,
+  addTrailStop, updateTrailStops, journeyOverride, editJourneyStop, removeJourneyStop,
+  hasHiddenStops, restoreHiddenStops,
 } from '../trail.js';
+import { stopForm } from './journey-edit.js';
 import { WEATHER_SPOTS } from '../weather.js';
 import { dateLocale } from '../i18n.js';
 import { isRouteNode, directLeg } from '../journey.js';
 import {
   go, mount, topbar, render, focusSpot, chipIcon, setBlobThumb, nearestSpotGlobal, homeFold,
-  entryPhotoKeys, ensureRouteGraph, ownTitle,
+  entryPhotoKeys, ensureRouteGraph, ownTitle, whereAmI, countriesNearFix,
 } from '../main.js';
 
 export function journalDispatch(arg) {
@@ -591,7 +593,7 @@ function journeyStops() {
     for (const s of stops) { const d = jkm(coords, s); if (d < bestKm) { bestKm = d; best = s; } }
     if (best && bestKm < NEAR_KM) return best;
     const st = { lat: coords.lat, lng: coords.lng, label: '', first: '', last: '', cc: '',
-      entries: [], places: [], auto: false, manual: false, arriveMode: '', _trailIds: [], ...seed };
+      entries: [], places: [], auto: false, manual: false, arriveMode: '', _trailIds: [], _srcKeys: [], ...seed };
     stops.push(st);
     return st;
   };
@@ -600,6 +602,8 @@ function journeyStops() {
     if (!st.first || date < st.first) st.first = date;
     if (!st.last || date > st.last) st.last = date;
   };
+  // Where a source sits once the traveller has moved it on this screen (js/trail.js, journeyOverride).
+  const placed = (ov, c) => ({ lat: ov.lat !== undefined ? ov.lat : c.lat, lng: ov.lng !== undefined ? ov.lng : c.lng });
 
   trailPoints().forEach((p) => {
     const st = add(p, { label: p.city || '', cc: p.cc || '', auto: true });
@@ -612,12 +616,19 @@ function journeyStops() {
     stamp(st, p.first); stamp(st, p.last);
   });
 
+  // A journal entry and a trip stop are read, never rewritten: a rename, a new date, a move or a removal made
+  // on this screen is a journey override keyed by the source, and the entry or stop reads as written.
   journalEntries().forEach((e) => {
     if (!e.coords || typeof e.coords.lat !== 'number') return;
-    const st = add(e.coords, { label: e.place || e.title || '' });
-    if (!st.label) st.label = e.place || e.title || '';
+    const key = `entry:${e.id}`, ov = journeyOverride(key);
+    if (ov.hidden) return;
+    const name = ov.city || e.place || e.title || '';
+    const st = add(placed(ov, e.coords), { label: name });
+    if (!st.label) st.label = name;
+    st._srcKeys.push(key);
     st.entries.push(e);
-    stamp(st, e.date);
+    stamp(st, ov.first || e.date);
+    if (ov.last) stamp(st, ov.last);
   });
 
   // A trip stop has a free-text title and no coordinates, so it can only reach the map when
@@ -628,10 +639,15 @@ function journeyStops() {
     if (!sp) return;
     const hit = WEATHER_SPOTS.find((w) => (w.city || '').toLowerCase() === sp);
     if (!hit) return;
-    const st = add({ lat: hit.lat, lng: hit.lng }, { label: s.title, cc: hit.country });
-    if (!st.label) st.label = s.title;
+    const key = `trip:${s.id}`, ov = s.id ? journeyOverride(key) : {};
+    if (ov.hidden) return;
+    const name = ov.city || s.title;
+    const st = add(placed(ov, hit), { label: name, cc: hit.country });
+    if (!st.label) st.label = name;
+    if (s.id) st._srcKeys.push(key);
     st.planned = true;
-    stamp(st, s.date);
+    stamp(st, ov.first || s.date);
+    if (ov.last) stamp(st, ov.last);
   });
 
   // Saved and rated places attach to whichever stop they sit in, so a pin also leads back to
@@ -766,11 +782,12 @@ export function journeyScreen() {
 
   const stops = journeyStops();
   const st = trailStats();
+  const empty = !stops.length;
 
-  if (!stops.length) {
+  if (empty) {
     wrap.append(h('div', { class: 'card' }, [
       h('p', { style: 'margin: 0 0 var(--sp-2)' }, trailEnabled()
-        ? 'Your map draws itself as you travel. Open the app where you are and this fills in — no pins to add.'
+        ? 'Your map draws itself as you travel. Open the app where you are and this fills in.'
         : 'Recording your journey is switched off, so there is nothing to draw yet.'),
       h('p', { class: 'muted tiny', style: 'margin: 0 0 var(--sp-2)' }, trailEnabled()
         ? 'It needs your device to have given the app a location at least once. Journal entries with a stamped place, and planned stops that name a city, show up here too.'
@@ -781,15 +798,13 @@ export function journeyScreen() {
         ? h('button', { class: 'btn block', onclick: () => go('#journal-new') }, '✎ Write the first entry')
         : h('button', { class: 'btn block', onclick: () => { setTrailEnabled(true); render(); } }, '▶️ Start recording my journey'),
     ]));
-    mount(wrap, '#home');
-    return;
+  } else {
+    wrap.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' },
+      [`${stops.length} ${stops.length === 1 ? 'place' : 'places'}`,
+        st.countries > 1 ? `${st.countries} countries` : null,
+        jrDateRange(stops[0].first, stops[stops.length - 1].last) || null,
+      ].filter(Boolean).join(' · ')));
   }
-
-  wrap.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' },
-    [`${stops.length} ${stops.length === 1 ? 'place' : 'places'}`,
-      st.countries > 1 ? `${st.countries} countries` : null,
-      jrDateRange(stops[0].first, stops[stops.length - 1].last) || null,
-    ].filter(Boolean).join(' · ')));
 
   // The map: a live MapLibre satellite map (same engine and offline-geometry fallback as
   // Places and Visitors — see js/map.js), numbered pins in visit order with their name shown
@@ -835,7 +850,9 @@ export function journeyScreen() {
     document.removeEventListener('keydown', onKey);
     document.body.classList.remove('jr-map-is-full');
   });
-  holder.append(canvas, h('div', { class: 'jr-map-tools' }, full), zoomHint);
+  // Shown while a stop form waits for a tap on the map (mapApi below).
+  const pickHint = h('p', { class: 'jr-pick-hint', role: 'status', hidden: '' }, 'Tap the map to place the pin.');
+  holder.append(pickHint, canvas, h('div', { class: 'jr-map-tools' }, full), zoomHint);
   // toggles are built after drawLegMarkers (below) and inserted here
   const togSlot = h('div', {}); holder.insertBefore(togSlot, zoomHint);
   const panel = h('div', { class: 'jr-panel' });
@@ -846,6 +863,29 @@ export function journeyScreen() {
   let mapCtrl = null;
   let legMarkers = [];
   let hereMarker = null;
+  // How the stop form (js/screens/journey-edit.js) reaches this map: switch tap-to-place on, show one pin, move the camera.
+  let pickCb = null;
+  const mapApi = {
+    pick: (cb) => {
+      pickCb = cb;
+      canvas.classList.toggle('is-picking', !!cb);
+      pickHint.hidden = !cb;
+      // The self-hosted geometry covers the four countries only, so with no signal the map is bare sea elsewhere.
+      pickHint.textContent = online() ? 'Tap the map to place the pin.'
+        : 'Tap the map to place the pin. With no signal the map shows no land outside the four countries; the pin still saves.';
+      if (cb) canvas.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    },
+    pin: (p) => { if (mapCtrl) mapCtrl.setPlacePin(p); },
+    fly: (p) => { if (mapCtrl) mapCtrl.map.flyTo({ center: [p.lng, p.lat], zoom: Math.max(mapCtrl.map.getZoom(), 7), duration: 500 }); },
+  };
+  // What the app knows about a coordinate: the town's name when one is within a few km, and the country
+  // when the point is inside one. Anywhere else both are '' and the traveller types the name: whereAmI()
+  // also offers a far-off guess (it names Singapore after Songkhla), which would be wrong to prefill.
+  const describe = (pt) => {
+    const w = whereAmI(pt);
+    const near = w && (w.source === 'town' || w.source === 'hub-town') ? w : null;
+    return { name: near ? near.name : '', cc: countriesNearFix(pt)[0] || (near && near.country) || '' };
+  };
   // A distinct "you are here" pin, separate from the numbered stop markers and not folded
   // into their fit() bounds — the app-wide location watch (js/main.js) already keeps this
   // current by the time any screen can mount, so this map does not need its own permission
@@ -961,6 +1001,8 @@ export function journeyScreen() {
   import('../map.js').then((mod) => mod.initMap(canvas, {
     places: mapPlaces,
     numbered: true,
+    worldBounds: true,
+    onMapClick: (pt) => { if (pickCb) pickCb(pt); },
     showLabels: true,
     markerColor: () => '#E8632A',
     route: stops.map((s) => ({ lat: s.lat, lng: s.lng })),
@@ -1032,7 +1074,9 @@ export function journeyScreen() {
       [h('span', { class: 'status-ic' }, '📍'), h('span', { class: 'status-lbl' }, pl.name)]))));
     }
     if (!s.entries.length && !s.photos.length && !s.places.length) {
-      card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-2)' }, 'Nothing written here yet — this pin came from having the app open at this place.'));
+      card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-2)' }, s.manual
+        ? 'Nothing written here yet — you added this stop yourself.'
+        : 'Nothing written here yet — this pin came from having the app open at this place.'));
       card.append(h('button', { class: 'btn block', onclick: () => go('#journal-new') }, '✎ Write about this place'));
     }
     return card;
@@ -1041,31 +1085,19 @@ export function journeyScreen() {
   // Every stop in order, so the whole trip is readable without hunting for pins on a map,
   // and tapping a row lights its pin. Same select() as the map, so they cannot diverge.
   //
-  // Edit/delete only for a stop with a trail.js component (s._trailIds.length) — one written
-  // purely from a journal entry, a planned trip stop or a saved place is already editable on
-  // its own screen (the journal entry, #trip, the place itself); giving it a second edit path
-  // here would let the two silently disagree about what a "rename" even changed.
+  // Every stop can be renamed, re-dated, moved and removed here, whatever it came from (traveller fix F2).
+  // A stop with trail points rewrites them; a journal entry or a trip stop keeps the change as a journey
+  // override (js/trail.js), because the entry is edited on its own screen and must still read as the
+  // traveller wrote it. Re-dating a stop moves it: the list sorts on the arrive date.
   const list = h('div', { class: 'card', style: 'margin-top: var(--sp-3)' }, [h('h2', {}, '🧭 Your stops, in order')]);
   stops.forEach((s, i) => {
     if (editingIdx === i) {
-      const t = h('input', { 'aria-label': 'Stop name', type: 'text', value: s.label });
-      const dt = h('input', { 'aria-label': 'Arrive date', type: 'date', value: s.first || '' });
-      const dt2 = h('input', { 'aria-label': 'Leave date', type: 'date', value: s.last || '' });
-      list.append(h('div', { class: 'trip-stop', style: 'display:block' }, [
-        h('div', { class: 'field' }, [h('label', {}, `Edit stop ${i + 1}`), t,
-          h('div', { class: 'trip-dates' }, [
-            h('label', { class: 'trip-date-lbl' }, ['Arrived', dt]),
-            h('label', { class: 'trip-date-lbl' }, ['Left (optional)', dt2]),
-          ])]),
-        h('div', { class: 'chips' }, [
-          h('button', { class: 'btn', onclick: () => {
-            if (!dt.value) return;
-            updateTrailStops(s._trailIds, { city: t.value.trim() || s.label, first: dt.value, last: dt2.value || dt.value });
-            editingIdx = null; render();
-          } }, 'Save'),
-          h('button', { class: 'btn ghost', onclick: () => { editingIdx = null; render(); } }, 'Cancel'),
-        ]),
-      ]));
+      list.append(stopForm({
+        heading: `Edit stop ${i + 1}`, stop: s, nested: true, map: mapApi, describe, submit: 'Save',
+        note: (s.entries.length || s.planned) ? 'Your journal and trip plan stay as written. This changes the stop on your journey.' : '',
+        onSave: (v) => { editJourneyStop(s, v); editingIdx = null; render(); },
+        onCancel: () => { editingIdx = null; render(); },
+      }));
       return;
     }
     const bits = [];
@@ -1080,50 +1112,41 @@ export function journeyScreen() {
       ]),
       h('span', { class: 'jr-row-go' }, '›'),
     ]));
-    if (s._trailIds.length) {
-      list.append(h('div', { class: 'jr-row-actions' }, [
-        h('button', { class: 'chip', 'aria-label': `Edit stop ${i + 1}`, onclick: () => { editingIdx = i; render(); } }, '✎ Edit'),
-        h('button', { class: 'chip', 'aria-label': `Remove stop ${i + 1}`, onclick: () => {
-          confirmAction({ title: 'Remove this stop?', body: `This removes ${s.label || 'this pin'} from your recorded journey. Your journal, photos and saved places are not touched.`, confirmLabel: 'Remove', danger: true })
-            .then((ok) => { if (ok) { deleteTrailStops(s._trailIds); render(); } });
-        } }, '✕ Remove'),
-      ]));
-    }
-  });
-  wrap.append(collapsibleCard(list, 'journeyStopsOpen'));
-  wrap.append(collapsibleCard(legsCard, 'journeyLegsOpen'));
-
-  // For a place visited without the app open — the gap the automatic pins cannot close on
-  // their own. Location comes from the same curated city list a trip stop matches against
-  // (WEATHER_SPOTS), so an added stop looks and merges exactly like one the app inferred from
-  // a matching trip stop's title, and the date is what places it correctly among the rest —
-  // there is no separate reorder control; re-dating a stop here or above is how you move it.
-  if (addingStop) {
-    let chosen = WEATHER_SPOTS[0];
-    const loc = locationSelect(spotKey(chosen), (key) => { chosen = spotForKey(key) || chosen; });
-    const dateIn = h('input', { 'aria-label': 'Arrive date', type: 'date' });
-    const dateOut = h('input', { 'aria-label': 'Leave date', type: 'date' });
-    const err = h('p', { class: 'muted tiny', style: 'margin: var(--sp-1) 0 0' });
-    wrap.append(h('div', { class: 'card', style: 'margin-top: var(--sp-2)' }, [
-      h('h3', { style: 'margin: 0 0 var(--sp-2)' }, '+ Add a stop you missed'),
-      field('Place', loc),
-      h('div', { class: 'trip-dates' }, [
-        h('label', { class: 'trip-date-lbl' }, ['Arrived', dateIn]),
-        h('label', { class: 'trip-date-lbl' }, ['Left (optional)', dateOut]),
-      ]),
-      err,
-      h('div', { class: 'chips', style: 'margin-top: var(--sp-2)' }, [
-        h('button', { class: 'btn', onclick: () => {
-          if (!dateIn.value) { err.textContent = 'Set when you arrived.'; return; }
-          addTrailStop({ lat: chosen.lat, lng: chosen.lng, city: chosen.city, cc: chosen.country, first: dateIn.value, last: dateOut.value || dateIn.value });
-          addingStop = false; render();
-        } }, 'Add stop'),
-        h('button', { class: 'btn ghost', onclick: () => { addingStop = false; render(); } }, 'Cancel'),
-      ]),
+    list.append(h('div', { class: 'jr-row-actions' }, [
+      h('button', { class: 'chip', 'aria-label': `Edit stop ${i + 1}`, onclick: () => { editingIdx = i; addingStop = false; render(); } }, '✎ Edit'),
+      h('button', { class: 'chip', 'aria-label': `Remove stop ${i + 1}`, onclick: () => {
+        confirmAction({ title: 'Remove this stop?', body: `This removes ${s.label || 'this pin'} from your journey. Your journal, photos, trip plan and saved places are not touched.`, confirmLabel: 'Remove', danger: true })
+          .then((ok) => { if (ok) { removeJourneyStop(s); render(); } });
+      } }, '✕ Remove'),
     ]));
+  });
+  if (!empty) {
+    wrap.append(collapsibleCard(list, 'journeyStopsOpen'));
+    wrap.append(collapsibleCard(legsCard, 'journeyLegsOpen'));
+  }
+
+  // For a place visited without the app open, or one the app never knew: the gap the automatic pins cannot
+  // close on their own. Three ways to place it (js/screens/journey-edit.js): the place picker, a pin dropped on
+  // the map anywhere in the world, or "I am here". The date is what puts it in order among the rest: there is
+  // no separate reorder control, and re-dating a stop here or above is how you move it. It is offered when
+  // the journey is empty too, which is when someone who started late needs it most.
+  if (addingStop) {
+    wrap.append(stopForm({
+      heading: '+ Add a stop you missed', map: mapApi, describe, submit: 'Add stop',
+      onSave: (v) => {
+        addTrailStop({ lat: v.lat, lng: v.lng, city: v.city, cc: v.cc, first: v.first, last: v.last });
+        addingStop = false; render();
+      },
+      onCancel: () => { addingStop = false; render(); },
+    }));
   } else {
-    wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => { addingStop = true; render(); } },
+    wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => { addingStop = true; editingIdx = null; render(); } },
       '+ Add a stop you missed'));
+  }
+  // A removed stop is hidden, not deleted, so it can come back.
+  if (hasHiddenStops()) {
+    wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => { restoreHiddenStops(); render(); } },
+      '↺ Bring back removed stops'));
   }
 
   // Unmatched planned stops: named, so the list is not quietly incomplete.
@@ -1135,6 +1158,9 @@ export function journeyScreen() {
     wrap.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-2) 0 0' },
       `Not on the map yet: ${unmatched.map((s) => s.title).join(', ')} — the app does not know where ${unmatched.length === 1 ? 'that is' : 'those are'}.`));
   }
+
+  // Nothing recorded or added yet: no map to share and no recording controls beyond the card above.
+  if (empty) { mount(wrap, '#home'); return; }
 
   wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', onclick: () => go('#sharejourney') },
     '📤 Share this journey →'));

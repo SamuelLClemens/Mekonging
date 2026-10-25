@@ -899,6 +899,9 @@ export async function initMap(containerEl, opts = {}) {
     // `opts.worldBounds` opts out; the global visitors map (initVisitMap, below) is a
     // different question and is deliberately left worldwide.
     maxBounds: opts.worldBounds ? undefined : REGION_BOUNDS,
+    // A world map needs a floor of its own: with no box to clamp to, a pinch would go out to a sliver of
+    // planet repeated sideways.
+    ...(opts.worldBounds ? { minZoom: 1 } : {}),
     // The far end of the same idea: stop the pinch where the imagery stops being real, so a
     // traveller cannot zoom past the data into a magnified blur. See SATELLITE_MAXZOOM.
     maxZoom: MAP_MAXZOOM,

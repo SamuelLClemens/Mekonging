@@ -1,42 +1,23 @@
-# Handoff — 2026-10-25 (program session 0: the register, the style brief and the backlog)
+# Handoff — 2026-10-26 (F2: your journey on a world map, every stop editable)
 
-The previous handoff (F1 and its Laos follow-up, with every carried item in full) is `git show e98f4a7:docs/HANDOFF.md`.
-Every open item now lives in `docs/PROGRAM.md` section 4, re-measured, each with an owning slice or owner action.
+The previous handoff (program session 0) is `git show f74d75a:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
 
 ## Shipped
-- **Program session 0**, branch `docs/program-plan`, [PR #135](https://github.com/SamuelLClemens/Mekonging/pull/135), open, documents only (no version bump).
-  - `docs/PROGRAM.md` (new):
-    - the unresolved register, re-measured on e98f4a7 (`mk-v0.649.0`);
-    - the "Mekong Retro, refined" style brief: the gate's eight screens and ten proposed token changes;
-    - the ranked feature backlog T1 to T15, with `file:line` evidence for each gap;
-    - the merged release order.
-  - `docs/PLAN.md`: the owner's rulings of 2026-10-25, the merged order and the new slice F1b (every Cambodian village).
-  - `CLAUDE.md`: the docs map points to `docs/PROGRAM.md` as the register every slice updates.
+- **F2**, branch `feat/f2-journey-world`, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136), `mk-v0.650.0` (store version 17). Waits for the owner's merge; F1b stacks on it.
+  - The journey map covers the world (`worldBounds`, floor at zoom 1).
+  - A stop is placed three ways, in one form for adding and for moving (`js/screens/journey-edit.js`): the F1 picker, a pin dropped by a tap on the map, and "I am here".
+  - Every stop is renamed, re-dated, moved and removed from the journey screen. A stop from a journal entry or a trip stop keeps the change as a journey override (`js/trail.js`, `profile.trail.over`, keyed `entry:<id>` or `trip:<id>`); the entry and the trip plan are untouched. "Bring back removed stops" restores them.
+  - The empty state keeps the map and "Add a stop you missed". Re-dating a stop moves it in the list.
+  - The share-journey route carries stops added by hand (decision 27).
+  - Decision 23: `js/market-routes.js` and `js/market-link.js` are in `PRECACHE`; `check-offline-boot` runs in CI and is in `scripts/README.md` and `CLAUDE.md`.
 
 ## Verified
-- The state in `BEST_TOOL_PROMPT.md` section 3 holds:
-  - `mk-v0.649.0`; PR #134 was the only merge since the prompt, and no other PR is open;
-  - `js/main.js` has 7,601 lines, and there are 44 screen modules;
-  - 882 places, 262 with a photo, 26,195 list places.
-- Only documents changed between #133 and e98f4a7, so #133's measurements of the shipped files hold.
-- Re-measured with jsc (`~/Library/Caches/mk-program/measure.mjs`, `cats.mjs`), the guards, `git`, `gh` and `grep`; each value is in `docs/PROGRAM.md` with its `file:line`.
-- Not re-measured, because this session changed documents only: rendered layout, tap targets and contrast. These are Q1's values from 2026-10-19 and later slices' values; Q2 re-measures them.
-- Guards on the branch:
-  - all 15 CI guards pass, along with place-fields, port-themes and cache-version against `origin/feat/scaffold-bangkok-slice` (0.649.0, unchanged);
-  - `jsc -m scripts/validate-jsc.mjs` passes 19,297 of 19,297 checks;
-  - `check-offline-boot` (not in CI) still fails on `js/market-routes.js` and `js/market-link.js`. That is decision 23, which rides with F2.
-
-## Owner answers (one form, 2026-10-25)
-- **Style work: split.**
-  - S0 (the style gate gallery) and Q2 run alongside the queue.
-  - S1 (the style foundation) goes just before F4.
-  - Q3 to Q7 go after L4 and before M4b-2.
-- **Feature backlog: trust first.**
-  - T1 (fact freshness) and T2 (border status) run right after Q7.
-  - T3 to T15 run after C8, unless the owner moves one up.
-- **Decisions 14, 19 and 23: yes.** 14 becomes the coordinates checks G1 to G4, Laos first, with decision 22 in G1. 19 is `pglast`, installed in M4c. 23 rides with F2.
-- **Decisions 10, 13 and 24.** 10 waits until Q5 is done. 13 is yes, in D5 tidy (49 labels: 45 plus 4). 24 is **yes**: every Cambodian village, slice F1b, right after F2.
-- Session 0 chose where F1b, G1 to G4, R1 to R3 and `pglast` go, because the form did not ask. They are listed in `docs/PROGRAM.md` section 1, and the owner can move them.
+- Before the change, at 375 px with `document.hidden` false: map bounds `[92, 2, 115, 27.5]` (a jump to Singapore landed at latitude 3.65); 1 of 3 stops (Bangkok, from the trail) had an Edit control.
+- After, headless Chrome over CDP (`~/Library/Caches/mk-f2/drive.py`), light and dark: 60 of 60 checks pass: 26 in light and 26 in dark on a journey with stops, 4 and 4 on the empty state.
+  - Singapore (a real tap on the map canvas) and Koh Mak (the picker) are numbered pins in date order; a journal-derived stop was renamed, re-dated, moved and removed, then restored, with the journal entry and the trip plan identical before and after.
+  - 0 overflow at 375 px at every step, `document.hidden` false, 0 console errors.
+- Basemap outside the region (`~/Library/Caches/mk-f2/world.py`, zooms 1 to 9 at Singapore, Koh Mak and London): online, 75 imagery tiles loaded across 18 views and none failed; offline with every external host unresolvable, 0 of 124 loaded and the map is bare sea outside the four countries. Registered as `docs/PROGRAM.md` 4.4 and decision 26.
+- All 16 CI guards (with `check-offline-boot`), place-fields, port-themes and cache-version against `origin/feat/scaffold-bangkok-slice` pass; `jsc -m scripts/validate-jsc.mjs` passes 19,297 of 19,297. The manifest is regenerated.
 
 ## Owner checks for M3b (carried; the first two are done)
 - [x] Migration 001 run, repaired by 001b; `001_rls.sql` 65 of 65 PASS. Security Advisor after 001: 0 errors.
@@ -46,44 +27,28 @@ Every open item now lives in `docs/PROGRAM.md` section 4, re-measured, each with
 
 ## Not done / known issues
 - Everything open is in `docs/PROGRAM.md` section 4. New in this session:
-  - one place has no `hours` (`la-ext-rental-vang-vieng`, for D5 tidy);
-  - the saved-collection topbar prefixes an emoji (`js/main.js:4642`, for Q4);
-  - the orphan branch `assets/m4b1-shots` and the spent branch `fix/transport-leaving-reverse` exist.
-- Dropped with evidence: the Museum of Cham Sculpture credit (fixed, `js/data/photos.js:595`).
+  - the automatic trail names a far-off place for a fix outside the region (Singapore recorded as "Songkhla, th"): `logTrail` accepts an approximate `whereAmI` name; for F3;
+  - the offline map outside the region (decision 26).
+- Found while testing, not fixed: the map credits plate opens expanded and covers part of the journey map (Q7, already in the register).
 - Tooling, this session only:
-  - The app launched this session in a worktree of the parent folder's repository (`/Users/zim/Claude Code/.claude/worktrees/program-plan-9c1f88`, branch `claude/program-plan-9c1f88`, no commits). The work was done in a new Mekonging worktree at `.claude/worktrees/program-plan`.
-  - The Edit and Write hook kept refusing the Mekonging path, so files were written through the scratchpad and copied in.
-  - The Bash isolation check refuses loops and long heredocs; a Python runner script in the scratchpad runs the guard block.
-  - Both worktrees are spent once #135 merges.
-- `docs/HANDOFF.md` no longer repeats the carried list. Its slice prompts below were updated for the new order.
+  - The app launched this session in a worktree of the parent folder's repository (Nomadic Almanac), not Mekonging. The work was done in a new Mekonging worktree, `Mekong/.claude/worktrees/f2`. It is spent once the PR merges.
+  - The Edit and Write hook refused the Mekonging path, so edits ran as exact-match Python scripts from the scratchpad, and the Bash isolation check refused loops and long heredocs (a Python runner script runs the guards).
+  - A headless Chrome run cannot go offline through `Network.emulateNetworkConditions`: the service worker's own requests ignore it. Block the hosts instead (`--host-resolver-rules="MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"`, see `mk-f2/cdp.py`, `MK_CHROME_ARGS`).
+  - A granted emulated position makes the app record an automatic pin on load: grant it after the page has loaded when the test must not have one.
 
 ## Open decisions (need the user)
-The numbers below keep their old values. Closed on 2026-10-25: 13, 14, 19, 22, 23 and 24 (see above).
+The numbers below keep their old values. Closed on 2026-10-25: 13, 14, 19, 22 and 24. Decision 23 is done (F2).
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese.
 8. Legal, for Omer Hanegbi or Omri Siri: `docs/EXCHANGE.md` §14, the terms and privacy policy, and the dispensary question. The terms and privacy policy gate M9; cash swap gates M10.
 10. Topbar icon spacing. Deferred by the owner until Q3 to Q5 are done; ask again after Q5.
-25. Remove the spent worktrees and branches listed in `docs/PROGRAM.md` 4.6: 7 worktrees, 15 merged or spent remote branches, 3 orphan screenshot branches, and the stale `mekong*` preview entries in the parent folder's `.claude/launch.json`. Recommended: yes, after #135 merges. The removal is one step per message, and each branch is checked against the tip first.
+25. Remove the spent worktrees and branches listed in `docs/PROGRAM.md` 4.6: 7 worktrees, 15 merged or spent remote branches, 3 orphan screenshot branches, and the stale `mekong*` preview entries in the parent folder's `.claude/launch.json`. Recommended: yes (#135 is merged). The F2 worktree (`Mekong/.claude/worktrees/f2`) joins the list once its PR merges. The removal is one step per message, and each branch is checked against the tip first.
+26. A coarse world outline for the journey map offline. With no signal and nothing cached, the map is bare sea outside the four countries at every zoom (`docs/PROGRAM.md` 4.4). Recommended: measure a simplified Natural Earth land outline first (size in KB, gzip) and bring the number to the owner; it is a new data file.
+27. The share-journey route now includes stops the traveller added by hand, under the existing "stops" box (automatic pins never go). Recommended: keep it. Say if hand-added stops should stay private.
 
 ## Next session prompts
-Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): **F2** (with decision 23), **F1b**, F3, **S1** (the style foundation), F4, F5, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4** (coordinates checks), **R1 to R3** (the style roll-out), Bangkok B1 to B8, city depth C1 onward, then T3 to T15. Each releasing slice stacks on the merged tip of the one before. Q2, S0 (the style gate) and Q8 change no shipped file and can run alongside any of them. The F and L slices are in `docs/PLAN.md`; S, Q, T, G and R are in `docs/PROGRAM.md`.
+Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~ (built, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136)), **F1b**, F3, **S1** (the style foundation), F4, F5, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4** (coordinates checks), **R1 to R3** (the style roll-out), Bangkok B1 to B8, city depth C1 onward, then T3 to T15. Each releasing slice stacks on the merged tip of the one before. Q2, S0 (the style gate) and Q8 change no shipped file and can run alongside any of them. The F and L slices are in `docs/PLAN.md`; S, Q, T, G and R are in `docs/PROGRAM.md`.
 
-### F2: Your journey, the whole world, fully editable (next)
-> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md (owner rulings, then F2). Run /slice for slice F2: Your journey on a world map, every stop editable.
-> **Start.** `git fetch`; `gh pr list --state all`. PR #135 (program session 0) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f2-journey-world`. Reproduce first: at 375 px the journey map is fenced to the region, and a stop from a journal entry has no edit control.
-> **What F1 left for F2.**
-> - "Add a stop you missed" already uses F1's picker. `spotForKey(key)` returns a list place `{ gz: true, country, city, lat, lng, local, prov, kind }`, and `addTrailStop()` takes its `lat`, `lng`, `city` and `country` as they are.
-> - The journey's empty state returns before that button exists. Offer it there too.
-> - `setPlacePin(spot)` on the `initMap` controller (`js/map.js`) draws one titled pin. The search box is `locationSelect()`, and the matching is `findPlaces()` in `js/place-search.js`.
-> - Decision 23 (two `PRECACHE` lines in `sw.js`, and `check-offline-boot` in `guards.yml` and the scripts README) was approved by the owner on 2026-10-25 and rides along.
-> **Pitfalls.**
-> - CDP clip coordinates are page coordinates: after scrolling, capture from `scrollY`.
-> - `Browser.close` fires no `pagehide`, so reload before closing a profile that a later run reuses.
-> - `mount()` folds sections: open the `<details>` around a control before measuring it.
-> - The F1 driver is `~/Library/Caches/mk-f1/drive.py`. Copy its pattern.
-> **Done when.** The F2 "Done when" in docs/PLAN.md holds in headless Chrome over CDP at 375 px, light and dark; every guard and `jsc -m scripts/validate-jsc.mjs` pass; `check-offline-boot` passes and runs in CI; the register in `docs/PROGRAM.md` is updated; the PR is open. Then run /handoff.
-> **Out of scope.** The share-journey file format beyond carrying the new stops, automatic location (F3), the recap (F4).
-
-### F1b: every village in Cambodia (after F2)
+### F1b: every village in Cambodia (next)
 > Read CLAUDE.md, docs/HANDOFF.md and the F1b section of docs/PLAN.md. Run /slice for slice F1b: every village in Cambodia.
 > **Start.** `git fetch`; `gh pr list --state all`. F2 must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `data/f1b-cambodia-villages`. Measure sizes and the worst keystroke (6x CPU slowdown) on the base first.
 > **Done when.** The F1b "Done when" in docs/PLAN.md holds; Thailand, Vietnam and Laos's list files are byte for byte unchanged; the register in `docs/PROGRAM.md` is updated; the PR is open. Then run /handoff.

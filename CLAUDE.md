@@ -60,7 +60,7 @@ relevant section of the docs below, not the whole repo.
 
 ## Guards (run before every commit; CI runs the same list)
 ```bash
-for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
@@ -86,6 +86,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
   is never added to `WEATHER_SPOTS`. A picked list place rides beside its nearest anchor as `focusSpot().place`.
 - `js/state.js` is the on-device store. Schema changes bump its version. Deleting or merging a place record also needs a
   line in `js/data/place-merges.js` in the same commit, or travellers' saved data is lost.
+- The journey screen builds its stops from trail points, journal entries and trip stops. A change to an entry's or trip stop's stop is
+  a journey override (`js/trail.js`, `profile.trail.over`), never an edit to the entry; `js/screens/journey-edit.js` is the one stop form.
 - `js/theme.js` plus `DESIGN_SYSTEM.md` own colour and skins; the default is "Mekong Retro". `css/style.css` is the stylesheet.
 - The Market's rules are in `css/market.css`, loaded lazily by `js/screens/market-parts.js` (`check-contrast` reads it).
 - `Mekonging Xcode/` is a live iOS WKWebView wrapper (`sync-web.sh` copies the web app in). Never delete or edit it as
