@@ -3,6 +3,8 @@
 Written by session 0 of `BEST_TOOL_PROMPT.md`, against `origin/feat/scaffold-bangkok-slice` at e98f4a7 (`mk-v0.649.0`).
 Between 1e98e6f (PR #133) and e98f4a7 only `BEST_TOOL_PROMPT.md` and `CLAUDE.md` changed, so the shipped files are the
 ones #133 measured. Every slice that closes an item below updates this file in its own PR.
+F2 (2026-10-26, `mk-v0.650.0`) updated sections 2 to 4: decision 23 is done, `check-offline-boot` runs in CI, and 4.4 gained
+two defects found on the way (the automatic trail's far-off name, and the offline map outside the region).
 
 Method for the numbers: jsc over the place modules (`~/Library/Caches/mk-program/measure.mjs` and `cats.mjs`), the
 repo's own guards, `git` and `gh`, and `grep` with the `file:line` given. Rendered-screen values (layout, tap
@@ -29,7 +31,7 @@ Placements the form did not ask, chosen by session 0 (the owner can move any of 
 
 Releasing slices stack, one at a time, each from the merged tip. The owner's queue is unchanged except where the form said.
 
-1. **F2**, your journey on a world map, every stop editable (with decision 23).
+1. **F2**, your journey on a world map, every stop editable (with decision 23). **Built**, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136), `mk-v0.650.0`.
 2. **F1b**, every village in Cambodia (decision 24).
 3. **F3**, location from the first open.
 4. **S1**, the style foundation: tokens and machinery (section 5).
@@ -53,12 +55,12 @@ until after C8, but either could run alongside if the owner says so.
 
 | Area | Measured | Change since the prompt's table |
 |---|---|---|
-| Release | `mk-v0.649.0` (`js/main.js:822`, `sw.js:55`). Last merged PR #134, the program prompt (documents). No PR open. | #134 merged. |
+| Release | `mk-v0.650.0` (`js/main.js:822`, `sw.js:55`) on the F2 branch; `mk-v0.649.0` on `origin/feat/scaffold-bangkok-slice` until [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136) merges. | F2 built. |
 | Content | 882 curated places; 262 with a photo (29.7%); 26,195 list places (th 9,092, vi 1,626, kh 2,192, la 13,285); 135 routes, 0 unsourced; 21 homepage-only citations. | None. |
 | Code shape | `js/main.js` 7,601 lines (ceiling ~1,500, no guard); 44 modules in `js/screens/`. | None. |
 | Market | Fixture-proven only; production answers `market_closed`; no real listing. | None. |
 | Style | Mekong Retro is the default of 11 skins (`js/theme.js:14`). Q1's faults are unfixed. | None. |
-| Guards | All 15 CI guards, place-fields, port-themes and cache-version pass. `check-offline-boot` (not in CI) fails. | None. |
+| Guards | All 16 CI guards (`check-offline-boot` joined in F2), place-fields, port-themes and cache-version pass; `jsc -m scripts/validate-jsc.mjs` passes 19,297 of 19,297. | `check-offline-boot` passes and runs in CI. |
 
 ## 4. The unresolved register
 
@@ -69,7 +71,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 
 | Slice | What | Placement |
 |---|---|---|
-| F2 | Journey on a world map, every stop editable | 1st |
+| F2 | Journey on a world map, every stop editable | **built** 2026-10-26, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136) |
 | F1b | Every Cambodian village in the place list (about 12,128 places, 213 KB gzip, measured in F1) | 2nd, owner 2026-10-25 |
 | F3 | Location from the first open | 3rd |
 | F4 | Post-trip recap with charts | after S1 |
@@ -116,7 +118,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | 14 | A coordinates-check slice | **closed: yes**, G1 to G4, Laos first |
 | 19 | Install `pglast` | **closed: yes**, at the start of M4c |
 | 22 | The Trat anchor sits on Ko Mak, 47.4 km from Trat town | **closed:** settled inside G1 |
-| 23 | `js/market-routes.js` and `js/market-link.js` into `PRECACHE`; `check-offline-boot` into CI | **closed: yes**, rides along with F2 |
+| 23 | `js/market-routes.js` and `js/market-link.js` into `PRECACHE`; `check-offline-boot` into CI | **closed: done** in F2 ([PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136)) |
 | 24 | Widen Cambodia's list to every village | **closed: yes** (against the recommendation), slice F1b |
 | (none) | A new source for more place photos (620 places have none) | open; S1's artwork makes a photo-less card deliberate, so no new photo source is proposed |
 
@@ -124,9 +126,9 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 
 | Area | Defect | Measured | Owner |
 |---|---|---|---|
-| Offline | `check-offline-boot` fails: `js/market-routes.js` and `js/market-link.js` are on the eager path but not in `PRECACHE`. The worker caches a sub-resource only when the request passes through it (`sw.js:853` to `866`), so a traveller who opens the app once and goes offline may find it will not start. | `python3 scripts/check-offline-boot.py`: FAIL, those two files (2026-10-25) | F2 (decision 23) |
 | Offline | The OCR language files are not in the service-worker manifest, so offline OCR after first use is untested | `grep -c traineddata sw.js`: 0; the files are `lib/tesseract/lang/{khm,lao,tha,vie}.traineddata.gz` | F5 (it touches the host languages) |
 | iOS wrapper | OCR from `mekong://` (a blob worker's `importScripts`) is untested | not measurable here (no Xcode) | next wrapper build; owner check |
+| Location | The automatic trail names a far-off place for a fix outside the region: an emulated fix in Singapore was recorded as "Songkhla", country `th`. `logTrail` (`js/main.js:6372`) takes `whereAmI(fix).name` whatever its `approx` flag (`place-far` and `hub` are guesses). F2's own pin naming uses only `town` and `hub-town` results | F2 driver, 2026-10-26: trail point `{city: 'Songkhla', cc: 'th'}` at 1.283, 103.851 | F3 |
 | Location | A GPS fix outranks a place picked by hand | `docs/HANDOFF.md` (F1) | F3 |
 | Location | Today, Arrival and the transport screens read the anchor, not the picked place | `docs/HANDOFF.md` (F1) | F3 |
 | Location | A picked place is saved only through the debounced store save | F1 probe (`Browser.close` lost it) | F3 |
@@ -135,6 +137,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | Layout | Tall portrait photos are uncapped (Phanom Rung renders 548 px tall at 375 px) | 548 px (carried) | S1 (photo treatment), applied in R1 |
 | Layout | Malay "Laman utama" is truncated in the tab bar | string at `js/data/ui-strings.ms.js:10`; truncation carried, not re-rendered | L2 |
 | Map | The `#map` `getSource` race | 1 of 4 runs (F1), 1 of 3 light loads (Q1) | Q7 |
+| Map | With no signal and no cached imagery, the journey map is bare sea outside the four countries, at every zoom from 1 to 9. Rendered `land` features: 0 at Singapore from zoom 5 and 0 at London at every zoom; imagery tiles: 0 of 124 requested loaded across the 18 views (online, 75 of 75). A pin and its name still save, and the pin hint says so. The offline geometry (`js/data/basemap.js`, 26 KB) holds the four countries only; a coarse world outline would be a new data file | F2 probe, 2026-10-26: headless Chrome with every external host unresolvable (`~/Library/Caches/mk-f2/world.py`) | open: owner decision (measure the outline's size first) |
 | Map | The MapLibre credits plate opens expanded and covers 16.6% of the journey map and its first pin | 16.6% (Q1, 2026-10-19) | Q7 |
 | Accessibility | 66 of 77 routes carry body controls under 44 px (1,315 controls, 199 under 24 px); topbar icons 30 to 36 px wide | Q1, 2026-10-19; not re-measured since M4b-1 and F1 merged | Q2 re-measures; Q3 to Q5 fix |
 | Accessibility | Contrast fails on 27 routes in light and 6 in dark (28 routes, 19 selectors); the dark calendar's selected day is 1.21:1 | Q1, 2026-10-19 | Q6 |
@@ -177,7 +180,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | Item | Measured 2026-10-25 | Owner |
 |---|---|---|
 | `js/main.js` size | 7,601 lines against ~1,500; no guard enforces a ceiling (no `1500` in `scripts/` or `.github/workflows/`) | T4 adds a ratchet. Until then, every slice that edits `main.js` moves the code it touches into a module (F4 moves `returnRecapCard`) |
-| Test drivers outside the repo | `~/Library/Caches/mk-f1/` and `mk-m4b1/` (plus their Chrome profiles); the Q1 driver and the M3b CDP client in the notes folder `local_45164220-ea74-40e6-851e-808583e5b9f4/` (`q1-audit-driver/`, `m3b-cdp/`) | Q2 commits the audit driver and one shared stdlib CDP client (`tools/cdp/cdp.py`) that later drivers import |
+| Test drivers outside the repo | `~/Library/Caches/mk-f1/`, `mk-f2/` and `mk-m4b1/` (plus their Chrome profiles); the Q1 driver and the M3b CDP client in the notes folder `local_45164220-ea74-40e6-851e-808583e5b9f4/` (`q1-audit-driver/`, `m3b-cdp/`) | Q2 commits the audit driver and one shared stdlib CDP client (`tools/cdp/cdp.py`) that later drivers import |
 | Spent worktrees | 7 under `Mekong/.claude/worktrees/`: best-tool-prompt, f1, fixes-plan, m3a, m4a, m4b1, rulings-1019. Each HEAD is an ancestor of the tip, and each has 0 uncommitted files | owner action (4.2): approve removal |
 | Spent remote branches | 14 merged: `data/d4-local-names`, `data/d5-vietnam`, `data/f1-laos-villages`, `docs/bangkok-buildout-plan`, `docs/language-work-plan`, `docs/m3b-handoff`, `docs/m4b-split`, `docs/owner-rulings-2026-10-19`, `docs/q1-audit-375`, `feat/f1-place-list`, `feat/m3-signin`, `feat/m3a-csp-secrets`, `feat/m4a-listings`, `feat/m4b1-market-browse`. **New:** `fix/transport-leaving-reverse` (PR #95 merged; its one extra commit, 3533216, merges #96 into it, and both fixes are on the tip) | owner action: approve removal |
 | Orphan screenshot branches | `assets/f1-shots` (0cda8bc), `assets/f1-laos-shots` (ab20737) and **new** `assets/m4b1-shots` (229be7f); the PRs that link to them are merged | owner action: approve removal (the PR pages' images then break) |
@@ -187,6 +190,10 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 
 ### 4.7 Dropped, with evidence
 
+- **`check-offline-boot` failed on `js/market-routes.js` and `js/market-link.js`** (on the eager path, not in `PRECACHE`; the
+  worker caches a sub-resource only when a request passes through it, so a first visit followed by going offline could fail
+  to start). Fixed in F2: both are in `PRECACHE` (`sw.js:108`, `109`), and the guard runs in `.github/workflows/guards.yml`
+  and is described in `scripts/README.md`. It passes on `mk-v0.650.0`.
 - **The Museum of Cham Sculpture credit "Unknown authorUnknown author"** is fixed: `js/data/photos.js:595` reads
   `vi-ext-cham-museum-v2.jpg`, "Daderot, CC0, via Wikimedia Commons", and the string appears nowhere in `js/`
   (`scripts/fetch-place-photos.py:280` now strips the hidden duplicate).
