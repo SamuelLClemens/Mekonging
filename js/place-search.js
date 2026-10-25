@@ -34,57 +34,108 @@ export function foldPlace(s) {
 
 // One edit apart (one letter added, dropped or changed): "Don Khone" is Don Khon and "Samloem" is
 // Sanloem, the spellings travellers meet on signs and booking sites. Only words of FUZZY_MIN
-// letters or more get this, so "Ko Mak" never turns into Ko Mai.
+// letters or more get this, so "Ko Mak" never turns into Ko Mai, and the first letter must agree:
+// the slips are inside a word, and the check then costs one comparison for most of the 26,000
+// names it meets on every keystroke. Nothing here copies a string.
 const FUZZY_MIN = 5;
-function oneEdit(a, b) {
-  if (a === b) return true;
-  if (Math.abs(a.length - b.length) > 1) return false;
-  let i = 0;
-  while (i < a.length && i < b.length && a[i] === b[i]) i++;
-  if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1);
-  return a.length > b.length ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
+// Does b, from index bi, start with what is left of a from index ai?
+function same(a, ai, b, bi) {
+  if (b.length - bi < a.length - ai) return false;
+  for (; ai < a.length; ai++, bi++) if (a[ai] !== b[bi]) return false;
+  return true;
 }
-function nearWord(w, x) {
-  return w.length >= FUZZY_MIN && (oneEdit(w, x) || oneEdit(w, x.slice(0, w.length)));
+// w is one edit from the whole word x.
+function nearWhole(w, x) {
+  if (w.length < FUZZY_MIN || w[0] !== x[0] || Math.abs(w.length - x.length) > 1) return false;
+  let i = 1;
+  while (i < w.length && i < x.length && w[i] === x[i]) i++;
+  if (i === w.length || i === x.length) return true;
+  if (w.length === x.length) return same(w, i + 1, x, i + 1);
+  return w.length > x.length ? same(w, i + 1, x, i) : same(w, i, x, i + 1);
+}
+// w is one edit from the start of x (the traveller is still typing).
+function nearPrefix(w, x) {
+  if (w.length < FUZZY_MIN || w[0] !== x[0]) return false;
+  let i = 1;
+  while (i < w.length && i < x.length && w[i] === x[i]) i++;
+  if (i === w.length) return true;
+  if (i === x.length) return w.length - x.length === 1;
+  return same(w, i + 1, x, i + 1) || same(w, i + 1, x, i) || same(w, i, x, i + 1);
 }
 
 // Lower is better, and at each level the place's own name beats its other names, so "kratie"
 // puts Kratie ahead of Sambor (Kratie) and Enter takes the one meant. A whole name one letter
 // off ranks just after the names that start with what was typed ("chiang" finds Chiang Mai before
 // Chang); every typed word starting a word of the name ranks 4, and with one letter off, 4.5.
-function rankNames(c, fq, tq) {
-  const own = c.tight[0], other = c.tight.slice(1);
+// `qw` is the folded query split into words, once per search. This runs for each of the 26,000
+// names on every keystroke, on a phone, so it is plain loops: no closure or array per name
+// (measured 2026-10-25: 250 ms a keystroke with closures, under a 6x CPU slowdown).
+function rankNames(c, fq, tq, qw) {
+  const t = c.tight, own = t[0], words = c.words, nq = qw.length;
   if (own === tq) return 0;
-  if (other.includes(tq)) return 1;
+  for (let k = 1; k < t.length; k++) if (t[k] === tq) return 1;
   if (own.startsWith(tq)) return 2;
-  const qw = fq.split(' ');
-  const words = c.words;
-  if (words.some((nw) => nw.length === qw.length && qw.every((w, k) => w === nw[k] || (w.length >= FUZZY_MIN && oneEdit(w, nw[k]))))) return 2.5;
-  if (other.some((t) => t.startsWith(tq))) return 3;
-  if (words.some((nw) => qw.every((w) => nw.some((x) => x.startsWith(w))))) return 4;
-  if (words.some((nw) => qw.every((w) => nw.some((x) => x.startsWith(w) || nearWord(w, x))))) return 4.5;
-  if (tq.length >= 3 && c.tight.some((t) => t.includes(tq))) return 5;
+  // Every word of the query must begin a word of the name, or one letter off its start: the
+  // slips are inside a word. A name with no word starting with a typed letter skips those checks.
+  let open = true;
+  for (let k = 0; k < nq && open; k++) if (c.init.indexOf(qw[k][0]) < 0) open = false;
+  if (open) for (let n = 0; n < words.length; n++) {     // the whole name, a letter off in each word
+    const nw = words[n];
+    if (nw.length !== nq) continue;
+    let all = true;
+    for (let k = 0; k < nq && all; k++) if (qw[k] !== nw[k] && !nearWhole(qw[k], nw[k])) all = false;
+    if (all) return 2.5;
+  }
+  for (let k = 1; k < t.length; k++) if (t[k].startsWith(tq)) return 3;
+  let fuzzy = false;
+  if (open) for (let n = 0; n < words.length; n++) {     // every typed word starts a word of one name
+    const nw = words[n];
+    let exact = true, near = true;
+    for (let k = 0; k < nq && near; k++) {
+      const w = qw[k];
+      let ex = false, nr = false;
+      for (let j = 0; j < nw.length; j++) {
+        if (nw[j].startsWith(w)) { ex = true; nr = true; break; }
+        if (!nr && nearPrefix(w, nw[j])) nr = true;
+      }
+      if (!ex) exact = false;
+      if (!nr) near = false;
+    }
+    if (exact) return 4;
+    if (near) fuzzy = true;
+  }
+  if (fuzzy) return 4.5;
+  if (tq.length >= 3) for (let k = 0; k < t.length; k++) if (t[k].includes(tq)) return 5;
   return -1;
 }
 function tighten(names) { return names.map((n) => n.replace(/ /g, '')); }
 function splitWords(names) { return names.map((n) => n.split(' ')); }
+// The distinct first letters of every word of every name, so a search can drop a name that has
+// no word starting with what was typed before it looks at one.
+function initialsOf(words) {
+  let s = '';
+  for (const nw of words) for (const w of nw) if (w && s.indexOf(w[0]) < 0) s += w[0];
+  return s;
+}
 
 let cityIndex = null;
 function rankCities(q) {
   const fq = foldPlace(q);
   if (!fq) return [];
   const tq = fq.replace(/ /g, '');
+  const qw = fq.split(' ');
   if (!cityIndex) {
     cityIndex = WEATHER_SPOTS.map((s, i) => {
       const inBrackets = (s.city.match(/\(([^)]+)\)/) || [])[1];
       const names = [s.city.replace(/\(.*?\)/g, ''), inBrackets, ...(CITY_AKA[spotKey(s)] || [])]
         .filter(Boolean).map(foldPlace);
-      return { s, i, names, tight: tighten(names), words: splitWords(names), country: foldPlace((getCountry(s.country) || {}).name) };
+      const words = splitWords(names);
+      return { s, i, names, tight: tighten(names), words, init: initialsOf(words), country: foldPlace((getCountry(s.country) || {}).name) };
     });
   }
   const hits = [];
   for (const c of cityIndex) {
-    let rank = rankNames(c, fq, tq);
+    let rank = rankNames(c, fq, tq, qw);
     // A country's name lists its cities: the whole name ahead of the place list's look-alikes
     // ("laos" is not Lao Suea Kok), the start of one only after everything else.
     if (c.country === fq) rank = Math.min(rank < 0 ? 1.6 : rank, 1.6);
@@ -116,9 +167,10 @@ function parseList(cc, mod) {
   return mod.ROWS.split('\n').map((line, i) => {
     const [name, local, lat, lng, prov, kind, aka] = line.split('\t');
     const names = [name, ...(aka ? aka.split(';') : [])].map(foldPlace);
+    const words = splitWords(names);
     return {
       cc, i, name, local: local || '', lat: Number(lat), lng: Number(lng),
-      prov: prov ? (mod.PROVINCES[Number(prov)] || '') : '', kind: kind || 'v', names, tight: tighten(names), words: splitWords(names),
+      prov: prov ? (mod.PROVINCES[Number(prov)] || '') : '', kind: kind || 'v', names, tight: tighten(names), words, init: initialsOf(words),
     };
   });
 }
@@ -150,30 +202,47 @@ export function placeSub(s) {
 }
 
 // Curated cities and list places for one query, best first: { results, more }. `results` holds
-// at most `limit` { key, spot } entries; `more` counts the matches left out.
+// at most `limit` { key, spot } entries; `more` counts the matches left out. Only the best
+// `limit` are kept as the list is walked (an insertion into a short sorted array), because a
+// query like "ban" matches 14,000 places and sorting them all on every keystroke is the cost.
 export function findPlaces(q, limit = 6) {
   const cities = rankCities(q);
-  const out = cities.map((x) => ({ rank: x.rank, src: 0, ord: x.i, spot: x.s }));
+  const best = [];
+  let total = 0;
+  const before = (a, b) => a.rank - b.rank || a.src - b.src || a.ord - b.ord;
+  const offer = (it) => {
+    total++;
+    let i = best.length;
+    if (i < limit) best.push(it);
+    else if (before(it, best[limit - 1]) < 0) { i = limit - 1; best[i] = it; }
+    else return;
+    for (; i > 0 && before(best[i], best[i - 1]) < 0; i--) { const s = best[i]; best[i] = best[i - 1]; best[i - 1] = s; }
+  };
+  for (const x of cities) offer({ rank: x.rank, src: 0, ord: x.i, spot: x.s });
   const fq = foldPlace(q);
   const raw = String(q || '').trim();
   const tq = fq.replace(/ /g, '');
+  const qw = fq.split(' ');
   const script = /[^\u0000-\u024f]/.test(raw);
   if (listIndex && (fq || script)) {
-    for (const e of listIndex) {
-      let rank = fq ? rankNames(e, fq, tq) : -1;
+    // A list place named like a curated city, within NEAR_CURATED_KM of it, is that city again.
+    const curatedNames = new Set();
+    for (const x of cities) for (const n of x.c.tight) curatedNames.add(n);
+    for (let i = 0; i < listIndex.length; i++) {
+      const e = listIndex[i];
+      let rank = fq ? rankNames(e, fq, tq, qw) : -1;
       if (rank < 0 && script && e.local) rank = e.local === raw ? 0 : e.local.startsWith(raw) ? 2 : e.local.includes(raw) ? 5 : -1;
       if (rank < 0) continue;
-      const dup = cities.some((x) => x.s.country === e.cc && x.c.tight.includes(e.tight[0])
-        && haversineKm({ lat: e.lat, lng: e.lng }, { lat: x.s.lat, lng: x.s.lng }) < NEAR_CURATED_KM);
-      if (!dup) out.push({ rank, src: 1, ord: e.i, e });
+      if (curatedNames.has(e.tight[0]) && cities.some((x) => x.s.country === e.cc && x.c.tight.includes(e.tight[0])
+        && haversineKm({ lat: e.lat, lng: e.lng }, { lat: x.s.lat, lng: x.s.lng }) < NEAR_CURATED_KM)) continue;
+      offer({ rank, src: 1, ord: e.i, e });
     }
   }
-  out.sort((a, b) => a.rank - b.rank || a.src - b.src || a.ord - b.ord);
-  const results = out.slice(0, limit).map((x) => {
+  const results = best.map((x) => {
     const spot = x.spot || listSpot(x.e);
     return { key: spotKey(spot), spot };
   });
-  return { results, more: Math.max(0, out.length - limit) };
+  return { results, more: Math.max(0, total - limit) };
 }
 
 // ---- RESOLVING A PICKED PLACE BY KEY ---------------------------------------------------------
