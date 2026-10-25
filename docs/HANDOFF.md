@@ -1,10 +1,14 @@
-# Handoff — 2026-10-25 (slice F1, every town, village and island in the place pickers)
+# Handoff — 2026-10-25 (slice F1, every town, village and island in the place pickers, and its Laos follow-up)
 
 ## Shipped
-- **F1**, branch `feat/f1-place-list`, [PR #132](https://github.com/SamuelLClemens/Mekonging/pull/132), `mk-v0.648.0`, stacked on #131 (merged 2026-10-24, 1a1c8ef). Screenshots are on the orphan branch `assets/f1-shots` (0cda8bc), safe to delete after the PR merges.
+- **F1 follow-up: every village in Laos**, branch `data/f1-laos-villages`, [PR #133](https://github.com/SamuelLClemens/Mekonging/pull/133), `mk-v0.649.0`, stacked on #132. The owner said yes to open decision 21 on 2026-10-25.
+  - Laos goes from 294 to 13,285 places (182 KB gzip; the cap is 250). `EVERY_VILLAGE = {'LA'}` in `scripts/build-gazetteer.py`; Thailand, Vietnam and Cambodia are byte for byte unchanged.
+  - `js/place-search.js` was rewritten for speed, because 26,195 places made a keystroke cost 251 ms under a 6x CPU slowdown: plain loops, a first-letter gate, a bounded best-six selection. It returns the same results as the merged matcher (3,540 comparisons, 0 differences) and the worst query under the same slowdown is now 73 ms.
+  - Screenshots: orphan branch `assets/f1-laos-shots` (ab20737), safe to delete after the PR merges.
+- **F1**, branch `feat/f1-place-list`, [PR #132](https://github.com/SamuelLClemens/Mekonging/pull/132), `mk-v0.648.0`, merged 2026-10-25 (2852ff7), stacked on #131 (merged 2026-10-24, 1a1c8ef). Screenshots are on the orphan branch `assets/f1-shots` (0cda8bc), safe to delete.
   - The five place pickers (Home's location sheet, Explore's "Where are you?", `#setcity-<cc>`, the Places sheet, the journey's "Add a stop you missed") are one search-as-you-type box: `locationSelect()` in `js/ui-widgets.js`, at most six matches, `onChange(key)` unchanged.
   - `js/place-search.js` searches the 165 curated cities first and then the offline place list: accents, Ko or Koh, word prefixes, one letter of tolerance on words of 5 letters or more, and Thai, Khmer or Lao script. It also took over the Weather finder's matching ("Look up another city" now finds the list too).
-  - `scripts/build-gazetteer.py` writes `js/data/gazetteer.{th,vi,kh,la}.js` from GeoNames (CC BY 4.0, credited on Help): 13,204 places (th 9,092, vi 1,626, kh 2,192, la 294). Precached by `sw.js`.
+  - `scripts/build-gazetteer.py` writes `js/data/gazetteer.{th,vi,kh,la}.js` from GeoNames (CC BY 4.0, credited on Help): 13,204 places in #132 (th 9,092, vi 1,626, kh 2,192, la 294), 26,195 with #133 (la 13,285). Precached by `sw.js`.
   - The place set is the owner's ruling of 2026-10-25, "only places with a population", as complete as possible without a long list. It holds every island, administrative seat and place with a population, the subdistricts and communes with a population, and the 425 populated places with a Wikipedia or Wikidata entry.
   - A list place is never in `WEATHER_SPOTS`. `setFocusSpot()` pairs it with its nearest anchor and stores it as `prefs.focusPlace`, and `focusSpot()` returns it as `place` (its name is `displayCity`). Four things read the place itself: Home's and Weather's forecast, the forecast keep-set, the distance anchor on Places, and the pin `setPlacePin` draws on the Map and Places maps (any place picked by hand). `spotKey()` adds coordinates for a list place.
 
@@ -21,13 +25,20 @@ Headless Chrome over CDP, 375 x 812 at DPR 2, fresh profiles on `127.0.0.1`, `do
   - **Home and Places on Ko Mak.** Home reads "Ko Mak · Sun, Oct 25" with Ko Mak's 28°C. Places reads "Near Ko Mak", and its 4 Nearby places are sorted by distance (Koh Mak's beach card, Koh Kood, two Koh Chang places).
   - **1280 px.** The picker and the forecast show 0 overflow.
 - **Offline.** After one online visit, the four list files and `js/place-search.js` were in the worker's cache. Then the server was stopped (curl: HTTP 000), and both the location sheet and the Places sheet still found Ko Mak, with 0 errors.
-- **Search speed** in jsc over 13,204 places: median 13 ms, worst 36 ms; the list loads in 66 ms.
+- **Search speed** (#132, jsc, 13,204 places): median 13 ms, worst 36 ms; the list loads in 66 ms.
 - **Sizes.**
   - `PRECACHE` grew from 214 files, 11,661 KB raw and 3,373 KB gzip to 219 files, 12,487 KB and 3,652 KB.
   - The manifest grew from 263 files, 20,150 KB raw and 6,496 KB gzip to 268 files, 20,976 KB and 6,775 KB.
   - `PACK_BYTES` is unchanged.
   - New files, raw and gzip: th 588 and 195 KB, vi 76 and 28 KB, kh 132 and 45 KB, la 16 and 6 KB, `place-search.js` 9 and 4 KB.
-- **Guards.** Every CI guard passes (js-syntax, imports, lazy-data, preloads, ui-strings, month-arrays, contrast, skins, spacing, place-dupes, undefined, net-gates, sources, secrets and market-sql). So do place-fields, port-themes and cache-version against `origin/feat/scaffold-bangkok-slice`. `jsc -m scripts/validate-jsc.mjs` gives 19,297 of 19,297. CI on #132 was pending when this was written.
+- **Guards.** Every CI guard passes (js-syntax, imports, lazy-data, preloads, ui-strings, month-arrays, contrast, skins, spacing, place-dupes, undefined, net-gates, sources, secrets and market-sql). So do place-fields, port-themes and cache-version against `origin/feat/scaffold-bangkok-slice`. `jsc -m scripts/validate-jsc.mjs` gives 19,297 of 19,297. #132 merged with CI green.
+
+### F1 follow-up, PR #133 (same driver, same method)
+- The driver gained three Lao samples that were absent before (Ban Thalat, Ban Phoukhoun, Ban Nongkhiat) and a Lao-only offline probe. **28 of 28 states pass**: 5 pickers x 2 queries, 15 places (forecast and pin), Home on Ko Mak, 1280 px picker and forecast. 0 picker overflow, 0 controls under 44 px, 0 console errors, `document.hidden` false.
+- **Offline**: after a warm visit the cached `gazetteer.la.js` was the widened file (624,938 characters); with the server stopped (curl: HTTP 000) both pickers found Ko Mak and Ban Thalat, with 0 errors.
+- **Matcher**: `~/Library/Caches/mk-f1/jsc-compare.mjs` compared the merged matcher (copied to an untracked `js/.place-search-ref.js`, deleted afterwards) with the new one on 1,180 queries at limits 6, 1 and 12: 3,540 comparisons, 0 differences. In Chrome, the worst of 8 wide queries went from 39 ms to 24 ms unthrottled and from 251 ms to 73 ms under a 6x CPU slowdown.
+- **Sizes** against 0.648.0: `gazetteer.la.js` 15.6 KB raw and 6.4 KB gzip to 615.0 and 182.2; `place-search.js` 9.3 and 3.9 to 12.5 and 5.0; `PRECACHE` and the manifest each +603 KB raw and +177 KB gzip (3,652 to 3,829 KB gzip precached); `PACK_BYTES` unchanged.
+- Every CI guard, place-fields, port-themes, cache-version (0.648.0 to 0.649.0) and `jsc -m scripts/validate-jsc.mjs` (19,297 of 19,297) pass. CI on #133: the `guards` job passed (32 s).
 
 ## Owner checks for M3b (carried; the first two are done)
 - [x] Migration 001 run, repaired by 001b (see the earlier handoff in git, `3f4d32f`), `001_rls.sql` 65 of 65 PASS.
@@ -38,7 +49,9 @@ Headless Chrome over CDP, 375 x 812 at DPR 2, fresh profiles on `127.0.0.1`, `do
 
 ## Not done / known issues
 - New in F1:
-  - **Laos and Vietnam are thin under the owner's rule.** GeoNames gives a population to 108 of 13,388 Lao villages and to 28 of 10,579 Vietnamese communes, so the list keeps 294 Lao places and 1,626 Vietnamese ones. Every Lao village would be 91 KB compressed; every Vietnamese populated place, 275 KB. See open decision 21.
+  - **Vietnam is thin under the owner's rule.** GeoNames gives a population to 28 of 10,579 Vietnamese communes, so the list keeps 1,626 places. Every populated place would be 478 KB compressed, over the 250 KB cap (the 275 KB first quoted came from a compact test encoding; the shipped format is larger). Laos was widened in #133, where it is 182 KB, not the 91 KB first quoted. Cambodia's every village would be 213 KB (see decision 24).
+  - **Landmarks are not in the list.** It holds populated places and islands only. Kong Lor Cave is a GeoNames spot (class S, CAVE) and its village, Ban Konglo, an abandoned place (PPLQ), so neither is found. The app's curated places cover the main sights.
+  - The matcher's cost is linear in the list: a 6x CPU slowdown gives 27 to 73 ms a keystroke at 26,195 places. Widening Cambodia (+9,900 places) or Vietnam (+39,700) would add about 40% or 150% to that.
   - The journey screen shows "Add a stop you missed" only once it has a stop (its empty state returns early). The F1 run seeded a Bangkok stop. This is F2's ground.
   - The curated "Trat" anchor (11.82, 102.47) is 1.6 km from Ko Mak and 47.4 km from Trat town (GeoNames 12.2436, 102.5151), so Ko Mak's anchor is "Trat". See decision 22.
   - Found on the way, identical on the base branch:
@@ -135,7 +148,7 @@ Headless Chrome over CDP, 375 x 812 at DPR 2, fresh profiles on `127.0.0.1`, `do
 
 
 ## Open decisions (need the user)
-Closed on 2026-10-25: which places F1 keeps (the owner: places with a population, as complete as possible without a long list). Closed on 2026-10-24: 20 (the owner widened the Thai report into the language work F5 and L1 to L5). Closed on 2026-10-19: 9, 11 and 12 (earlier that day), 15 to 18 (D5 tidy after M5; the city-depth order; M5 right after M4c; visitors may browse, which gates on M9), and during M4a: "kush" and "gun" allowed in names, no native speaker available, the closed beta stays closed to visitors.
+Closed on 2026-10-25: which places F1 keeps (the owner: places with a population, as complete as possible without a long list), and 21 (every village in Laos, built in PR #133). Closed on 2026-10-24: 20 (the owner widened the Thai report into the language work F5 and L1 to L5). Closed on 2026-10-19: 9, 11 and 12 (earlier that day), 15 to 18 (D5 tidy after M5; the city-depth order; M5 right after M4c; visitors may browse, which gates on M9), and during M4a: "kush" and "gun" allowed in names, no native speaker available, the closed beta stays closed to visitors.
 
 The numbers below keep their old values.
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
@@ -144,16 +157,16 @@ The numbers below keep their old values.
 13. Relabel the 46 leftover "Lao National Tourism Administration" entries (and 4 "Ministry of Information, Culture and Tourism") on tourismlaos.org as "Tourism Laos"? This is data text only, and it bumps the version. Recommended: yes, inside D5 tidy.
 14. Add a coordinates check slice? D5 Laos checked 2 of 185 Lao pins, and both were wrong. Recommended: yes, one country per session, starting with Laos's remote sites, flagging any record more than 2 km from its OSM object.
 19. Install `pglast` (a PostgreSQL parser for Python, from PyPI, a few MB) so a future session can syntax-check SQL and PL/pgSQL before the owner pastes it? It parses only; it runs no database. Recommended: yes. It would have caught the type of mistake this slice's reviewer found by reading.
-21. Widen the place list for Laos to every village (13,388 places, 91 KB compressed, under the 250 KB cap)? The picker shows at most six matches at a time, whatever the list holds, so a longer list does not mean more scrolling, which was the concern behind the ruling. Recommended: yes for Laos, where villages (ban) are the administrative unit and GeoNames gives almost none a population. Leave Vietnam (275 KB for every populated place, over the cap) until a traveller reports a missing place. It is one rule in `scripts/build-gazetteer.py`.
 22. The curated "Trat" anchor sits on Ko Mak, 47.4 km from Trat town. Recommended: check it inside the coordinates slice (decision 14), together with the records filed under city "Trat", before moving or renaming it, because a rename changes which records Nearby shows.
 23. Add `js/market-routes.js` and `js/market-link.js` to `PRECACHE` and `check-offline-boot` to CI? Recommended: yes, riding along with F2 (two lines in `sw.js`, one in `guards.yml` and the scripts README).
+24. Widen Cambodia to every village too (12,128 places, 213 KB compressed, under the 250 KB cap)? GeoNames gives a population to 330 of its villages, and the 1,442 communes already cover the country evenly. Recommended: no, until a traveller reports a missing village. It adds about 9,900 places to every keystroke's search, and the picker shows six matches either way. One set in `build-gazetteer.py` (`EVERY_VILLAGE`) changes it.
 
 ## Next session prompts
-Order (owner, 2026-10-24): **F1 (built, PR #132), F2, F3, F4, F5, L1, L2, L3, L4 (the traveller fixes and the language work), then M4b-2**, then M4c, M5, then L5, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them. The F and L slices are written out in `docs/PLAN.md`, "Traveller fixes and language work".
+Order (owner, 2026-10-24): **F1 (merged, PR #132, with its Laos follow-up PR #133), F2, F3, F4, F5, L1, L2, L3, L4 (the traveller fixes and the language work), then M4b-2**, then M4c, M5, then L5, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them. The F and L slices are written out in `docs/PLAN.md`, "Traveller fixes and language work".
 
 ### F2: Your journey, the whole world, fully editable (next)
 > Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md (owner rulings, then F2). Run /slice for slice F2: Your journey on a world map, every stop editable.
-> **Start.** `git fetch`; `gh pr list --state all`. PR #132 (F1) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f2-journey-world`. Reproduce first: at 375 px the journey map is fenced to the region, and a stop from a journal entry has no edit control.
+> **Start.** `git fetch`; `gh pr list --state all`. PR #133 (the F1 Laos follow-up; #132 is merged) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/f2-journey-world`. Reproduce first: at 375 px the journey map is fenced to the region, and a stop from a journal entry has no edit control.
 > **What F1 left for F2.**
 > - "Add a stop you missed" already uses F1's picker. `spotForKey(key)` returns a list place `{ gz: true, country, city, lat, lng, local, prov, kind }`, and `addTrailStop()` takes its `lat`, `lng`, `city` and `country` as they are.
 > - The journey's empty state returns before that button exists. Offer it there too.
