@@ -6,7 +6,7 @@ import { putMeta, getMeta } from './idb.js';
 import { MERGED_PLACE_IDS, canonicalPlaceId } from './data/place-merges.js';
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 16;
+const CURRENT_VERSION = 17;
 
 function defaults() {
   return {
@@ -291,6 +291,14 @@ function migrate(data) {
     out.profile.skin = 'retro';
     out.profile.prefs.skinMovedFrom = 'classic';
   }
+  // v16 -> v17: the journey's override store, profile.trail.over (js/trail.js, slice F2). A stop on the
+  // journey screen can come from a journal entry or a trip stop, which the screen must not rewrite, so a
+  // rename, a new date, a move or a removal is kept there, keyed by the source ("entry:<id>", "trip:<id>").
+  // A trail saved before this has none; trail.js bucket() makes the same repair on first use.
+  const trail = out.profile.trail;
+  if (dv < 17 && trail && typeof trail === 'object' && (!trail.over || typeof trail.over !== 'object' || Array.isArray(trail.over))) {
+    out.profile.trail = { ...trail, over: {} };
+  }
   return out;
 }
 
@@ -413,6 +421,11 @@ function hasUserData(s) {
   // trail must not have it replaced by a stale mirror.
   const trail = profile.trail && typeof profile.trail === 'object'
     && Array.isArray(profile.trail.pts) && profile.trail.pts.length;
+  // The journey's overrides (js/trail.js): a rename, a new date, a new place or a removal the traveller
+  // typed for a stop that comes from a journal entry or a trip stop. The source record is untouched, so
+  // this is the only place the change lives.
+  const overrides = profile.trail && typeof profile.trail === 'object' && profile.trail.over
+    && typeof profile.trail.over === 'object' && Object.keys(profile.trail.over).length;
   // Closes the candidate the comment above flagged: per-phrase notes the traveller typed.
   const pnotes = prefs.phraseNotes && typeof prefs.phraseNotes === 'object'
     && Object.keys(prefs.phraseNotes).length;
@@ -423,7 +436,7 @@ function hasUserData(s) {
     && Object.values(prefs.customPhrases).some((arr) => Array.isArray(arr) && arr.length);
   return !!(j || b || stops || visits || wd || c || p || col || pd || f
     || stay || areas || contacts || threads || listings || album || board || per || journeys
-    || cells || done || idp || phr || cust || trail || pnotes);
+    || cells || done || idp || phr || cust || trail || overrides || pnotes);
 }
 
 function load() {

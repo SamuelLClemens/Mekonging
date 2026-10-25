@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.649.0';
+const CACHE_VERSION = 'mk-v0.650.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -105,6 +105,8 @@ const PRECACHE = [
   'js/theme.js',
   'js/theme-boot.js',
   'js/trail.js',
+  'js/market-routes.js',
+  'js/market-link.js',
   'js/screens/home.js',
   'js/screens/weather.js',
   'js/screens/nextstop.js',
@@ -370,7 +372,7 @@ const PRECACHE = [
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
   'css/market.css': 'd4a46cd8',
-  'css/style.css': 'b404821c',
+  'css/style.css': '2fd10626',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'index.html': 'fbe66c6f',
@@ -540,12 +542,12 @@ const MANIFEST = {
   'js/gamify.js': '235c330e',
   'js/i18n.js': '81404ab3',
   'js/idb.js': 'c5e4e32a',
-  'js/journey-share.js': 'd020ccad',
+  'js/journey-share.js': 'e859a00d',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '5732784f',
+  'js/main.js': '71bead08',
   'js/map-tiles.js': '3f500cc5',
-  'js/map.js': 'c8e7b440',
+  'js/map.js': 'baf60785',
   'js/market-api.js': '0f0d76c5',
   'js/market-art.js': '8473a6c4',
   'js/market-config.js': 'd342b560',
@@ -583,7 +585,8 @@ const MANIFEST = {
   'js/screens/giveback.js': '6ed0573a',
   'js/screens/help.js': '4af2770c',
   'js/screens/home.js': 'e13772c4',
-  'js/screens/journal.js': '645b40e1',
+  'js/screens/journal.js': '3091b0d4',
+  'js/screens/journey-edit.js': '2ab9426e',
   'js/screens/map.js': '69c5faff',
   'js/screens/market-account.js': '7024bb25',
   'js/screens/market-home.js': 'd0289385',
@@ -610,11 +613,11 @@ const MANIFEST = {
   'js/screens/welcome.js': '6f39cb03',
   'js/screens/you.js': '05c7503c',
   'js/social.js': 'bdf1920c',
-  'js/state.js': '64e80529',
+  'js/state.js': '4bf5fd03',
   'js/svg-pan-zoom.js': '6c2048a4',
   'js/theme-boot.js': '96c9fd57',
   'js/theme.js': 'd91d1534',
-  'js/trail.js': 'c04f9efc',
+  'js/trail.js': '4f5e1c1c',
   'js/translate.js': 'bb9a9517',
   'js/tts.js': '43323496',
   'js/ui-widgets.js': '0b8b202b',

@@ -5,11 +5,11 @@ Python 3 (no dependencies, run it directly) or a browser module you import in th
 
 ## Before every commit
 
-Seventeen guards, plus the content validator below. Each one exists because the failure it catches actually shipped. Run all of
+Nineteen guards, plus the content validator below. Each one exists because the failure it catches actually shipped. Run all of
 them; each prints one line and exits non-zero on failure.
 
 ```bash
-for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
@@ -17,7 +17,7 @@ python3 tools/style-tiles/port-themes.py --check
 python3 scripts/check-cache-version.py --base feat/scaffold-bangkok-slice
 ```
 
-The same seventeen also run in CI, from `.github/workflows/guards.yml`, on every pull request into
+The same nineteen also run in CI, from `.github/workflows/guards.yml`, on every pull request into
 `feat/scaffold-bangkok-slice` and on every push to it. CI runs every guard even after one
 fails, prints the full output of each failure, and fails the check if any guard does. On a
 pull request `check-cache-version` compares against `origin/feat/scaffold-bangkok-slice`; on a
@@ -27,6 +27,7 @@ list above, so a new guard goes in both places.
 
 | guard | catches | why it exists |
 |---|---|---|
+| `check-offline-boot` | a module on the eager launch path (the `modulepreload` list in `index.html`) that `sw.js` does not list in `PRECACHE` | on 2026-09-20 the app rendered "Loading your companion…" and nothing else offline: three eagerly imported modules were not precached, returned 504, and stopped module evaluation. The worker caches a sub-resource only when a request passes through it, so a traveller who opens the app once and goes offline may find it will not start. The guard was written then but never ran in CI, and `js/market-routes.js` and `js/market-link.js` drifted out of `PRECACHE` until F2 (decision 23) added both and the guard to CI |
 | `check-imports` | a named import with no matching export | a file split leaves them behind and the module simply never loads |
 | `check-undefined` | an identifier used but never declared, imported or parametered | ES modules are strict mode, so this is a ReferenceError waiting for the right tap. Caught `wxMetric` and `weatherKey` — the same refactor missed them two comments apart |
 | `check-net-gates` | an `online()` gate that can render nothing | shipped three times in three files: Home lost its weather section, rates froze 8% out, and Talk lost live translation entirely |

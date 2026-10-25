@@ -10,7 +10,8 @@
 // path offers it to a feed, and so it can afford to be precise and to be on by default.
 //
 // Nothing here leaves the device. There is no endpoint, no upload, no import into
-// journey-share.js's opt-in scopes unless the traveller ticks the box there themselves.
+// journey-share.js's opt-in scopes unless the traveller ticks the box there themselves. The
+// automatic pins never go; a stop the traveller added by hand rides with the "stops" box.
 //
 // ON BY DEFAULT, and honestly so. The flag is stored as `off`, not `on`, so a profile that
 // has never seen this feature is already recording without a migration having to write to
@@ -32,8 +33,9 @@ const MAX_PTS = 1500;
 
 function bucket() {
   const p = store.profile;
-  if (!p.trail || typeof p.trail !== 'object') p.trail = { off: false, pts: [] };
+  if (!p.trail || typeof p.trail !== 'object') p.trail = { off: false, pts: [], over: {} };
   if (!Array.isArray(p.trail.pts)) p.trail.pts = [];
+  if (!p.trail.over || typeof p.trail.over !== 'object' || Array.isArray(p.trail.over)) p.trail.over = {};
   return p.trail;
 }
 
@@ -128,8 +130,7 @@ export function trailStats() {
 // and never touched by updateTrailStops, so correcting an auto-recorded pin's label later
 // does not relabel it as "added by you".
 export function addTrailStop({ lat, lng, city, cc, first, last }) {
-  if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  if (!validPoint(lat, lng)) return null;
   if (!first) return null;
   const b = bucket();
   if (b.pts.length >= MAX_PTS) b.pts.shift();
@@ -159,6 +160,8 @@ export function updateTrailStops(ids, patch = {}) {
     if (patch.cc !== undefined) p.cc = patch.cc || '';
     if (patch.first !== undefined && patch.first) p.first = patch.first;
     if (patch.last !== undefined) p.last = patch.last || p.first;
+    // Move the pin (the journey screen's "Move": a new place from the picker, a dropped pin or "I am here").
+    if (validPoint(patch.lat, patch.lng)) { p.lat = +patch.lat.toFixed(PRECISION); p.lng = +patch.lng.toFixed(PRECISION); }
     // How the traveller reached this point — a correction over the journey map's own
     // inferred glyph (js/screens/journal.js). '' clears it back to inferred rather than
     // pinning it to a guess forever.
@@ -178,6 +181,72 @@ export function deleteTrailStops(ids) {
   const before = b.pts.length;
   b.pts = b.pts.filter((p) => !p || !set.has(p.id));
   const n = before - b.pts.length;
+  if (n) save();
+  return n;
+}
+
+// ---- JOURNEY OVERRIDES — editing a stop this file does not own ---------------
+// A stop on the journey screen is built from three sources (journeyStops(), js/screens/journal.js): the
+// trail points above, journal entries that carry a place, and trip stops whose title names a city. The
+// trail owns its points, so the edit above rewrites them. A journal entry and a trip stop belong to their
+// own screens, and the reason stands that the journey must never rewrite them: a rename here would
+// otherwise change what the diary says. So the change is kept here, keyed by the source ("entry:<id>",
+// "trip:<id>"), and journeyStops() reads it while it builds the stops. { city, first, last, lat, lng,
+// hidden }, every field optional. Removing a stop is `hidden`, which "Bring back removed stops" clears.
+// Stored in profile.trail.over (state.js schema v17), so it travels with the trail and nowhere else.
+function validPoint(lat, lng) {
+  return typeof lat === 'number' && typeof lng === 'number' && Number.isFinite(lat) && Number.isFinite(lng)
+    && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+}
+
+// The override for one source, or {} when it has none.
+export function journeyOverride(key) { return bucket().over[key] || {}; }
+
+export function setJourneyOverride(keys, patch = {}) {
+  const over = bucket().over;
+  let n = 0;
+  (keys || []).forEach((key) => {
+    if (!key) return;
+    const o = over[key] || (over[key] = {});
+    if (patch.city !== undefined) o.city = String(patch.city || '').slice(0, 80);
+    if (patch.first !== undefined && patch.first) o.first = patch.first;
+    if (patch.last !== undefined) o.last = patch.last || o.first || '';
+    if (validPoint(patch.lat, patch.lng)) { o.lat = +patch.lat.toFixed(PRECISION); o.lng = +patch.lng.toFixed(PRECISION); }
+    if (patch.hidden !== undefined) { if (patch.hidden) o.hidden = true; else delete o.hidden; }
+    n++;
+  });
+  if (n) save();
+  return n;
+}
+
+// Rename, re-date or move one merged stop: the trail's own points are rewritten, and every other source
+// the stop carries gets an override, so the stop reads the same whichever source drew it.
+export function editJourneyStop(stop, patch) {
+  updateTrailStops(stop._trailIds, patch);
+  setJourneyOverride(stop._srcKeys, patch);
+}
+
+// Remove one merged stop. Its trail points are deleted, as before; a journal entry or a trip stop is only
+// hidden from the journey. Neither is touched at its source.
+export function removeJourneyStop(stop) {
+  deleteTrailStops(stop._trailIds);
+  setJourneyOverride(stop._srcKeys, { hidden: true });
+}
+
+export function hasHiddenStops() { return Object.values(bucket().over).some((o) => o && o.hidden); }
+
+// Bring every removed stop back. A rename or a new date the traveller gave one of them before removing it
+// comes back with it; a record left empty is dropped.
+export function restoreHiddenStops() {
+  const over = bucket().over;
+  let n = 0;
+  Object.keys(over).forEach((key) => {
+    const o = over[key];
+    if (!o || !o.hidden) return;
+    delete o.hidden;
+    if (!Object.keys(o).length) delete over[key];
+    n++;
+  });
   if (n) save();
   return n;
 }
