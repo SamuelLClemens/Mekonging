@@ -8,7 +8,16 @@
 - M1 (the board moved to `js/screens/exchange.js`) is PR #108, `mk-v0.633.0`, 2026-10-12.
 - M1 (PR #108) and M2 (the Market tab, PR #111, `mk-v0.635.0`) are merged. M3 is next on the exchange side. Its owner actions (`docs/EXCHANGE.md` §15, the M3 rows up to sending the public values) were done on 2026-10-19.
 
-### Release order (owner, 2026-10-19; updated after M3b; fixes inserted 2026-10-24)
+### Release order (owner, 2026-10-19; updated after M3b; fixes inserted 2026-10-24; program order 2026-10-25)
+- **Owner rulings, 2026-10-25 (program session 0).** `docs/PROGRAM.md` holds the re-measured open-item register, the style
+  brief and the ranked feature backlog (T1 to T15). The owner answered one form: the style work splits (S0, the style gate,
+  runs alongside; S1, the style foundation, goes just before F4; Q3 to Q7 go after L4), trust comes first (T1, fact
+  freshness, and T2, border status, run right after Q7, before M4b-2; T3 to T15 after C8), decisions 14, 19 and 23 are yes,
+  13 is yes, 10 waits until Q5 is done, and 24 is yes (every Cambodian village, slice F1b). The order is now:
+  F2 (with decision 23), F1b, F3, S1, F4, F5, L1, L2, L3, L4, Q3 to Q7, T1, T2, M4b-2, M4c (installs `pglast`, decision 19),
+  M5, L5, D5 tidy (with decision 13), G1 to G4 (coordinates checks, decision 14, with decision 22 in G1), R1 to R3 (the style
+  roll-out), B1 to B8, C1 onward, then T3 to T15. Q2, S0 and Q8 run alongside. Session 0 chose the places of F1b, G1 to G4,
+  R1 to R3 and `pglast` (the form did not ask); the owner can move them.
 - **Owner rulings, 2026-10-24: the traveller fixes and the language work (section below) come before M4b-2**, in the order F1, F2, F3, F4, F5, L1, L2, L3, L4. They stack like any releasing slice. The Market's M4b-2, M4c and M5 then follow, then **L5** (Talk by invite, which reuses M5), then D5 tidy and the rest as listed.
 - Merged on 2026-10-19: D5 Laos (PR #122, `mk-v0.643.0`), M3a (PR #124, `mk-v0.644.0`) and **M3b, accounts and sign-in** (PR #125, `mk-v0.645.0`). M3b's owner checks (migration 001, the RLS test, the Security Advisor, the iPhone sign-ins) are tracked in `docs/HANDOFF.md`.
 - **Owner ruling after M3b: Market first, one slice per session** (`docs/EXCHANGE.md` §16, 2026-10-19). Releasing slices stack, one at a time, each from the merged tip:
@@ -20,10 +29,10 @@
   4. **M5**: messages, block and live alerts, right after M4c (owner, 2026-10-19): a marketplace that cannot message cannot complete a hand-off. M6 onward follow later.
   5. **D5 tidy** (approved): relabel the 50 "Ministry of Tourism" entries on tourismcambodia.com and .org (34 in `places.kh.ext.js`, 6 in `places.kh.js`, 5 in `local.kh.js`, 3 in `itineraries.js`, 1 each in `info.kh.js` and `prices.kh.js`) as "Tourism Cambodia", with tourism.gov.kh as the ministry. Check Long Beach (Sok San) against Long Set Beach (4K Beach) and merge them if they are one beach (with a `place-merges.js` line). Open decision 13 (the Tourism Laos relabel) is recommended to ride along.
   6. **Bangkok B1 to B8** (below), then **city depth C1 onward** (below, order confirmed by the owner).
-- Q2, the audit driver under `tools/audit-375/` (tools only, no version bump), can run alongside any of these. Q3 to Q8 stack like any releasing slice.
+- Q2, the audit driver under `tools/audit-375/` (tools only, no version bump), can run alongside any of these, and so can S0 and Q8. Q3 to Q7 stack like any releasing slice, after L4 (owner, 2026-10-25).
 
 ## Traveller fixes and language work (owner, 2026-10-24)
-The owner listed five fixes "we need to make for sure", then widened the language one. Code facts below were measured at 6e5a7cc (`mk-v0.647.0`, the live version). Each slice is one session, run with `/slice`, and stacks on the merged tip of the one before. F2 and F3 use F1's place list; L2 uses F5's check; L4 uses L3's list.
+The owner listed five fixes "we need to make for sure", then widened the language one. Code facts below were measured at 6e5a7cc (`mk-v0.647.0`, the live version). Each slice is one session, run with `/slice`, and stacks on the merged tip of the one before. F2 and F3 use F1's place list; L2 uses F5's check; L4 uses L3's list. Since 2026-10-25, F1b runs between F2 and F3, and S1 (`docs/PROGRAM.md` section 5) between F3 and F4.
 
 ### Owner rulings, 2026-10-24
 - The five fixes come before M4b-2.
@@ -48,6 +57,20 @@ The owner listed five fixes "we need to make for sure", then widened the languag
   - Credit GeoNames where the app lists its data sources.
 - **Done when.** Koh Chang, Koh Mak and 10 sampled small places (at least two per country, including Koh Rong Samloem in Cambodia, Con Son in Vietnam and Don Khone in Laos) can be found in every picker and show a forecast and a pin at 375 px. The place list loads offline after the first visit. File and pack sizes are reported before and after. All guards and the validator pass.
 - **Out of scope.** Place records and guides for the new places (content for Koh Chang and Koh Mak is its own data slice), the journey map (F2), automatic location (F3).
+
+### F1b: every village in Cambodia (owner, 2026-10-25, decision 24)
+- **Problem.** Cambodia's place list holds its communes and populated places but few villages: 2,192 places, 341 of them
+  villages (`js/data/gazetteer.kh.js`, measured 2026-10-25).
+- **Measured.** Every village would make 12,128 places, 213 KB gzip, under the 250 KB cap (F1's measurement, `docs/HANDOFF.md`
+  decision 24). Laos took the same step in PR #133 through `EVERY_VILLAGE` in `scripts/build-gazetteer.py`. The worst
+  keystroke at 26,195 places is 73 ms under a 6x CPU slowdown; about 9,900 more places add about 40% to it.
+- **Scope.** Add Cambodia to `EVERY_VILLAGE`, rebuild and measure. Thailand, Vietnam and Laos stay byte for byte unchanged.
+  Measure the keystroke cost before and after under a 6x CPU slowdown; if the worst query passes 100 ms, tune the matcher in
+  the same slice.
+- **Done when.** Three Cambodian villages absent before are found in every picker and show a forecast and a pin at 375 px;
+  the offline probe finds one with the server stopped; file, `PRECACHE` and manifest sizes are reported before and after;
+  all guards and the validator pass.
+- **Out of scope.** Landmarks (T3 in `docs/PROGRAM.md`), Vietnam (T13).
 
 ### F2: Your journey, the whole world, fully editable
 - **Problem.** "My journey" must be fully editable, and its map must cover the world so a traveller can tag where they are from anywhere.

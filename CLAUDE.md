@@ -138,7 +138,7 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 ## Docs map (most are history; read only what the task names)
 - `scripts/README.md`: the guards. `DESIGN_SYSTEM.md` and `VISUAL_DIRECTION_PROMPT.md`: theme, all four phases merged.
 - `AUDIT_REPORT.md` section 7: the 11 audit slices (all merged). `WORK_ORDER.md`: the 15-item owner list in slices.
-- `BEST_TOOL_PROMPT.md`: the program prompt for session 0 (open-item register, style refinement, feature backlog); its output is `docs/PROGRAM.md`.
+- `BEST_TOOL_PROMPT.md`: the program prompt for session 0. Its output, `docs/PROGRAM.md`, holds the open-item register, the style brief and the feature backlog (T1 to T15); every slice updates it.
 - `MASTER_BUILD_PROMPT.md`, `OVERHAUL.md`, `UX_OVERHAUL_PROMPT.md`, `MEKONGING_REFACTOR_*`: earlier planning, now history.
 
 ## Open items
