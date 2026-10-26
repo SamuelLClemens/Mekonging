@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.650.0';
+const CACHE_VERSION = 'mk-v0.651.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -417,7 +417,7 @@ const MANIFEST = {
   'js/data/food.th.js': 'c2e15c48',
   'js/data/food.vi.ext.js': '2a883a69',
   'js/data/food.vi.js': 'e73c2c1c',
-  'js/data/gazetteer.kh.js': '148e9367',
+  'js/data/gazetteer.kh.js': '46e98a70',
   'js/data/gazetteer.la.js': '88da8327',
   'js/data/gazetteer.th.js': 'ebd2e63d',
   'js/data/gazetteer.vi.js': '659445ce',
@@ -545,7 +545,7 @@ const MANIFEST = {
   'js/journey-share.js': 'e859a00d',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '71bead08',
+  'js/main.js': '2aaa84b7',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'baf60785',
   'js/market-api.js': '0f0d76c5',
@@ -563,7 +563,7 @@ const MANIFEST = {
   'js/personal.js': '34ddb915',
   'js/photo-registry.js': 'c1c4f7e2',
   'js/phrase-ui.js': '7f34630a',
-  'js/place-search.js': 'fc61f9ab',
+  'js/place-search.js': 'c847ec89',
   'js/place-ui.js': '8937b287',
   'js/reminders.js': 'f18165dd',
   'js/render-utils.js': '154dc807',

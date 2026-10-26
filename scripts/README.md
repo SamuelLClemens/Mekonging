@@ -124,7 +124,7 @@ A migration runs once, so after 001 a new city reaches the database only through
 Download `{TH,VN,KH,LA}.zip` from `download.geonames.org/export/dump/` and the same four from its
 `alternatenames/` folder into a new empty folder, and run the script with `python3 -I`. It keeps
 islands, administrative seats, places with a population, populated subdistricts and communes,
-places with a Wikipedia or Wikidata entry, and every village in Laos (owner, 2026-10-25), and fails if a country passes
+places with a Wikipedia or Wikidata entry, and every village in Laos and Cambodia (owner, 2026-10-25), and fails if a country passes
 250 KB after gzip. `--report` prints the counts and sizes without writing. Then bump the version and
 run `build-sw-manifest.py --write`.
 
