@@ -1,9 +1,9 @@
-# Handoff, 2026-10-27 (F7a: Emergency outside the four countries)
+# Handoff, 2026-10-27 (F7a merged; F7b placed after F5)
 
 The previous handoff (S1) is `git show 2f65d17:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
 
 ## Shipped
-- **F7a**, branch `feat/f7a-emergency-outside`, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140), `mk-v0.654.0` (store version unchanged, 17). Waits for the owner's merge; F4 stacks on it. The owner placed F7 before F4 and ruled the two open questions of decision 28: a **worldwide table** of national numbers, and the location line **with coordinates**. The table is too big for one session, so F7 was split: F7a is the part that needs no new data.
+- **F7a**, branch `feat/f7a-emergency-outside`, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140), `mk-v0.654.0` (store version unchanged, 17). **Merged by the owner, 2026-10-27 14:17:39Z** (merge commit `151422f`, CI `guards` SUCCESS). The owner placed F7 before F4 and ruled the two open questions of decision 28: a **worldwide table** of national numbers, and the location line **with coordinates**. The table is too big for one session, so F7 was split: F7a is the part that needs no new data.
   - `countryOfFix` (`js/main.js`) returns null when no curated city is within `OUTSIDE_KM` (250 km).
   - `js/screens/emergency-outside.js` (new, eager, precached): `fixSureness(fix)` returns `sure`, `far` or `outside`; `outsideScreen(route, fix, near)` renders `#sos` and `#hospital` outside the region: coordinates to read to a dispatcher, the distance to the nearest city, `tel:112` with the note "answered on most mobile networks worldwide, not all", a hospital map search around the fix, the four chips (none pressed), and on `#sos` the survival guide and an embassy search; `farCard` adds 112 above the numbers on a `far` fix.
   - `sosScreen` and `hospitalScreen` branch on it. An explicit country pick still wins.
@@ -16,7 +16,7 @@ Headless Chrome over CDP, fresh profiles on 127.0.0.1, 375 x 812 at DPR 2 (and 1
 - **Why 60 km:** of the 36,131 list places, 681 have no outline within 10 km; 124 of those (0.34 % of all) are more than 60 km from a curated city.
 - Screenshots looked at: Singapore `#sos` and `#hospital` at 375 px dark, Yangon `#sos` at 375 px light, Singapore `#sos` at 1280 px light. One defect found that way (the city read "undefined": the spot key is `city`, not `name`) and fixed before the commit.
 - All CI guards, place-fields, port-themes, derive-viz, cache-version (against `origin/feat/scaffold-bangkok-slice`) and `jsc -m scripts/validate-jsc.mjs` pass. `check-preloads` and `check-offline-boot` failed once on the new eager module and were fixed (preload block regenerated; file added to `PRECACHE`).
-- Not verified: an iPhone; CI on the PR (none had reported when this was written); the light theme of the outside screen on a phone width (the dark skin was).
+- CI on PR #140: `guards` SUCCESS, checked after the merge. Not verified: an iPhone; the light theme of the outside screen on a phone width (the dark skin was).
 
 ## Owner checks
 - [ ] **F7a, iPhone:** with the phone's location set outside the region (Xcode simulated location, or travelling), `#sos` shows "Outside Thailand, Vietnam, Cambodia and Laos", the coordinates, and the 112 button opens the dialer. Do not dial it.
@@ -43,14 +43,14 @@ Closed on 2026-10-27: 25 (worktrees), 28 (rulings above), 29 (hold the pick). Th
 8. Legal, for Omer Hanegbi or Omri Siri: `docs/EXCHANGE.md` section 14, the terms and privacy policy, and the dispensary question. The terms and privacy policy gate M9; cash swap gates M10.
 10. Topbar icon spacing. Deferred until Q3 to Q5 are done; ask again after Q5.
 25. (worktrees closed) The remote branches of merged work are still on origin: the 15 in `docs/PROGRAM.md` 4.6, plus `data/f1b-cambodia-villages`, `feat/f2-journey-world`, `feat/f3-location-first-open` and `feat/s1-tokens-machinery`, and the orphan screenshot branches. Recommended: remove them, one step per message, each checked against the tip first.
-26. A coarse world outline for the journey map offline. Owner, 2026-10-26: measure first. Not done. F7b needs the same file, so decide them together.
-28. **Open part:** where to place **F7b** (the worldwide table). Recommended: right after F5, with decision 26's measurement run beforehand. It is a safety item but F7a already removes the wrong-numbers hazard. The owner may put it before F4.
+26. A coarse world outline for the journey map offline. Owner, 2026-10-26: measure first; 2026-10-27: run the measurement before F7b. Not run: the download needs the owner's yes with file name, source and size. F7b needs the same file, so rule on the map's use of it after the numbers are in.
+28. **Closed** (owner, 2026-10-27): **F7b** (the worldwide table) goes right after F5, with decision 26's outline measurement run beforehand.
 29. **Ruled** (owner, 2026-10-27): hold the pick. Slice F6 (4.1), unplaced. Not ruled: for how long (a time, a distance moved, until the traveller asks), and what makes the pick let go. Recommended placement: with the other location work, after F4.
 
 ## Next session prompts
-Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~, ~~S1~~ ([PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139), merged), ~~F7a~~ ([PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140), built, placed before F4 by the owner), **F4**, F5, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4**, **R1 to R3**, Bangkok B1 to B8, city depth C1 onward, then T3 to T15; F6 and F7b are unplaced. Each releasing slice stacks on the merged tip of the one before. Q2, S0, Q8 and the decision 26 measurement change no shipped file and can run alongside any of them.
+Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~, ~~S1~~ ([PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139), merged), ~~F7a~~ ([PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140), built, placed before F4 by the owner), **F4**, F5, **the decision 26 measurement**, **F7b**, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4**, **R1 to R3**, Bangkok B1 to B8, city depth C1 onward, then T3 to T15; F6 is unplaced. F7b sits right after F5 (owner, 2026-10-27). Each releasing slice stacks on the merged tip of the one before. Q2, S0, Q8 and the decision 26 measurement change no shipped file and can run alongside any of them; the measurement must be done before F7b starts.
 
-**Next is F4.** [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140) must be merged first.
+**Next is F4.** [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140) is merged (`151422f`), so F4 can start from the tip of `origin/feat/scaffold-bangkok-slice`.
 
 ### F4 and F5, then L1 to L4 (and L5 after M5)
 > Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <F4, F5, L1 to L4 or L5>, as written there.
@@ -58,10 +58,16 @@ Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~,
 > F5, L1 and L5 end with a check by the owner on their iPhone in Safari, from a short checklist the slice writes. L5 starts only after M5 has merged.
 > F4 and L3 draw their charts with S1's `--viz-*` tokens (built: `css/refined.css`; slots in the fixed order brick, plum, gold, teal, blue, green, violet, rose, never cycled; lines, bars and stacks only, a scatter or a map takes the first three; the `dataviz` skill's rules apply). Their screens carry `data-refined` on the root to get the refined type scale; new text sizes use `--fs-*` (`check-font-sizes`), new icons `js/icons.js`. F5 checks the OCR language files against the service-worker manifest (`docs/PROGRAM.md` 4.4). Machine-fill strings added by F1 and F3 in L2.
 
-### F7b: the worldwide table of emergency numbers (once the owner places it)
+### Decision 26 measurement: the world outline's size (before F7b; changes no shipped file)
+> Read CLAUDE.md, docs/HANDOFF.md, docs/PROGRAM.md (4.3 decision 26, 4.4 Map and Location rows) and `js/screens/emergency-outside.js`. Not a releasing slice: no version bump, no PR needed unless the numbers go in a doc.
+> **Ask the owner first (one form):** the download. State the file name, source and size before fetching (Natural Earth admin-0 countries at 1:110m and 1:50m are the candidates, from naturalearthdata.com or the `nvkelso/natural-earth-vector` repository on GitHub). Put each download in its own new, empty directory under `~/Library/Caches/`, never in the repo.
+> **Measure:** for each resolution, simplify the polygons (keep the country code), write the lazy data file the app would load, and report its KB raw and gzipped, beside `js/data/basemap.js` (26 KB, four countries). Then run the lookup on the 15 fixes of F7a's driver plus the Mae Sot pair and report which country each returns and how far each border is off. One file has to serve both the journey map (land) and F7b (the country of a fix): say whether admin-0 does.
+> **Done when:** a table of resolution, simplification, KB, gzip KB and the lookup results is in `docs/PROGRAM.md` 4.3 under decision 26, and the owner is asked once whether the map uses it. Nothing is built into the app.
+
+### F7b: the worldwide table of emergency numbers (placed right after F5; the measurement above comes first)
 > Read CLAUDE.md, docs/HANDOFF.md, docs/PROGRAM.md (4.1 F7b, 4.3 decision 28, 4.4 Location row) and `js/screens/emergency-outside.js`. Run /slice for slice F7b.
-> **Start.** `git fetch`; `gh pr list --state all`. F7a (PR #140) must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`. Reproduce on a rendered screen first (Singapore, Yangon and a fix 30 km into Myanmar from Mae Sot; the driver pattern is in HANDOFF "Verified").
-> **Ask the owner first (one form):** the world outline is a download, so state the file name, source and size before fetching (Natural Earth land or admin-0 at 1:110m or 1:50m; decision 26 measures the same file for the journey map). Also ask whether to split the table by region.
+> **Start.** `git fetch`; `gh pr list --state all`. F5 must be merged, the decision 26 measurement done and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`. Reproduce on a rendered screen first (Singapore, Yangon and a fix 30 km into Myanmar from Mae Sot; the driver pattern is in HANDOFF "Verified").
+> **Ask the owner first (one form):** the world outline is a download. If the measurement already got the owner's yes for the file, use that file and say so; otherwise state the file name, source and size before fetching. Also ask whether to split the table by region.
 > **Scope.** A sourced table of national emergency numbers (every entry cited with a real URL; leave a country open rather than publish an unsourced number); a lazy country-of-fix lookup from the outline (new data files, never an eager global); the outside screen shows the numbers of the country the fix is in, keeps the coordinates, keeps 112 as the fallback, and `far` fixes get the answer too. Replace `fixSureness`'s distance hedge with the outline where it decides.
 > **Done when:** the 15 fixes of F7a's driver plus a border pair (Mae Sot and 30 km into Myanmar) show the right country's numbers or, where the table has a gap, 112 and the coordinates; 0 console errors; 0 overflow at 375 px; every guard passes.
 > **Out of scope:** translating the new strings (L2), the other `nearestSpotGlobal` callers.

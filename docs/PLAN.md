@@ -14,7 +14,7 @@
   runs alongside; S1, the style foundation, goes just before F4; Q3 to Q7 go after L4), trust comes first (T1, fact
   freshness, and T2, border status, run right after Q7, before M4b-2; T3 to T15 after C8), decisions 14, 19 and 23 are yes,
   13 is yes, 10 waits until Q5 is done, and 24 is yes (every Cambodian village, slice F1b). The order is now:
-  F2 (with decision 23), F1b, F3, S1, F4, F5, L1, L2, L3, L4, Q3 to Q7, T1, T2, M4b-2, M4c (installs `pglast`, decision 19),
+  F2 (with decision 23), F1b, F3, S1, F7a (placed before F4 by the owner, 2026-10-27), F4, F5, F7b (placed right after F5, 2026-10-27; decision 26's outline measurement first), L1, L2, L3, L4, Q3 to Q7, T1, T2, M4b-2, M4c (installs `pglast`, decision 19),
   M5, L5, D5 tidy (with decision 13), G1 to G4 (coordinates checks, decision 14, with decision 22 in G1), R1 to R3 (the style
   roll-out), B1 to B8, C1 onward, then T3 to T15. Q2, S0 and Q8 run alongside. Session 0 chose the places of F1b, G1 to G4,
   R1 to R3 and `pglast` (the form did not ask); the owner can move them.
