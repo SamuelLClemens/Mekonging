@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.652.0';
+const CACHE_VERSION = 'mk-v0.653.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -97,7 +97,9 @@ const PRECACHE = [
   'index.html',
   'manifest.webmanifest',
   'css/style.css',
+  'css/refined.css',
   'icons/icon.svg',
+  'icons/ui.svg',
   'icons/apple-touch-icon.png',
   'js/main.js',
   'js/app-state.js',
@@ -374,10 +376,12 @@ const PRECACHE = [
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
   'css/market.css': 'd4a46cd8',
+  'css/refined.css': 'e9c66ef7',
   'css/style.css': '2fd10626',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
-  'index.html': '4bebee92',
+  'icons/ui.svg': '8b29a252',
+  'index.html': '4323df07',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'f2ff527f',
@@ -544,12 +548,13 @@ const MANIFEST = {
   'js/fix-place.js': 'd7ca920d',
   'js/gamify.js': '235c330e',
   'js/i18n.js': '81404ab3',
+  'js/icons.js': '2538ab47',
   'js/idb.js': 'c5e4e32a',
   'js/journey-share.js': 'e859a00d',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
   'js/location-ask.js': '2be4200d',
-  'js/main.js': '22fbe839',
+  'js/main.js': 'd8c26693',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'baf60785',
   'js/market-api.js': '0f0d76c5',
@@ -560,13 +565,15 @@ const MANIFEST = {
   'js/market-link.js': '0d4268b0',
   'js/market-listings.js': 'c008e8c7',
   'js/market-routes.js': '2b771207',
-  'js/nav-groups.js': '5c8ca9e9',
+  'js/nav-groups.js': 'b9a99a72',
   'js/offline-areas-ui.js': '01b8e952',
   'js/offline-pack.js': '146bfdb9',
   'js/offline-ready.js': 'c93785dc',
   'js/personal.js': '34ddb915',
   'js/photo-registry.js': 'c1c4f7e2',
   'js/phrase-ui.js': '7f34630a',
+  'js/place-art.js': '5abb900a',
+  'js/place-card.js': '553c14dc',
   'js/place-search.js': '1cafa9c7',
   'js/place-ui.js': '8937b287',
   'js/reminders.js': 'f18165dd',

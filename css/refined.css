@@ -1,0 +1,208 @@
+/* "Mekong Retro, refined": the tokens and components of slice S1 (docs/PROGRAM.md section 5.3).
+
+   NOTHING HERE APPLIES TO AN EXISTING SCREEN. The slice's done criterion is a computed-style digest showing that
+   nothing outside the new components moved, so every rule below is one of:
+     * a NEW token name (:root): --lh-*, --icon-*, --card-media-*, --dur-1/2, --hit, --viz-*, --skel-*;
+     * the refined values of the EXISTING type tokens (--fs-*), scoped to [data-refined]. A screen group opts in
+       by putting data-refined on its root, which is what R1 to R3 do; until then no element carries it;
+     * a NEW class (.num, .icon, .rf-*, .pla-*) that no screen uses yet;
+     * a scoped override of an existing class (`[data-refined] .skeleton`).
+   The existing --fs-* tokens keep their values at :root (css/style.css), so every screen reads as before.
+
+   The generated block at the end is --viz-1 to --viz-8 for the 16 surfaces (11 skins, light and dark where a skin
+   has both). tools/style-tiles/derive-viz.py derives it into tools/style-tiles/round2.json and
+   tools/style-tiles/port-themes.py writes it here; scripts/check-contrast.py holds each colour to 3:1 on its card. */
+
+:root {
+  /* Line height for every script (5.3 item 2). Thai, Lao and Khmer stack marks above and below the line, and
+     Vietnamese puts two diacritics on one vowel, so a line box of 1 clips them. */
+  --lh-tight: 1.2;       /* Latin headings */
+  --lh-body: 1.5;
+  --lh-script: 1.7;      /* :lang(th), :lang(lo), :lang(km) */
+  --lh-vi: 1.6;          /* :lang(vi) */
+
+  /* Icons (item 5): the sprite is icons/ui.svg, drawn by js/icons.js. */
+  --icon-size: 20px;
+  --icon-stroke: 1.75;
+
+  /* The place card's media box (items 6 and 8). */
+  --card-media-ratio: 3 / 2;
+  --card-media-max: 240px;
+
+  /* Motion (item 9). The easing is the existing --ease, the one easing token. */
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+
+  /* The smallest target a control may have (item 10). Q3 to Q5 apply it. */
+  --hit: 44px;
+
+  /* Chart furniture (item 4). The series colours are --viz-1 to --viz-8, generated below per skin. */
+  --viz-grid: var(--line);
+  --viz-axis: var(--ink-soft);
+  --viz-label: var(--ink-soft);
+
+  /* Skeleton colours (item 9): the page's own ink laid over its card, so every skin gets its own. */
+  --skel-base: var(--line);
+  --skel-shine: rgba(255, 255, 255, 0.5);
+}
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  :root {
+    --skel-base: color-mix(in srgb, var(--ink) 9%, var(--card));
+    --skel-shine: color-mix(in srgb, var(--ink) 5%, var(--card));
+  }
+}
+
+/* The refined type scale (item 1), on one ratio of 1.125 from 1rem: 0.889, 0.79 below, 1.125, 1.266 and 1.424 above.
+   --fs-label is the exception: a floor of 12 px, because no text goes below it. --fs-lg is an alias of --fs-h2 in
+   style.css and var() is resolved where it is declared, so it is restated here. --fs-display is unchanged. */
+[data-refined] {
+  --fs-label: 0.75rem;
+  --fs-xs: 0.79rem;
+  --fs-sm: 0.889rem;
+  --fs-base: 1rem;
+  --fs-body: 1rem;
+  --fs-h3: 1.125rem;
+  --fs-h2: 1.266rem;
+  --fs-h1: clamp(1.424rem, 1.3rem + 0.7vw, 1.6rem);
+  --fs-lg: var(--fs-h2);
+  line-height: var(--lh-body);
+}
+[data-refined] :is(h1, h2, h3, h4) { line-height: var(--lh-tight); }
+/* A script rule outranks the heading rule (0,2,0 against 0,1,1), so a Thai heading keeps its marks. */
+[data-refined]:lang(th), [data-refined] :lang(th),
+[data-refined]:lang(lo), [data-refined] :lang(lo),
+[data-refined]:lang(km), [data-refined] :lang(km) { line-height: var(--lh-script); }
+[data-refined]:lang(vi), [data-refined] :lang(vi) { line-height: var(--lh-vi); }
+
+/* Figures (item 3): a price, a time, a distance or a count lines up in a column. */
+.num { font-variant-numeric: tabular-nums; }
+
+/* One icon: a symbol of icons/ui.svg, in the text colour (item 5). */
+.icon {
+  display: inline-block; flex: none; width: var(--icon-size); height: var(--icon-size); vertical-align: -0.2em;
+  fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* Loading and empty states (item 9). The shimmer already exists (.skeleton in style.css); inside a refined screen it takes the
+   per-skin colours above. An empty state carries the retro stripe band, which paints only on the retro theme. */
+[data-refined] .skeleton { background: var(--skel-base); }
+[data-refined] .skeleton::after { background: linear-gradient(90deg, transparent, var(--skel-shine), transparent); }
+.rf-empty { display: grid; justify-items: center; gap: var(--sp-2); padding: var(--sp-5) var(--sp-4); text-align: center; color: var(--ink-soft); }
+.rf-empty .stripe-band { width: 64px; border-radius: var(--r-pill); overflow: hidden; }
+.rf-empty-title { margin: 0; color: var(--ink); font-size: var(--fs-h3); font-weight: 700; }
+.rf-empty-text { margin: 0; max-width: 42ch; font-size: var(--fs-sm); }
+
+/* One reduced-motion rule for a refined screen. It honours the device setting and the app's own Reduce motion setting
+   (html[data-reduced-motion="on"], Settings). A skeleton stops shimmering, an animation ends at once. */
+@media (prefers-reduced-motion: reduce) {
+  [data-refined] *, [data-refined] *::before, [data-refined] *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+  }
+}
+html[data-reduced-motion="on"] [data-refined] *,
+html[data-reduced-motion="on"] [data-refined] *::before,
+html[data-reduced-motion="on"] [data-refined] *::after {
+  animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+}
+
+/* ---- The place card (item 6), photo treatment (item 8) ----
+   Anatomy, top to bottom: media (a photo, or artwork when there is none) in a 3 / 2 box capped at 240 px; the
+   credit line under a photo; the name and, under it, the local name; a meta row of open now, price tier and distance
+   in tabular figures; the source chip and "Checked <date>". Built by js/place-card.js. */
+.rf-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-soft);
+}
+.rf-card-media {
+  position: relative; overflow: hidden; width: 100%;
+  aspect-ratio: var(--card-media-ratio); max-height: var(--card-media-max);
+  background: var(--skel-base);
+}
+/* One crop rule: cover, centred. The height cap above is what keeps a tall portrait from running to 548 px. */
+.rf-photo { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.rf-card-media .pla-frame { position: absolute; inset: 0; }
+/* The label on a black-and-white archive photograph, in the top-left corner like a kind label. */
+.rf-archival {
+  position: absolute; top: var(--sp-2); left: var(--sp-2); padding: var(--sp-0h) var(--sp-2);
+  border-radius: var(--r-pill); background: var(--card); color: var(--ink); border: 1px solid var(--line);
+  font-size: var(--fs-label); font-weight: 700; line-height: var(--lh-tight);
+}
+/* One credit-line style, for every photo. */
+.rf-credit { margin: 0; padding: var(--sp-1) var(--sp-3) 0; color: var(--ink-soft); font-size: var(--fs-label); line-height: var(--lh-body); overflow-wrap: anywhere; }
+.rf-card-body { display: grid; gap: var(--sp-1h); padding: var(--sp-3); }
+.rf-card-name { margin: 0; font-size: var(--fs-h3); line-height: var(--lh-tight); font-weight: 800; color: var(--ink); }
+.rf-card-name > :is(a, button) {
+  display: inline-flex; align-items: center; min-height: var(--hit); max-width: 100%;
+  padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: start; text-decoration: none; cursor: pointer;
+  transition: color var(--dur-1) var(--ease);
+}
+.rf-card-local { margin: 0; color: var(--ink-soft); font-size: var(--fs-sm); }
+.rf-card-meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin: 0; padding: 0; list-style: none; color: var(--ink); font-size: var(--fs-sm); }
+.rf-card-meta li { display: inline-flex; align-items: center; gap: var(--sp-1h); }
+/* A state dot beside a state word: the colour never carries the state alone. */
+.rf-card-meta .rf-open::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-soft); }
+.rf-card-meta .rf-open[data-state="open"]::before { background: var(--good, var(--ink-soft)); }
+.rf-card-meta .rf-open[data-state="closed"]::before { background: var(--danger, var(--ink-soft)); }
+.rf-card-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2); margin: 0; color: var(--ink-soft); font-size: var(--fs-label); }
+.rf-chip {
+  display: inline-flex; align-items: center; max-width: 100%; padding: var(--sp-0h) var(--sp-2);
+  border: 1px solid var(--line); border-radius: var(--r-pill); color: var(--ink); background: var(--bg);
+  font-size: var(--fs-label); line-height: var(--lh-tight); overflow-wrap: anywhere;
+}
+
+/* ---- Artwork for a place with no photo (item 7), drawn by js/place-art.js ----
+   Inline, so every shape carries a class instead of a colour and each skin repaints the drawing. The classes:
+   b ground tint, s sun, p family fill, a accent, w paper, i ink, o ink outline, k thick stroke, g1..g4 the stripe band.
+   The family colour is one of the --viz-* slots, so it is already held to 3:1 on the card in every skin. */
+.pla-frame { --pa-k: var(--viz-5, var(--ink-soft)); --pa-bg: var(--bg); display: block; width: 100%; height: 100%; background: var(--pa-bg); }
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  .pla-frame { --pa-bg: color-mix(in srgb, var(--pa-k) 14%, var(--card)); }
+}
+.pla-frame[data-art="stay"] { --pa-k: var(--viz-5, var(--ink-soft)); }
+.pla-frame[data-art="food"] { --pa-k: var(--viz-1, var(--ink-soft)); }
+.pla-frame[data-art="culture"] { --pa-k: var(--viz-7, var(--ink-soft)); }
+.pla-frame[data-art="market"] { --pa-k: var(--viz-3, var(--ink-soft)); }
+.pla-frame[data-art="nature"] { --pa-k: var(--viz-6, var(--ink-soft)); }
+.pla-frame[data-art="beach"] { --pa-k: var(--viz-4, var(--ink-soft)); }
+.pla-frame[data-art="viewpoint"] { --pa-k: var(--viz-5, var(--ink-soft)); }
+.pla-frame[data-art="transport"] { --pa-k: var(--viz-2, var(--ink-soft)); }
+.pla-frame[data-art="practical"] { --pa-k: var(--viz-4, var(--ink-soft)); }
+.pla-frame[data-art="nightlife"] { --pa-k: var(--viz-8, var(--ink-soft)); }
+.pla-frame[data-art="other"] { --pa-k: var(--ink-soft); }
+.pla { display: block; width: 100%; height: 100%; }
+.pla .b { fill: var(--pa-bg); }
+.pla .s { fill: var(--sun); }
+.pla .p { fill: var(--pa-k); }
+.pla .a { fill: var(--sun-deep, var(--sun)); }
+.pla .w { fill: var(--card); }
+.pla .i { fill: var(--ink); }
+.pla .o { stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.pla path.o:not(.p):not(.a):not(.w):not(.s):not(.i) { fill: none; }
+.pla .k { fill: none; stroke: var(--pa-k); stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; }
+.pla .g1 { fill: var(--stripe-1, var(--ink-soft)); }
+.pla .g2 { fill: var(--stripe-2, var(--ink-soft)); }
+.pla .g3 { fill: var(--stripe-3, var(--ink-soft)); }
+.pla .g4 { fill: var(--stripe-4, var(--ink-soft)); }
+
+/* ==== BEGIN GENERATED VIZ (tools/style-tiles/port-themes.py; do not edit by hand) ==== */
+/* --viz-1 to --viz-8 in the fixed slot order brick, plum, gold, teal, blue, green, violet, rose, one rule per surface. Never reorder or cycle:
+   the order is what keeps neighbours apart under colour-vision deficiency (tools/style-tiles/derive-viz.py). */
+:root[data-skin="classic"][data-theme="light"] { --viz-1: #892D00; --viz-2: #CB6AB2; --viz-3: #835B00; --viz-4: #009B92; --viz-5: #1E4CA4; --viz-6: #409D49; --viz-7: #603493; --viz-8: #CB6E85; }
+:root[data-skin="classic"][data-theme="dark"] { --viz-1: #BA4F24; --viz-2: #CE6DB5; --viz-3: #956800; --viz-4: #00A89F; --viz-5: #3D6EC8; --viz-6: #1E812D; --viz-7: #A77CE1; --viz-8: #AD536B; }
+:root[data-skin="retro"][data-theme="light"] { --viz-1: #892D00; --viz-2: #CB6AB2; --viz-3: #835B00; --viz-4: #009E95; --viz-5: #1E4CA4; --viz-6: #409D49; --viz-7: #603493; --viz-8: #CB6E85; }
+:root[data-skin="retro"][data-theme="dark"] { --viz-1: #BE5228; --viz-2: #CE6DB5; --viz-3: #996B00; --viz-4: #00A89F; --viz-5: #4071CB; --viz-6: #228430; --viz-7: #A77CE1; --viz-8: #BC4A6B; }
+:root[data-skin="river"][data-theme="light"] { --viz-1: #892D00; --viz-2: #CE6DB5; --viz-3: #835B00; --viz-4: #00A198; --viz-5: #1E4CA4; --viz-6: #46A34F; --viz-7: #603493; --viz-8: #D2748B; }
+:root[data-skin="river"][data-theme="dark"] { --viz-1: #BA4F24; --viz-2: #CE6DB5; --viz-3: #956800; --viz-4: #00A89F; --viz-5: #3D6EC8; --viz-6: #1E812D; --viz-7: #A77CE1; --viz-8: #B94768; }
+:root[data-skin="flags"][data-theme="light"] { --viz-1: #892D00; --viz-2: #D270B8; --viz-3: #835B00; --viz-4: #00A198; --viz-5: #1E4CA4; --viz-6: #46A34F; --viz-7: #603493; --viz-8: #D2748B; }
+:root[data-skin="flags"][data-theme="dark"] { --viz-1: #B4481D; --viz-2: #CE6DB5; --viz-3: #8D6300; --viz-4: #00A89F; --viz-5: #3868C1; --viz-6: #157B27; --viz-7: #A77CE1; --viz-8: #A74D65; }
+:root[data-skin="temples"][data-theme="light"] { --viz-1: #892D00; --viz-2: #CE6DB5; --viz-3: #835B00; --viz-4: #00A198; --viz-5: #1E4CA4; --viz-6: #46A34F; --viz-7: #603493; --viz-8: #D2748B; }
+:root[data-skin="temples"][data-theme="dark"] { --viz-1: #BA4F24; --viz-2: #CE6DB5; --viz-3: #916500; --viz-4: #00A89F; --viz-5: #3A6BC5; --viz-6: #4DAA55; --viz-7: #A77CE1; --viz-8: #B94768; }
+:root[data-skin="night"][data-theme="dark"] { --viz-1: #B4481D; --viz-2: #CE6DB5; --viz-3: #8A6000; --viz-4: #00A89F; --viz-5: #3868C1; --viz-6: #157B27; --viz-7: #A77CE1; --viz-8: #B24162; }
+:root[data-skin="psychnight"][data-theme="dark"] { --viz-1: #B04519; --viz-2: #CE6DB5; --viz-3: #8A6000; --viz-4: #00A89F; --viz-5: #3564BE; --viz-6: #0F7824; --viz-7: #A77CE1; --viz-8: #AF3D60; }
+:root[data-skin="expedition"][data-theme="dark"] { --viz-1: #B74B21; --viz-2: #CE6DB5; --viz-3: #916500; --viz-4: #00A89F; --viz-5: #3A6BC5; --viz-6: #1A7E2A; --viz-7: #A77CE1; --viz-8: #B64465; }
+:root[data-skin="silk"][data-theme="light"] { --viz-1: #892D00; --viz-2: #D270B8; --viz-3: #835B00; --viz-4: #00A198; --viz-5: #1E4CA4; --viz-6: #46A34F; --viz-7: #603493; --viz-8: #D2748B; }
+:root[data-skin="tropical"][data-theme="light"] { --viz-1: #892D00; --viz-2: #D270B8; --viz-3: #835B00; --viz-4: #00A198; --viz-5: #1E4CA4; --viz-6: #46A34F; --viz-7: #603493; --viz-8: #D2748B; }
+:root[data-skin="psych"][data-theme="light"] { --viz-1: #892D00; --viz-2: #C867AF; --viz-3: #835B00; --viz-4: #009B92; --viz-5: #1E4CA4; --viz-6: #409D49; --viz-7: #603493; --viz-8: #CB6E85; }
+/* ==== END GENERATED VIZ ==== */
