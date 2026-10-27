@@ -18,7 +18,7 @@ drift. Both directions of drift are silent:
   • a module preloaded but no longer eagerly imported is a wasted download on every cold
     start, and a preload of a DELETED file is a console warning plus a 404.
 
-So this recomputes the graph from the import statements — the source of truth — and compares.
+So this recomputes the graph from the import statements, the source of truth, and compares.
 """
 import json
 import os
@@ -80,10 +80,10 @@ def main():
                 print('   ' + f)
 
     if not missing and not extra and not dead and have == want:
-        print('\nPASS — preload list matches the eager import graph exactly.')
+        print('\nPASS: preload list matches the eager import graph exactly.')
         return 0
     if not missing and not extra and not dead:
-        print('\nPASS — same set as the eager graph (order differs only).')
+        print('\nPASS: same set as the eager graph (order differs only).')
         return 0
     if fix:
         start = html.index(BEGIN)
@@ -91,16 +91,16 @@ def main():
         tags = '\n'.join(f'  <link rel="modulepreload" href="{f}">' for f in want)
         comment = (
             '  <!-- Module preload graph. The app is native ES modules with no bundler, so without these the\n'
-            '       browser cannot discover a single dependency until it has downloaded AND parsed main.js —\n'
+            '       browser cannot discover a single dependency until it has downloaded AND parsed main.js, \n'
             '       making first paint a two-round-trip chain: html, then main.js in full, then everything\n'
             '       else. These hints let all eager modules download in parallel with main.js instead of\n'
             '       after it. Every entry is a module the app statically imports, so nothing here is\n'
             '       speculative; lazily-imported country data and screens are deliberately absent.\n'
             '       Regenerate with: python3 scripts/check-preloads.py --fix -->\n')
         open(INDEX, 'w', encoding='utf-8').write(html[:start] + comment + tags + '\n' + html[end:])
-        print(f'\nFIXED — rewrote {len(want)} modulepreload tags.')
+        print(f'\nFIXED, rewrote {len(want)} modulepreload tags.')
         return 0
-    print('\nFAIL — run with --fix to regenerate the block.')
+    print('\nFAIL: run with --fix to regenerate the block.')
     return 1
 
 

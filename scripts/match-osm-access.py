@@ -19,7 +19,7 @@ import glob, io, json, math, os, re, sys
 WHEELCHAIR = {'yes': 'yes', 'designated': 'yes', 'limited': 'partial', 'no': 'no'}
 
 # MEASURED, then tightened. At 150 m with plain token overlap this produced 13 matches of
-# which roughly nine were wrong — "Battambang Mart" matched the Battambang riverside stalls on
+# which roughly nine were wrong: "Battambang Mart" matched the Battambang riverside stalls on
 # the token "battambang", "Novotel Bangkok" matched the BTS/MRT entry on "bangkok", and
 # "Mama Leurth Sunset Guesthouse" matched Don Det's sunset strip on "sunset". A ~70% error
 # rate on an accessibility field is precisely the failure that strands a wheelchair user at
@@ -41,7 +41,7 @@ STOP = re.compile(
     r'resort|sunset|sunrise|walking|food|stalls|riverside|island|' + GEO_WORDS + r')\b', re.I)
 
 
-# Some records describe a whole area rather than one venue — "Backpacker hostels (Khaosan /
+# Some records describe a whole area rather than one venue: "Backpacker hostels (Khaosan /
 # Rambuttri)", "Old Town cafes", "riverside stalls". No single OSM object's wheelchair tag can
 # speak for a district, so these are excluded outright rather than left to the radius to catch.
 AREA_ENTRY = re.compile(r'\b(hostels|hotels|resorts|guesthouses|cafes|bars|stalls|kitchens|'
@@ -116,7 +116,7 @@ def main(batch_dir):
     for pid, (e, via, d) in list(edits.items())[:16]:
         print(f'   {pid:44s} {json.dumps(e)}  <- "{via[:34]}" {d} m')
     if not apply_changes:
-        print('DRY RUN — nothing written')
+        print('DRY RUN, nothing written')
         return 0
 
     ID = re.compile(r'(?:^|[\s{,])"?id"?:\s*[\'"]([a-z0-9\-]+)[\'"]', re.M)

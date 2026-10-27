@@ -2,12 +2,12 @@
 """Splice a batch of translations into all 29 interface dictionaries at once.
 
 WHY THIS EXISTS. Adding one interface string means editing 29 files, and the parity guard
-requires that all 29 land together — a key added to 28 dictionaries falls back to English in
+requires that all 29 land together, a key added to 28 dictionaries falls back to English in
 the 29th, silently, on whichever screen the traveller happens to be reading. Doing that by
 hand 200 times is where drift comes from, so the edit is mechanical and the mechanism checks
 itself: every language must supply every numbered row, or nothing is written at all.
 
-INPUT. `scratch/keys.json` is the ordered English key list — the numbering is stable and rows
+INPUT. `scratch/keys.json` is the ordered English key list, the numbering is stable and rows
 are addressed by it, so a translation file may be written in any order and an omission is
 reported as a number rather than silently shifting every later row (which is what a
 positional, one-line-per-row format does when a line goes missing).
@@ -109,7 +109,7 @@ def main():
         for p in problems:
             print('  - ' + p)
         return 1
-    print('%d languages × %d keys — all rows present.' % (len(trs), len(keys)))
+    print('%d languages × %d keys, all rows present.' % (len(trs), len(keys)))
 
     # An identical value is a real error only where the script differs from English; the
     # parity guard draws that line and this mirrors it, so a problem surfaces here rather

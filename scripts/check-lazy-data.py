@@ -6,7 +6,7 @@
 
 WHY THIS EXISTS. js/lazy-data.js loads the single-screen data modules on demand. Every
 consumer stays fully synchronous and reads a safe empty default until the module lands, so a
-route that reads one WITHOUT being listed in ROUTE_DATA does not throw and does not log — it
+route that reads one WITHOUT being listed in ROUTE_DATA does not throw and does not log, it
 just renders a screen with the data silently missing. That is the worst possible failure mode
 for this app: a visa screen with no visa rules looks like a visa screen.
 
@@ -43,7 +43,7 @@ BARRIERS = {'render', 'renderNow', 'route', 'go'}
 # catch.
 SUPPRESS_EDGES = {
     # whereNextSection's `rerender` default calls exploreScreen; #nextstop always passes its own
-    # onChange, so the default only ever fires on explore/country — routes that reach
+    # onChange, so the default only ever fires on explore/country, routes that reach
     # exploreScreen directly and already gate everything it reads.
     ('whereNextSection', 'exploreScreen'),
 }
@@ -61,7 +61,7 @@ EXTRA_EDGES = {
 # js/offline-pack.js builds the offline media manifest from js/data/sounds.js. It runs on idle
 # from the app's boot sequence, not from any route, and its one read is
 # `(await loadData('sounds')).SOUNDS`. Without this entry the derived map attributes 'sounds' to
-# every route in the app — because main.js imports the module at top level — and the only way
+# every route in the app, because main.js imports the module at top level, and the only way
 # to satisfy that would be to declare a data dependency that ten routes do not have.
 SELF_GATED = {'js/offline-pack.js'}
 
@@ -225,7 +225,7 @@ def functions(path):
 
 
 def eager_files():
-    """Files reachable by static import from main.js — i.e. parsed on every launch."""
+    """Files reachable by static import from main.js, i.e. parsed on every launch."""
     seen, q = set(), deque([MAIN])
     spec = re.compile(r"""^\s*(?:import\s+(?:[\w*{},\s$]+\s+from\s+)?|export\s+(?:\*|\{[^}]*\})\s+from\s+)['"](\.[^'"]+)['"]""", re.M)
     while q:
@@ -271,16 +271,16 @@ def main():
     route_screens = parse_map(main_src, 'ROUTE_SCREENS') or {}
     screen_files = {}
     # [\w.-]: a screen filename may be hyphenated (share-journey.js, country-info.js) even
-    # though its SCREEN_LOADERS/ROUTE_SCREENS key never is (sharejourney, countryinfo) — see
+    # though its SCREEN_LOADERS/ROUTE_SCREENS key never is (sharejourney, countryinfo), see
     # main.js's own SCREEN_LOADERS table. Plain \w. missed this silently: it dropped the file
     # from screen_files, which only ever surfaced as a problem once a hyphenated-filename
     # screen ALSO needed lazy-data gating (country-info.js's access/visa/scams routes, in the
-    # module split that added it) — share-journey.js needs no lazy-data bucket, so the same gap
+    # module split that added it), share-journey.js needs no lazy-data bucket, so the same gap
     # sat there latent and harmless before this.
     for m in re.finditer(r"(\w+):\s*\(b\)\s*=>\s*import\('\./(screens/[\w.-]+\.js)'", main_src):
         screen_files[m.group(1)] = 'js/' + m.group(2)
 
-    # The lazy modules' own source is not a consumer — exclude it, or every export reads as a
+    # The lazy modules' own source is not a consumer, exclude it, or every export reads as a
     # top-level reference to itself.
     lazy_src = {'js/data/%s.js' % n for n in set(owner.values())} | {LAZY_DATA} | SELF_GATED
     files = [f for f in eager_files() if f not in lazy_src] + sorted(set(screen_files.values()))

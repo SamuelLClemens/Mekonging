@@ -7,7 +7,7 @@
 WHY THIS EXISTS. The palette is token-driven and the app renders one surface per skin and mode:
 the ids and modes in js/theme.js (SKIN_MODE), built here in cascade order. A token that is
 legible on the cream default can be invisible on the dark grape card, and nothing catches it
-— the page renders, the text is simply unreadable. That failure has been found and repaired
+the page renders, the text is simply unreadable. That failure has been found and repaired
 BY HAND at least four times in this file's history, each time for a different token:
 
   --warn      given a brighter dark value, with a comment citing the new ratio
@@ -134,10 +134,10 @@ def skin_modes(theme_js):
     """id -> 'light' | 'dark' | 'auto', read from js/theme.js SKIN_MODE (the same table applyTheme() uses)."""
     m = re.search(r'export const SKIN_MODE = \{([^}]*)\}', theme_js)
     if not m:
-        raise SystemExit('FAIL — could not find SKIN_MODE in js/theme.js.')
+        raise SystemExit('FAIL: could not find SKIN_MODE in js/theme.js.')
     modes = dict(re.findall(r"(\w+):\s*'(\w+)'", m.group(1)))
     if not modes:
-        raise SystemExit('FAIL — SKIN_MODE in js/theme.js parsed to nothing.')
+        raise SystemExit('FAIL: SKIN_MODE in js/theme.js parsed to nothing.')
     return modes
 
 
@@ -243,15 +243,15 @@ def rule_threshold(body):
             if num:
                 rem = float(num.group(1))
     if rem is None:
-        return AA_TEXT, 'inherited size — treated as body text'
+        return AA_TEXT, 'inherited size, treated as body text'
     px = rem * 16
     bold = bool(weight_m and int(weight_m.group(1)) >= 700)
     if px >= 24 or (px >= 18.66 and bold):
-        return AA_LARGE, f'{px:.0f}px{" bold" if bold else ""} — large text'
+        return AA_LARGE, f'{px:.0f}px{" bold" if bold else ""}, large text'
     # A cursor:pointer element with no other content is a control drawn as a glyph.
     if 'cursor: pointer' in body and px >= 18:
-        return AA_LARGE, f'{px:.0f}px glyph control — WCAG 1.4.11'
-    return AA_TEXT, f'{px:.0f}px{" bold" if bold else ""} — body text'
+        return AA_LARGE, f'{px:.0f}px glyph control: WCAG 1.4.11'
+    return AA_TEXT, f'{px:.0f}px{" bold" if bold else ""}, body text'
 
 
 def hex_stops(value):
@@ -270,10 +270,10 @@ def main():
     # block, a selector this parser cannot read) fails here instead of going unchecked.
     expected = sum(2 if k == 'auto' else 1 for sid, k in modes.items() if sid not in PENDING)
     if len(surfaces) != expected:
-        print(f'FAIL — built {len(surfaces)} surfaces, js/theme.js implies {expected}.')
+        print(f'FAIL: built {len(surfaces)} surfaces, js/theme.js implies {expected}.')
         return 1
     if any(sid not in modes for sid in PENDING):
-        print('FAIL — PENDING names an id that js/theme.js does not define.')
+        print('FAIL: PENDING names an id that js/theme.js does not define.')
         return 1
 
     rule_css = css + '\n' + '\n'.join(strip_comments(read(p)) for p in EXTRA_CSS)
@@ -400,10 +400,10 @@ def main():
           f'{skipped["no hex value"]} pairs with a non-hex value; '
           f'ids awaiting a palette: {", ".join(sorted(pending)) or "none"}.')
     if not failures:
-        print('\nPASS — every text colour clears its WCAG AA threshold on every surface.')
+        print('\nPASS: every text colour clears its WCAG AA threshold on every surface.')
         return 0
 
-    print(f'\nFAIL — {len(failures)} below threshold:\n')
+    print(f'\nFAIL: {len(failures)} below threshold:\n')
     for bare, token, name, ratio, threshold, fg, bg, why in sorted(failures, key=lambda r: r[3]):
         print(f'  {bare[:42]:42s} --{token:11s} {name:24s} '
               f'{ratio:5.2f}:1 (needs {threshold}) {fg} on {bg}')

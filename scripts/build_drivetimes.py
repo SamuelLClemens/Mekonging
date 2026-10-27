@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Build js/data/drivetimes.js — a calibrated straight-line-km -> drive-minutes curve per
+"""Build js/data/drivetimes.js, a calibrated straight-line-km -> drive-minutes curve per
 country, fitted to real routed journeys instead of two guessed constants.
 
 WHAT WAS WRONG. render-utils.js estimated drive time as `km * 1.35 / 50 kmh`, a single flat
 figure of 1.62 minutes per straight-line kilometre. Measured against 17,994 real OSRM-routed
 pairs between the app's own places, that is wrong in a consistent and predictable direction:
 it UNDERSTATES short journeys by 23-63% (a 50-90 km hop in Thailand really takes 129 minutes,
-not 86) and OVERSTATES long ones by 18-30% (expressways). The error is not noise — minutes per
+not 86) and OVERSTATES long ones by 18-30% (expressways). The error is not noise, minutes per
 straight-line kilometre falls steadily with distance, because a longer trip spends a greater
 share of itself on a better road. One constant cannot express that.
 
@@ -15,7 +15,7 @@ minutes because a straight-line-derived estimate put Pai -> Chiang Mai at ~89 mi
 would have pulled a genuine 2h20m mountain drive into "near you". Real routing puts that pair
 at 129 minutes, comfortably outside a 90-minute cap, so the cap can be raised on evidence.
 
-Input:  the OSRM /table matrices fetched into the session scratchpad (two rounds — a spread
+Input:  the OSRM /table matrices fetched into the session scratchpad (two rounds, a spread
         sample and a dense short-range one; short pairs are what "near me" actually depends
         on and the first round had only tens of them).
 Usage:  python3 scripts/build_drivetimes.py <scratchpad-dir>
@@ -26,7 +26,7 @@ CCS = ['th', 'vi', 'kh', 'la']
 # Band edges in straight-line km. Dense at the short end: that is where "near me" lives and
 # where the old model was most wrong.
 BANDS = [(1, 5), (5, 12), (12, 25), (25, 50), (50, 90), (90, 160), (160, 320), (320, 1200)]
-MIN_N = 12          # corridors, not pairs — a band below this inherits its neighbours
+MIN_N = 12          # corridors, not pairs, a band below this inherits its neighbours
 
 
 def hav(a, b):
@@ -67,19 +67,19 @@ def load_pairs(root):
                 road = di / 1000.0
                 # EXCLUDE PAIRS THAT ARE NOT A DRIVE. A routing engine answers the question
                 # "what is the road route", and for two islands the honest answer is "there
-                # isn't one" — so it returns a road that goes the long way round the mainland,
+                # isn't one", so it returns a road that goes the long way round the mainland,
                 # or snaps both ends onto a disconnected fragment. Both wreck the fit:
                 #   Maya Bay -> Koh Kradan: 69 km apart, 154 km of "road", 511 minutes.
                 #   Mu Ko Lanta -> Koh Kradan: 28 km apart, 176 km of road, ratio 19.9.
-                #   Koh Tao -> Koh Samui: 72 km apart, 48 km of "road" — shorter than the
+                #   Koh Tao -> Koh Samui: 72 km apart, 48 km of "road", shorter than the
                 #     straight line, which is impossible and means a snapped network.
                 # A traveller crosses that water by boat, and the app has ferry and route data
                 # for exactly that. Keep only journeys where the road plausibly IS the journey:
                 # never shorter than the straight line, never more than 2.5 times it.
                 #
                 # 2.5 is not arbitrary. Beyond that the road is no longer "the same journey by
-                # a winding route", it is a detour round a barrier — water, a range with no
-                # pass, a park with no through road — and a traveller facing one takes a boat,
+                # a winding route", it is a detour round a barrier, water, a range with no
+                # pass, a park with no through road, and a traveller facing one takes a boat,
                 # a different route, or does not go. The threshold is set to RETAIN the worst
                 # genuine road journey this app knows about, Pai -> Chiang Mai at 2.35x (129 km
                 # of mountain switchbacks for 55 km of straight line, 2h20m), while excluding
@@ -90,7 +90,7 @@ def load_pairs(root):
                     continue
                 # AND on implied speed, which is the filter that actually catches the ferries.
                 # Maya Bay -> Koh Kradan survives the detour test at 2.23x, because 154 km of
-                # road for 69 km of straight line is not obviously absurd — but that route takes
+                # road for 69 km of straight line is not obviously absurd, but that route takes
                 # 511 minutes, i.e. 18 km/h. Nobody drives at 18 km/h for eight hours; that is a
                 # boat with a scheduling penalty, or an unpaved track the router priced as
                 # impassable. Below 25 km/h it is not a drive, and above 110 km/h average it is
@@ -118,13 +118,13 @@ def collapse(band_rows, cell_deg):
     Place pairs inside a cluster are not independent observations: eleven curated places around
     Krabi pair with each other over the same two roads, so they contribute a hundred nearly
     identical ratios and drown out the single Bangkok-Ayutthaya pair on the motorway. That is
-    what made Thailand's 50-90 km band read p25 2.27 / p50 2.37 — a suspiciously tight spread
+    what made Thailand's 50-90 km band read p25 2.27 / p50 2.37, a suspiciously tight spread
     for a band that demonstrably contains both a 59-minute motorway run and a 2h20m mountain
     drive. Collapsing each origin-destination cell pair to its own median gives every corridor
     one vote, which is what the quantiles are supposed to measure.
 
     The cell size has to scale with the band. A first attempt used one ~55 km cell for every
-    band, which merged both endpoints of every short pair into the SAME cell — so every band
+    band, which merged both endpoints of every short pair into the SAME cell, so every band
     under 55 km collapsed to a single corridor, fell below the minimum sample, and silently
     inherited its neighbour's figures. Each band now snaps at roughly a quarter of its own
     length, which keeps a corridor meaningful at 5 km and at 500 km alike."""
@@ -154,7 +154,7 @@ def fit(rows):
     typical case is what the threshold means; p15 and p85 drive the label, so the app says
     "1h45m-2h30m by road" instead of asserting a precision it does not have. p15/p85 rather
     than p25/p75 because at the quartiles the band was still too narrow to contain real
-    journeys — Pai -> Chiang Mai fell outside its own band's interquartile range. Quantiles,
+    journeys: Pai -> Chiang Mai fell outside its own band's interquartile range. Quantiles,
     not mean and standard deviation: the tails here are journeys, not measurement error."""
     out = {}
     for cc in CCS:

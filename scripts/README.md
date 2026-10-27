@@ -30,7 +30,7 @@ list above, so a new guard goes in both places.
 |---|---|---|
 | `check-offline-boot` | a module on the eager launch path (the `modulepreload` list in `index.html`) that `sw.js` does not list in `PRECACHE` | on 2026-09-20 the app rendered "Loading your companion…" and nothing else offline: three eagerly imported modules were not precached, returned 504, and stopped module evaluation. The worker caches a sub-resource only when a request passes through it, so a traveller who opens the app once and goes offline may find it will not start. The guard was written then but never ran in CI, and `js/market-routes.js` and `js/market-link.js` drifted out of `PRECACHE` until F2 (decision 23) added both and the guard to CI |
 | `check-imports` | a named import with no matching export | a file split leaves them behind and the module simply never loads |
-| `check-undefined` | an identifier used but never declared, imported or parametered | ES modules are strict mode, so this is a ReferenceError waiting for the right tap. Caught `wxMetric` and `weatherKey` — the same refactor missed them two comments apart |
+| `check-undefined` | an identifier used but never declared, imported or parametered | ES modules are strict mode, so this is a ReferenceError waiting for the right tap. Caught `wxMetric` and `weatherKey`, the same refactor missed them two comments apart |
 | `check-net-gates` | an `online()` gate that can render nothing | shipped three times in three files: Home lost its weather section, rates froze 8% out, and Talk lost live translation entirely |
 | `check-lazy-data` | a route reading a lazy data module it does not gate | the read succeeds against an empty default, so a visa screen with no visa rules still looks like a visa screen |
 | `check-preloads` | `<link rel=modulepreload>` drifting from the real eager graph | cold-start cost, and the list is hand-kept |
@@ -96,15 +96,15 @@ It audits **controls**, not just content: every fold is opened first (so nothing
 collapsed section), then it reports controls that arrive disabled, controls with no accessible
 name by any mechanism, controls that are operable but have no size, and any `<summary>` that
 has become a grid or flex ITEM of its parent. Those last two checks exist because two
-regressions shipped in three releases — Talk's lesson audio disabled on every language, and
-the You hub's quick-access row stacked into one column — and both were catchable without
+regressions shipped in three releases: Talk's lesson audio disabled on every language, and
+the You hub's quick-access row stacked into one column, and both were catchable without
 clicking anything. Both are negative-tested: reintroduce either and the sweep names it.
 
 `routeSweep({ clicks: true })` additionally presses screen buttons and reports what throws.
 It is opt-in and refuses anything whose accessible name suggests it deletes, sends, exports or
 spends, so the default pass stays safe to run against real data.
 
-Read its header before trusting a result — it documents the traps that made earlier
+Read its header before trusting a result, it documents the traps that made earlier
 hand-written versions of this sweep report confident nonsense, including the one where a
 hidden page computes no layout at all and every width check silently inverts.
 

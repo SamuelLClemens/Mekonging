@@ -103,7 +103,7 @@ before relying on a number; the code changes daily.
 
 ### 3.3 Screens
 
-- **Welcome.** Eleven lines of prose on the first screen. The secondary "Skip — just explore" button is
+- **Welcome.** Eleven lines of prose on the first screen. The secondary "Skip, just explore" button is
   full width; the primary "Next" is a small pill beside it.
 - **Home.** The weather card is the tallest block (about 500px, mostly the 24-hour ring). Home's "Quick
   access" (Calendar, Budget, Weather, Journal) and You's "Quick access" (Calendar, My trip, Budget,

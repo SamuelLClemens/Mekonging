@@ -39,7 +39,7 @@ def main():
     # Every source needs both org and url, and url must look like a real http(s) link.
     src_objs = re.findall(r'\{\s*n:\s*\d+,\s*org:\s*(".*?"|\'.*?\'),\s*url:\s*(".*?"|\'.*?\')\s*\}', src_block)
     if len(src_objs) != len(src_nums):
-        sys.exit(f'FAIL: {len(src_nums)} numbered sources but only {len(src_objs)} matched the full org+url pattern — check for a malformed entry.')
+        sys.exit(f'FAIL: {len(src_nums)} numbered sources but only {len(src_objs)} matched the full org+url pattern, check for a malformed entry.')
     bad_urls = [u for _, u in src_objs if not re.match(r'^["\']https?://', u)]
     if bad_urls:
         sys.exit(f'FAIL: source(s) with a non-http(s) url: {bad_urls}')
@@ -52,7 +52,7 @@ def main():
         sys.exit(f'FAIL: duplicate topic ids: {sorted(dupe_ids)}')
     srcs_lists = re.findall(r'srcs:\s*\[([\d,\s]+)\]', topics_block)
     if len(srcs_lists) != len(topic_ids):
-        sys.exit(f'FAIL: {len(topic_ids)} topics but {len(srcs_lists)} `srcs:` arrays — every topic must cite at least one source.')
+        sys.exit(f'FAIL: {len(topic_ids)} topics but {len(srcs_lists)} `srcs:` arrays, every topic must cite at least one source.')
 
     cited = set()
     empty_topics = []
@@ -66,7 +66,7 @@ def main():
                 sys.exit(f'FAIL: topic "{tid}" cites source {n}, which does not exist (valid range 1..{len(expected)}).')
             cited.add(n)
         if len(nums) < 4:
-            print(f'WARN: topic "{tid}" cites only {len(nums)} source(s) — below the 5-source bar (may be acceptable for a narrow procedural point; verify by eye).')
+            print(f'WARN: topic "{tid}" cites only {len(nums)} source(s), below the 5-source bar (may be acceptable for a narrow procedural point; verify by eye).')
     if empty_topics:
         sys.exit(f'FAIL: topic(s) with an empty srcs list: {empty_topics}')
 

@@ -3,7 +3,7 @@
 
     python3 scripts/check-undefined.py
 
-WHY THIS EXISTS. check-imports.py catches a named import that does not match an export — a
+WHY THIS EXISTS. check-imports.py catches a named import that does not match an export, a
 failure at MODULE EVALUATION, loud and immediate. This catches the quieter sibling: a bare
 identifier left behind by a refactor. It is still valid JavaScript, every other guard passes,
 the module evaluates, the app boots, and the ReferenceError fires only when a traveller opens
@@ -15,7 +15,7 @@ broke the weather screen for every user until someone hit it in the field and re
 
 The analysis is deliberately GENEROUS about what counts as declared: any binding-shaped
 occurrence anywhere in the file, block scope ignored. So it cannot see a use-before-declare or
-a leaked block-scoped name — it is not a linter and does not try to be. It answers exactly one
+a leaked block-scoped name, it is not a linter and does not try to be. It answers exactly one
 question, the one that has actually cost this project a production incident: is this name
 reachable from this file at all? Everything it reports is a genuine ReferenceError waiting for
 the right tap.
@@ -35,7 +35,7 @@ var void while with yield async await get set as from of true false null undefin
 """.split())
 
 # Runtime globals. A name here is assumed to exist at runtime; anything NOT here and not
-# declared in the file is reported. Keep it tight — a too-generous list is how this guard
+# declared in the file is reported. Keep it tight, a too-generous list is how this guard
 # would quietly stop catching the bug it exists for.
 GLOBALS = set("""
 globalThis window document navigator location history screen self top parent console
@@ -165,7 +165,7 @@ def strip_literals(src):
                     break          # unterminated: it was division after all
                 j += 1
             if closed:
-                j += 1             # step PAST the closing slash before taking the flags —
+                j += 1             # step PAST the closing slash before taking the flags,
                 while j < n and src[j].isalpha():   # without this, /&/g left a bare `g`
                     j += 1                          # behind and reported it as a variable
                 blank(i, min(j, n)); i = min(j, n); prev_sig = 'x'; prev_word = ''; continue
@@ -195,16 +195,16 @@ DECL_PATTERNS = [
 VAR_KW = re.compile(r'\b(?:const|let|var)\s')
 IMPORT_NAMED = re.compile(r'\bimport\s*(?:[A-Za-z_$][\w$]*\s*,\s*)?\{([^}]*)\}\s*from')
 # Any parenthesised group introducing a body: function params, method params, arrow params,
-# and — harmlessly — `if (...) {`. Over-collecting here loses findings; it never invents one.
+# and, harmlessly: `if (...) {`. Over-collecting here loses findings; it never invents one.
 # A parameter list, found by balancing rather than by regex. `[^()]*` was the first attempt
-# and it silently skips any list containing a call — so
+# and it silently skips any list containing a call, so
 # `function countryChips(onPick, selected = getActiveCountry())` declared NEITHER parameter.
 # That went unnoticed for as long as it did because an unrelated `const selected` elsewhere in
 # main.js happened to cover the name; the moment that line moved to another file, `selected`
 # was reported as a ReferenceError in a function that had always been correct.
 #
 # A CONTROL clause is not a parameter list. `if (store.profile) {` used to be read as one,
-# declaring `store` — and that cost real findings: a file split left js/screens/trip.js
+# declaring `store`, and that cost real findings: a file split left js/screens/trip.js
 # without its `store` import and js/screens/schedules.js without `getCountry`, both genuine
 # ReferenceErrors, and both invisible to this script until these keywords were excluded. The
 # screens simply failed to open. `catch (e)` is NOT in this list because it really does bind.
@@ -229,7 +229,7 @@ def param_blobs(code):
                     break
             j += 1
         if j >= len(code):
-            # An unclosed '(' — main.js has four, and returning here silently abandoned the
+            # An unclosed '(', main.js has four, and returning here silently abandoned the
             # rest of the file, so every parameter after that point read as undeclared. Skip
             # the one bad opener and keep scanning.
             i += 1
@@ -242,7 +242,7 @@ def param_blobs(code):
             out.append(code[i + 1:j])
         i += 1
 BARE_ARROW = re.compile(r'\b([A-Za-z_$][\w$]*)\s*=>')
-# Object/class method shorthand — `{ acceptNode(node) { ... } }` defines a property, it does
+# Object/class method shorthand: `{ acceptNode(node) { ... } }` defines a property, it does
 # not reference a variable named acceptNode.
 METHOD_SHORTHAND = re.compile(r'[{,;]\s*(?:async\s+|get\s+|set\s+|\*\s*)?([A-Za-z_$][\w$]*)\s*\([^()]*\)\s*\{')
 
@@ -309,7 +309,7 @@ def references(code):
     """Yield (name, offset) for every identifier used as a VALUE.
 
     Skipped: `.foo` (property access), `foo:` (object key, label, or the losing arm of a
-    ternary — a false negative we accept), and `{ foo }` shorthand keys are NOT skipped
+    ternary, a false negative we accept), and `{ foo }` shorthand keys are NOT skipped
     because in an object literal the shorthand is itself a reference to a variable.
     """
     for m in IDENT.finditer(code):
@@ -357,14 +357,14 @@ def main():
     for path, rel in sorted(files):
         findings.extend(check(path, rel))
     if findings:
-        print(f'FAIL — {len(findings)} identifier(s) used but never declared, imported or passed in:\n')
+        print(f'FAIL: {len(findings)} identifier(s) used but never declared, imported or passed in:\n')
         for rel, line, name in findings:
             print(f'  {rel}:{line}  {name}')
         print('\nEach of these throws a ReferenceError the moment that line runs. Either import')
-        print('the name, declare it, or — if it is a real runtime global — add it to GLOBALS in')
+        print('the name, declare it, or, if it is a real runtime global, add it to GLOBALS in')
         print('this script with a note saying where it comes from.')
         return 1
-    print(f'ok — {len(files)} files, every identifier resolves')
+    print(f'ok: {len(files)} files, every identifier resolves')
     return 0
 
 

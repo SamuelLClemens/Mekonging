@@ -3,7 +3,7 @@
 
 WHY THIS EXISTS AS A SCRIPT. img/ already holds 400 self-hosted photos and
 js/data/photos.js already maps record ids to them, but the tool that produced
-them was never committed — so when nature.js and produce.js grew, 161 records
+them was never committed, so when nature.js and produce.js grew, 161 records
 (38%) fell back to the "Photo coming soon" placeholder with no way to fix them
 short of rewriting the fetcher. This is that fetcher, committed.
 
@@ -20,7 +20,7 @@ licence short-name is recorded verbatim in the credit shown under the photo.
 Anything non-free, unknown or fair-use is skipped and reported, because a
 missing photo is a gap and a wrongly-licensed one is a problem.
 
-OFFLINE-FIRST. Images are downloaded and committed under img/ — never hot-linked.
+OFFLINE-FIRST. Images are downloaded and committed under img/, never hot-linked.
 An external image URL is exactly the runtime CDN dependency the project rules
 forbid, and it would also mean no photos at all on a plane.
 
@@ -46,7 +46,7 @@ IMG_DIR = os.path.join(ROOT, 'img')
 
 # Width to store. The photo renders in a card about 340px wide on a phone and is
 # never full-screen, so 900px covers a 2x display with headroom and keeps the
-# average file near 130KB — the size the existing 400 images already average.
+# average file near 130KB, the size the existing 400 images already average.
 STORE_WIDTH = 900
 JPEG_QUALITY = 82
 
@@ -61,7 +61,7 @@ THROTTLE = 1.1
 
 # NOT EVERY LEAD IMAGE IS A PHOTOGRAPH, and the wrong one is worse than none. The first run
 # of this script gave the deadly Amanita exitialis a map of Guangdong province, because that
-# is that article's lead image — a field guide that shows a traveller a choropleth where a
+# is that article's lead image, a field guide that shows a traveller a choropleth where a
 # lethal mushroom should be has actively misinformed them.
 #
 # Two rules catch it. First, the file must be a raster photograph: distribution maps, range
@@ -85,7 +85,7 @@ def api(url, tries=3):
     environment where curl succeeds, so curl is the transport throughout.
 
     Retried, because these APIs intermittently answer with an HTML error page
-    rather than JSON under load — which read as "this species has no photo" on
+    rather than JSON under load, which read as "this species has no photo" on
     the first run and silently left records empty."""
     last = ''
     for n in range(tries):
@@ -143,7 +143,7 @@ def commons_search(term, limit=10):
     """Candidate Commons photo filenames for a term, best match first.
 
     The fallback when an article's lead image is not a photograph (or the article
-    has none). Restricted to bitmaps, then put through the same photo test — a
+    has none). Restricted to bitmaps, then put through the same photo test, a
     bare keyword search returns maps and specimen shots freely."""
     q = ('https://commons.wikimedia.org/w/api.php?action=query&format=json'
          '&maxlag=5&generator=search&gsrnamespace=6&gsrlimit=%d&gsrsearch=%s'
@@ -156,7 +156,7 @@ def commons_search(term, limit=10):
 
 def find_image(titles, log):
     """(url, artist, licence, filename) for the best openly-licensed PHOTOGRAPH."""
-    # 1. The article's lead image — chosen by editors to depict the subject, so it
+    # 1. The article's lead image, chosen by editors to depict the subject, so it
     #    is right far more often than any keyword search.
     for title in titles:
         try:
@@ -172,10 +172,10 @@ def find_image(titles, log):
         got = _vet(fn, log)
         if got:
             return got
-    # 2. Commons search — but only for a file that NAMES THE SAME ORGANISM.
+    # 2. Commons search, but only for a file that NAMES THE SAME ORGANISM.
     #
     #    This guard is not defensive tidiness. Without it the search handed
-    #    Amanita exitialis — one of the deadliest mushrooms in the region — a
+    #    Amanita exitialis, one of the deadliest mushrooms in the region — a
     #    photograph of Amanita verna, a different species on a different
     #    continent, because the names are close and Commons ranks on text. That
     #    record's own text tells the reader that deadly and edible Amanitas
@@ -198,7 +198,7 @@ def find_image(titles, log):
         # A binomial has no such collisions: "Termitomyces", "Coccinia grandis" and
         # "Betta splendens" mean one organism and nothing else, and every search result that
         # survived review was keyed on one. So the fallback is now limited to titles that ARE
-        # binomials. A produce record whose article has no lead image keeps its placeholder —
+        # binomials. A produce record whose article has no lead image keeps its placeholder,
         # which is the correct outcome: a gap is honest, and a photo of the wrong thing in a
         # field guide is not.
         if not _is_binomial(title):
@@ -236,7 +236,7 @@ def _identity_key(title):
 
 
 def _is_binomial(title):
-    """True for "Genus epithet" — capitalised genus followed by a lowercase epithet."""
+    """True for "Genus epithet", capitalised genus followed by a lowercase epithet."""
     w = _words(title)
     return len(w) >= 2 and w[0][:1].isupper() and w[1][:1].islower()
 
@@ -256,7 +256,7 @@ def _words(title):
 # Three rules, all cheap, all of which those failures trip:
 #   * every significant word of the name must appear in the filename, not just one;
 #   * a filename naming a place outside this region is a different organism or a different
-#     subject entirely — nothing in this guide is illustrated from Malawi or Tacoma;
+#     subject entirely, nothing in this guide is illustrated from Malawi or Tacoma;
 #   * a filename naming a PREPARED DISH is not a picture of the raw ingredient, which is what
 #     a market-produce record is about.
 OFF_REGION = re.compile(
@@ -349,7 +349,7 @@ def nature_records():
     return out
 
 
-# Produce records carry no scientific name — they are named the way a stall names them — so
+# Produce records carry no scientific name, they are named the way a stall names them, so
 # the binomial path above never ran for any of them, which is why every remaining produce gap
 # was a produce gap. These are the accepted botanical names for the ones the English name
 # alone could not resolve, so each gets a search key that means exactly one plant.
@@ -375,7 +375,7 @@ PRODUCE_SCINAME = {
     'thai-eggplant': 'Solanum melongena',
     'daikon': 'Raphanus sativus',
 }
-# Non-plant records — a paste, a preserved egg, a fermented sauce — have no organism to look
+# Non-plant records, a paste, a preserved egg, a fermented sauce, have no organism to look
 # up. Their subject is a PREPARED product, exactly the thing the search filters reject, and
 # there is no honest automated route to a photograph of it. They keep the placeholder until
 # someone photographs a stall.

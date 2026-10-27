@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Build js/data/bus.<cc>.js for Vietnam, Cambodia and Laos — bus stop LOCATIONS from
+"""Build js/data/bus.<cc>.js for Vietnam, Cambodia and Laos, bus stop LOCATIONS from
 OpenStreetMap, with no route-number join (unlike Thailand's GTFS-derived layer).
 
 WHY NO ROUTE NUMBERS HERE. Thailand's layer (see build_bus_th.py) can say "routes 8, 25, 159
 stop here" because the source GTFS feed links every stop to specific route IDs directly. OSM
 has no equivalent clean link at this scale for these three countries: getting "which routes
 serve this stop" from OSM would mean parsing thousands of route relations' member lists
-(1,102 in Vietnam, 421 in Cambodia, 600 in Laos, nationwide) and matching them to stop nodes —
+(1,102 in Vietnam, 421 in Cambodia, 600 in Laos, nationwide) and matching them to stop nodes,
 a much bigger, less reliable undertaking than a GTFS join, for uncertain payoff given how
 inconsistently route relations are tagged/maintained here. Shipping stop locations only is
 still real and useful (a traveller sees "there is a bus stop here" while navigating); the
@@ -19,12 +19,12 @@ is not practical in one pass, so this ships the historic/downtown core of each c
 biggest traveller hub instead of attempting exhaustive coverage: Hanoi Old Quarter + French
 Quarter (Vietnam), central Phnom Penh including its intercity bus-company stops (Cambodia),
 central Vientiane (Laos). Real, accurate, useful for where most travellers actually spend
-time — not a substitute for full-country coverage, which would need a different data-access
+time, not a substitute for full-country coverage, which would need a different data-access
 approach (e.g. a full country .osm.pbf extract processed with real GIS tooling) to attempt.
 
 Source: OpenStreetMap contributors, ODbL, `highway=bus_stop` nodes, queried 2026-09-19.
 
-Input:  a directory containing <cc>.tsv files (id, lat, lon, name — name may be blank).
+Input:  a directory containing <cc>.tsv files (id, lat, lon, name, name may be blank).
 Usage:  python3 scripts/build_bus_osm.py <tsv-dir>
 """
 import csv

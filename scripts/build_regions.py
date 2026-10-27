@@ -20,8 +20,8 @@ import json, math, os, urllib.request
 
 COUNTRIES = [('th', 'THA'), ('vi', 'VNM'), ('kh', 'KHM'), ('la', 'LAO')]
 SRC = 'https://github.com/wmgeolab/geoBoundaries/raw/main/releaseData/gbOpen/{iso}/ADM1/geoBoundaries-{iso}-ADM1_simplified.geojson'
-RDP_EPS = 0.012      # degrees (~1.3 km) — province outline smoothness / size trade-off
-COORD_DP = 3         # ~110 m precision — plenty to draw a small map and bucket a place
+RDP_EPS = 0.012      # degrees (~1.3 km), province outline smoothness / size trade-off
+COORD_DP = 3         # ~110 m precision, plenty to draw a small map and bucket a place
 RING_MIN_PTS = 4     # drop degenerate rings after simplification
 VIEW_W = 680
 PAD = 14
@@ -89,7 +89,7 @@ def point_in_ring(pt, ring):
 
 
 def poly_label(poly_rings_ll):
-    """Pole of inaccessibility of the largest polygon, in lng/lat — a label point
+    """Pole of inaccessibility of the largest polygon, in lng/lat, a label point
     guaranteed to sit inside a wide part of the province."""
     ext = poly_rings_ll[0]; holes = poly_rings_ll[1:]
     xs = [p[0] for p in ext]; ys = [p[1] for p in ext]

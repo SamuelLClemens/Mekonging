@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keep every month ARRAY in the app honest against its own prose — all three "when to go" tiers.
+"""Keep every month ARRAY in the app honest against its own prose, all three "when to go" tiers.
 
     python3 scripts/check-month-arrays.py           # PASS/FAIL table, all three files
     python3 scripts/check-month-arrays.py --table   # also print each source's month grid
@@ -13,23 +13,23 @@ stops appearing in the month it is best in.
 
 Formerly `check-zone-months.py`, checking only js/data/zones.js. Extended to also check
 js/data/history.cities.<cc>.js's city `bestM`/`avoidM` pairs (added alongside the existing `bestTime`
-prose), then extended again for js/data/place-months.js's hand-curated place-tier overrides —
+prose), then extended again for js/data/place-months.js's hand-curated place-tier overrides,
 rather than maintaining three near-duplicate scripts for what is structurally the same check.
 
 The check is deliberately asymmetric, because the two are not equivalent by design:
 
   - EVERY month in `bestM` / `avoidM` MUST be named by the matching prose. This is the
-    direction that matters — an array may never assert a month the sentence does not support.
+    direction that matters, an array may never assert a month the sentence does not support.
   - The reverse is NOT required. The editorial rule at the head of zones.js (and history.js's
     own note) keeps hedged months OUT of `bestM` ("Jul-Oct is green and wet but quiet" is not a
     recommendation), so a prose month with no array entry is expected and is not an error.
 
 It also enforces the structural rules the UI depends on: every record has both arrays, and
 every month is a plain integer 1-12 with no duplicates. A month appearing in BOTH arrays is
-allowed on purpose — see the "mixed" case documented in both source files' headers.
+allowed on purpose, see the "mixed" case documented in both source files' headers.
 
 Month ranges tolerate a leading qualifier on the second month ("Late May to early July",
-"mid-October to mid-May") — the region tier has not needed one, the city tier does.
+"mid-October to mid-May"), the region tier has not needed one, the city tier does.
 """
 import os
 import re
@@ -38,7 +38,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ZONES_SRC = os.path.join(ROOT, 'js', 'data', 'zones.js')
 # The 142 city records moved out of history.js into one file per country (loaded with that
-# country's other data — see js/data/regions.js). They are VERBATIM, formatting included,
+# country's other data, see js/data/regions.js). They are VERBATIM, formatting included,
 # precisely so this parser keeps working; it now reads the four files as one stream.
 HISTORY_SRCS = [os.path.join(ROOT, 'js', 'data', f'history.cities.{cc}.js') for cc in ('th', 'vi', 'kh', 'la')]
 PLACE_MONTHS_SRC = os.path.join(ROOT, 'js', 'data', 'place-months.js')
@@ -47,10 +47,10 @@ MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 
 MONTH_NO = {m: i + 1 for i, m in enumerate(MONTHS)}
 NAME = {i + 1: m.capitalize() for i, m in enumerate(MONTHS)}
 # En dash, em dash, hyphen and "to" all appear in hand-written ranges. A qualifier word may sit
-# between the separator and the second month ("to early July", "to mid-May") — optional, so a
+# between the separator and the second month ("to early July", "to mid-May"), optional, so a
 # direct "November to February" still matches with nothing in between.
 QUAL = r'(?:early|late|mid|around|roughly)?[\s-]*'
-RANGE_RE = re.compile(r'\b(%s)[a-z]*\s*(?:[-–—]|to)\s*%s(%s)[a-z]*'
+RANGE_RE = re.compile(r'\b(%s)[a-z]*\s*(?:[-–-]|to)\s*%s(%s)[a-z]*'
                        % ('|'.join(MONTHS), QUAL, '|'.join(MONTHS)), re.I)
 SINGLE_RE = re.compile(r'\b(%s)[a-z]*\b' % '|'.join(MONTHS), re.I)
 YEAR_ROUND_RE = re.compile(r'year[-\s]?round|all year|every month', re.I)
@@ -106,7 +106,7 @@ def parse_zones(src):
 
 
 def parse_cities(src):
-    """[{tag, name, bestM, avoidM, checks:[...]}] — both arrays justified by ONE bestTime
+    """[{tag, name, bestM, avoidM, checks:[...]}], both arrays justified by ONE bestTime
     sentence (cities carry a single prose field, unlike zones' separate best/avoid prose)."""
     out = []
     cur = {}
@@ -129,7 +129,7 @@ def parse_cities(src):
     if cur:
         out.append(cur)
     # Every city that carries `bestTime` is REQUIRED to carry bestM/avoidM too, the same
-    # structural rule zones.js is held to — not just the ones that happen to have it today.
+    # structural rule zones.js is held to, not just the ones that happen to have it today.
     # Filtering on "has bestM" instead would silently stop checking any city where a future
     # edit added bestTime prose but forgot the arrays, which is precisely the failure mode
     # this script exists to catch (proven by the negative test that added this comment).
@@ -143,8 +143,8 @@ def parse_cities(src):
 
 
 def parse_places(src):
-    """[{tag, bestM, avoidM, checks:[...]}] — one line per entry, e.g.
-    `'th-ext-pam-bok': { bestM: [6, 7, 8], avoidM: [], why: '...' },` — a different shape from
+    """[{tag, bestM, avoidM, checks:[...]}], one line per entry, e.g.
+    `'th-ext-pam-bok': { bestM: [6, 7, 8], avoidM: [], why: '...' },`, a different shape from
     zones.js/history.js's multi-line records, since curated entries are short enough for one
     line each. Both arrays are justified by the single `why` field, same as the city tier."""
     out = []
@@ -175,7 +175,7 @@ def check_records(records, problems):
         for field, arr, prose_label, prose in r['checks']:
             if arr is None:
                 if field == 'bestM' or field == 'avoidM':
-                    # Only an error for records that declared the array tier at all — a record
+                    # Only an error for records that declared the array tier at all, a record
                     # with neither array present was already filtered out by the caller (cities)
                     # or never had one to begin with (should not happen for zones).
                     problems.append('%s: %s is missing' % (r['tag'], field))
@@ -213,12 +213,12 @@ def main():
     cities = parse_cities('\n'.join(open(p, encoding='utf-8').read() for p in HISTORY_SRCS))
     places = parse_places(open(PLACE_MONTHS_SRC, encoding='utf-8').read())
     if not zones:
-        print('FAIL — parsed no zones out of js/data/zones.js')
+        print('FAIL: parsed no zones out of js/data/zones.js')
         return 1
     if not cities:
-        print('FAIL — parsed no month-array cities out of js/data/history.js')
+        print('FAIL: parsed no month-array cities out of js/data/history.js')
         return 1
-    # places is allowed to be empty (the file starts that way) — only a parse failure on a
+    # places is allowed to be empty (the file starts that way), only a parse failure on a
     # non-empty file is suspicious, and that already shows up as 0 unexpectedly matching a
     # known-populated file, which the caller can see from the summary line below.
 
@@ -234,7 +234,7 @@ def main():
             print_table('place (js/data/place-months.js)', places)
 
     if problems:
-        print('FAIL — %d problem%s' % (len(problems), '' if len(problems) == 1 else 's'))
+        print('FAIL: %d problem%s' % (len(problems), '' if len(problems) == 1 else 's'))
         for p in problems:
             print('  ' + p)
         return 1
@@ -249,7 +249,7 @@ def main():
     summarize('region', zones)
     summarize('city', cities)
     summarize('place', places)
-    print('\nPASS — every month claimed by an array is named by that record\'s own prose.')
+    print('\nPASS: every month claimed by an array is named by that record\'s own prose.')
     return 0
 
 

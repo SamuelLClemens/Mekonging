@@ -7,8 +7,8 @@ Exits non-zero on any problem, so it can gate a commit or a deploy.
 
 WHY THIS EXISTS. js/i18n.js translates the finished DOM by exact-matching English strings
 against js/data/ui-strings.<code>.js. That design has one failure mode worth guarding: a language can
-drift out of parity — a key added to English and to fifteen dictionaries but not the
-sixteenth — and NOTHING breaks. The missing key just falls back to English, so a Korean
+drift out of parity, a key added to English and to fifteen dictionaries but not the
+sixteenth, and NOTHING breaks. The missing key just falls back to English, so a Korean
 traveller silently gets one English word in the middle of a Korean screen and no error is
 raised anywhere. A count is the only thing that makes that visible, so this counts.
 
@@ -20,7 +20,7 @@ Checks performed:
      and lo, which F5 and F5b fill): every one of them must hold every key. A language outside that list may omit a key
      (owner ruling 2026-10-29, open decision 30: the 25 null-only languages keep the 405 keys they carry and gain none until
      L2 fills them); an omitted key counts as a null (shown in English), and a key no host language holds is an error.
-  3. No duplicate keys inside a block — a JS object literal silently keeps only the last, so a
+  3. No duplicate keys inside a block, a JS object literal silently keeps only the last, so a
      duplicate is a translation that looks present and is not.
   4. No empty values, and no value left identical to its English key in a non-Latin script
      (a strong sign of a copy-paste that was never translated).
@@ -52,7 +52,7 @@ MANIFEST = 'js/data/ui-strings.js'
 # One file per language since the dictionaries were split out of the manifest (all 29 in one
 # eagerly-imported module cost every traveller 162 KB before first paint). The manifest is
 # still the source of truth for WHICH languages exist, so a file on disk that the manifest
-# does not list — or a listed language with no file — is itself a failure worth reporting.
+# does not list, or a listed language with no file, is itself a failure worth reporting.
 STRINGS_GLOB = 'js/data/ui-strings.*.js'
 
 # A block whose language genuinely shares a word with English is not an error. Filipino uses
@@ -279,7 +279,7 @@ def main():
     for code in sorted(set(listed) - set(on_disk)):
         problems.append(f'{code}: listed in UI_STRING_LANGS but js/data/ui-strings.{code}.js is missing')
     for code in sorted(set(on_disk) - set(listed)):
-        problems.append(f'{code}: js/data/ui-strings.{code}.js exists but is not in UI_STRING_LANGS — it will never load')
+        problems.append(f'{code}: js/data/ui-strings.{code}.js exists but is not in UI_STRING_LANGS, it will never load')
 
     dicts = {}
     for code, path in on_disk.items():
@@ -293,12 +293,12 @@ def main():
 
     # 1. registry / dictionary agreement
     for code in sorted(ui_true - set(dicts)):
-        problems.append(f'{code}: marked ui:true but has no dictionary — the picker would offer a dead choice')
+        problems.append(f'{code}: marked ui:true but has no dictionary, the picker would offer a dead choice')
     for code in sorted(set(dicts) - ui_true):
-        problems.append(f'{code}: has a dictionary but is not marked ui:true — it will never be offered')
+        problems.append(f'{code}: has a dictionary but is not marked ui:true, it will never be offered')
 
     if not dicts:
-        problems.append('no dictionaries parsed at all — has the file format changed?')
+        problems.append('no dictionaries parsed at all, has the file format changed?')
         print('\n'.join(problems))
         return 1
 
@@ -340,7 +340,7 @@ def main():
                 # alphabet with English; for German or Dutch it is often simply correct.
                 if code in ('th', 'vi', 'km', 'lo', 'zh-CN', 'zh-TW', 'ko', 'ja', 'hi', 'ru',
                             'he', 'ar', 'fa', 'ur', 'uk', 'bn'):
-                    problems.append(f'{code}: {k!r} is identical to the English — untranslated?')
+                    problems.append(f'{code}: {k!r} is identical to the English, untranslated?')
 
     # 8. composed strings: keys with {0}, {1} slots (F5c)
     composed_strings(dicts, harvest, problems)
@@ -388,7 +388,7 @@ def main():
         for p in problems:
             print('  - ' + p)
         return 1
-    print(f'PASS — {len(dicts)} languages, {len(canon)} keys in the host languages, registry agrees.')
+    print(f'PASS: {len(dicts)} languages, {len(canon)} keys in the host languages, registry agrees.')
     return 0
 
 
