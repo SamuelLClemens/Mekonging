@@ -204,6 +204,7 @@ function getSpecies(id) { return _natureMod ? _natureMod.getSpecies(id) : null; 
 const SCREEN_LOADERS = {
   calendar: (b) => import('./screens/calendar.js' + b),
   journal: (b) => import('./screens/journal.js' + b),
+  triprecap: (b) => import('./screens/trip-recap.js' + b),
   nextstop: (b) => import('./screens/nextstop.js' + b),
   settings: (b) => import('./screens/settings.js' + b),
   visitors: (b) => import('./screens/visitors.js' + b),
@@ -251,6 +252,8 @@ const SCREEN_LOADERS = {
 const ROUTE_SCREENS = {
   calendar: ['calendar'],
   journal: ['journal'], scrapbook: ['journal'], journey: ['journal'],
+  // Own line, one key per line (check-lazy-data.py reads this map with re.match).
+  recap: ['triprecap'],
   nextstop: ['nextstop'],
   settings: ['settings'],
   visitors: ['visitors'],
@@ -821,7 +824,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.654.0';
+export const APP_VERSION = 'mk-v0.655.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2865,12 +2868,6 @@ export function daysUntilISO(iso) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.round((target - today) / 86400000);
 }
-// One stage-aware card for Home: a countdown in the planning phase, a recap in the post phase.
-function journeyCompanionCard(phase, cc) {
-  if (phase === 'planning') return tripCountdownCard(cc);
-  if (phase === 'post') return returnRecapCard();
-  return null;
-}
 function tripCountdownCard(cc) {
   const start = tripStartISO();
   if (!start) {
@@ -2932,48 +2929,7 @@ export function gamifyLevelBadge() {
     h('span', {}, [h('b', {}, lvl.title), ` · Level ${lvl.level} →`]),
   ]);
 }
-function returnRecapCard() {
-  const jEntries = (store.journal.entries || []).length;
-  const stops = (store.trip.stops || []).length;
-  const loved = Object.entries(store.placeData || {}).filter(([, d]) => d && (d.rating || 0) >= 4).length;
-  const ratedN = Object.values(store.placeData || {}).filter((d) => d && (d.rating || 0) > 0).length;
-  const home = homeCurrency();
-  const totals = {};
-  (store.trip.budgetLog || []).forEach((b) => { const c = b.currency || '?'; totals[c] = (totals[c] || 0) + (parseFloat(b.amount) || 0); });
-  let homeSum = 0, allKnown = true, any = false;
-  for (const [c, v] of Object.entries(totals)) {
-    any = true;
-    if (c === home) { homeSum += v; continue; }
-    const conv = convert(v, c, home);
-    if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv;
-  }
-  if (!jEntries && !stops && !loved && !any) {
-    return h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' }, [
-      h('strong', {}, '📖 Welcome back'),
-      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'Turn your trip into a keepsake — a scrapbook of your journal, photos, places and spending.'),
-      h('button', { class: 'btn', onclick: () => go('#scrapbook') }, 'Build your scrapbook'),
-    ]);
-  }
-  const card = h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' });
-  card.append(h('strong', {}, '📖 Welcome back'));
-  const stat = (n, label) => h('span', { class: 'recap-stat' }, [h('b', {}, String(n)), ' ' + label]);
-  const stats = [];
-  if (jEntries) stats.push(stat(jEntries, jEntries === 1 ? 'journal entry' : 'journal entries'));
-  if (loved) stats.push(stat(loved, loved === 1 ? 'place loved' : 'places loved'));
-  if (ratedN) stats.push(stat(ratedN, ratedN === 1 ? 'place rated' : 'places rated'));
-  if (stops) stats.push(stat(stops, stops === 1 ? 'stop' : 'stops'));
-  if (stats.length) card.append(h('div', { class: 'recap-stats' }, stats));
-  if (any && homeSum > 0) card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 0' }, `Spent ≈ ${money(Math.round(homeSum), home)}${allKnown ? '' : ' (some rates unknown)'}`));
-  const unrated = (store.favorites || []).filter((id) => (getPlaceData(id).rating || 0) === 0);
-  if (unrated.length) {
-    const first = getPlace(unrated[0]);
-    if (first) card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${first.id}`) },
-      unrated.length === 1 ? `⭐ Rate ${first.name}` : `⭐ Rate ${unrated.length} places you saved`));
-  }
-  card.append(h('button', { class: 'btn block btn-spaced', onclick: () => go('#scrapbook') }, 'Build your scrapbook →'));
-  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#export') }, '📤 Save & share your trip (journal, reviews, photos, expenses)'));
-  return card;
-}
+// returnRecapCard() moved to js/screens/home.js (recapSummaryCard, F4): Home's post-trip summary, with the way into #recap.
 
 // destinationOutlookCard() lived here: a six-day forecast for the focus city, rendered inside
 // the planning block. It is gone rather than merely unused — it was the SECOND copy of that
@@ -3099,11 +3055,11 @@ export function plannedStopsOutlook() {
 
 // One stage-appropriate situational block for Home, replacing the old one-size "right now" card
 // that showed near-me picks in every stage. Planning gets the outlook/countdown hub; arrived and
-// travelling get the live, now forecast-aware near-me card; post gets the return recap. This is
-// the core of making Home relevant to the traveller's actual stage.
+// travelling get the live, now forecast-aware near-me card; post gets the return recap, which
+// js/screens/home.js builds itself (recapSummaryCard). This is the core of making Home relevant
+// to the traveller's actual stage.
 export function homeStageBlock(phase, cc) {
   if (phase === 'planning') return planningStageBlock(cc);
-  if (phase === 'post') return returnRecapCard();
   // The on-the-ground phase no longer has a single stage block: its two halves are ordered
   // independently by js/screens/home.js as homeBudgetFold() then homeRightNowFold(), so that
   // Weather can sit above both and Identify below them.
@@ -7157,7 +7113,7 @@ export function render() {
   // graph memoises forever on first build, so it must never run while only partly
   // loaded); and a traveller's own saved places/collections, which may span any
   // country they have visited.
-  const NEEDS_ALL_COUNTRIES = new Set(['search', 'route', 'journey', 'saved', 'collection', 'nextstop', 'map']);
+  const NEEDS_ALL_COUNTRIES = new Set(['search', 'route', 'journey', 'recap', 'saved', 'collection', 'nextstop', 'map']);
   // The two routes that render a province/zone map or read placesInZone/townsInZone
   // (zoneAssignment) — all backed by the ADM1 region-set loader (loadRegionSet/
   // isRegionSetLoaded, defined above with REGIONS_BY_CC). This is a second, independent
@@ -7304,6 +7260,7 @@ export function render() {
       case 'scrapbook': return screenMod('journal').scrapbookScreen();
       case 'contributions': return screenMod('contributions').contributionsScreen();
       case 'journey': return screenMod('journal').journeyScreen();
+      case 'recap': return screenMod('triprecap').tripRecapScreen();
       case 'sharejourney': return screenMod('sharejourney').shareJourneyScreen();
       // A journey someone shared as a link. The whole journey travels in the payload, so this
       // renders for a first-time visitor with no profile and nothing stored.

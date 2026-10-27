@@ -186,6 +186,82 @@ html[data-reduced-motion="on"] [data-refined] *::after {
 .pla .g3 { fill: var(--stripe-3, var(--ink-soft)); }
 .pla .g4 { fill: var(--stripe-4, var(--ink-soft)); }
 
+/* ---- The trip recap (F4): js/screens/trip-recap.js, charts in js/recap-charts.js ----
+   Series colours are --viz-1 to --viz-8; slot 0 is --viz-axis, the neutral grey that is already held to 3:1 on every surface. A mark's colour is
+   set once, by its slot class, through --rc-k. Text never wears a series colour: names and values stay in --ink and --ink-soft. */
+.rc-k0 { --rc-k: var(--viz-axis); }
+.rc-k1 { --rc-k: var(--viz-1); } .rc-k2 { --rc-k: var(--viz-2); } .rc-k3 { --rc-k: var(--viz-3); } .rc-k4 { --rc-k: var(--viz-4); }
+.rc-k5 { --rc-k: var(--viz-5); } .rc-k6 { --rc-k: var(--viz-6); } .rc-k7 { --rc-k: var(--viz-7); } .rc-k8 { --rc-k: var(--viz-8); }
+.rc-card > h2, .rc-empty > h2 { margin-top: 0; }
+.rc-sub { margin: var(--sp-4) 0 var(--sp-2); font-size: var(--fs-h3); }
+.rc-line { margin: var(--sp-2) 0; color: var(--ink); font-size: var(--fs-body); overflow-wrap: anywhere; }
+.rc-note { margin: var(--sp-2) 0 0; color: var(--ink-soft); font-size: var(--fs-sm); }
+.rc-flag { margin: var(--sp-2) 0 0; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line); border-left: 4px solid var(--viz-axis);
+  border-radius: var(--r-sm); color: var(--ink); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+.rc-big { font-size: var(--fs-h1); }
+/* Headline figures: proportional digits, never tabular at this size. */
+.rc-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: var(--sp-3); }
+.rc-tile { display: flex; flex-direction: column; gap: var(--sp-0h); min-width: 0; }
+.rc-tile-val { font-size: var(--fs-h2); line-height: var(--lh-tight); color: var(--ink); overflow-wrap: anywhere; }
+.rc-tile-lbl { font-size: var(--fs-sm); color: var(--ink); }
+.rc-tile-sub { font-size: var(--fs-label); color: var(--ink-soft); overflow-wrap: anywhere; }
+/* Horizontal bars: name and value on one line, a thin bar under them. 10 px thick, a 4 px rounded data end, square on the baseline. */
+.rc-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); }
+.rc-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-0h) var(--sp-3); align-items: baseline; }
+.rc-bar-name { color: var(--ink); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+.rc-bar-val { color: var(--ink); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rc-bar-track { grid-column: 1 / -1; display: flex; gap: 2px; height: 10px; border-left: 1px solid var(--viz-axis); }
+.rc-bar-fill { display: block; height: 100%; min-width: 2px; background: var(--rc-k, var(--viz-1)); }
+.rc-bar-fill:last-child { border-radius: 0 4px 4px 0; }
+.rc-bar-sub { grid-column: 1 / -1; color: var(--ink-soft); font-size: var(--fs-label); overflow-wrap: anywhere; }
+.rc-legend { list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin: var(--sp-3) 0 0; padding: 0; color: var(--ink-soft); font-size: var(--fs-sm); }
+.rc-legend li, .rc-ro-list li { display: inline-flex; align-items: center; gap: var(--sp-1h); }
+.rc-key { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 2px; background: var(--rc-k, var(--viz-1)); }
+/* Stacked columns. The plot is one focusable control at least 44 px tall (it is 140 units of a 320-unit viewBox). */
+.rc-fig { margin: 0; }
+.rc-svg { display: block; width: 100%; max-width: 440px; height: auto; }
+.rc-grid { stroke: var(--viz-grid); stroke-width: 1; shape-rendering: crispEdges; }
+.rc-tick { fill: var(--viz-label); font-size: var(--fs-label); }
+.rc-col { fill: var(--rc-k, var(--viz-1)); stroke: var(--card); stroke-width: 2; paint-order: stroke; }
+.rc-sel { fill: var(--viz-grid); opacity: 0.55; }
+.rc-plot { fill: transparent; cursor: crosshair; touch-action: pan-y; }
+.rc-plot:focus { outline: none; }
+.rc-plot:focus-visible { stroke: var(--ink); stroke-width: 2; }
+.rc-readout { min-height: 4.5rem; margin-top: var(--sp-2); color: var(--ink-soft); font-size: var(--fs-sm); }
+.rc-ro-head b, .rc-ro-list b { color: var(--ink); }
+.rc-ro-head { color: var(--ink); }
+.rc-ro-tag { color: var(--ink-soft); }
+.rc-ro-list { list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-0h) var(--sp-3); margin: var(--sp-1) 0 0; padding: 0; }
+.rc-table { margin-top: var(--sp-3); }
+.rc-table > summary { display: flex; align-items: center; min-height: var(--hit); color: var(--ink); font-size: var(--fs-sm); cursor: pointer; }
+.rc-table table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
+.rc-table th, .rc-table td { padding: var(--sp-1) var(--sp-2); border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); text-align: left; }
+.rc-table td:nth-child(2) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rc-table .rc-split { color: var(--ink-soft); overflow-wrap: anywhere; }
+/* The shared fold summary and info icon are 30 and 24 px tall; on this screen both meet the 44 px target (Q3 to Q5 do the rest). */
+.rc .foldcard > summary { min-height: var(--hit); }
+.rc .screen-hint > summary { min-width: var(--hit); min-height: var(--hit); justify-content: center; }
+.rc-stops { margin: 0; padding-left: var(--sp-5); color: var(--ink); font-size: var(--fs-sm); }
+.rc-stops li { padding: var(--sp-1) 0; overflow-wrap: anywhere; }
+/* The route: water, land and river from tokens; the route and its dots are slot 1; the ring round a dot is the card colour. */
+.rc-map { margin: 0 0 var(--sp-3); }
+.rc-map-svg { display: block; width: 100%; max-width: 420px; height: auto; margin: 0 auto; border-radius: var(--r-sm); }
+.rc-water { fill: var(--skel-base); }
+.rc-land { fill: var(--card); stroke: var(--viz-axis); }
+.rc-river { fill: none; stroke: var(--viz-axis); stroke-linecap: round; opacity: 0.55; }
+.rc-route { fill: none; stroke: var(--viz-1); stroke-linecap: round; stroke-linejoin: round; }
+.rc-dot { fill: var(--viz-1); stroke: var(--card); }
+.rc-map-label { fill: var(--ink); stroke: var(--card); paint-order: stroke; font-weight: 700; }
+.rc-top { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-1); }
+.rc-top-row { display: flex; flex-direction: column; gap: var(--sp-0h); min-height: var(--hit); padding: var(--sp-2) var(--sp-3); box-sizing: border-box;
+  border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); text-decoration: none; }
+a.rc-top-row:hover, a.rc-top-row:focus-visible { border-color: var(--ink-soft); }
+.rc-top-name { font-weight: 700; font-size: var(--fs-body); overflow-wrap: anywhere; }
+.rc-top-meta { color: var(--ink-soft); font-size: var(--fs-sm); }
+.rc-top-review { color: var(--ink); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+.rc-stars { letter-spacing: 1px; }
+.rc-end { display: grid; gap: var(--sp-1); }
+
 /* ==== BEGIN GENERATED VIZ (tools/style-tiles/port-themes.py; do not edit by hand) ==== */
 /* --viz-1 to --viz-8 in the fixed slot order brick, plum, gold, teal, blue, green, violet, rose, one rule per surface. Never reorder or cycle:
    the order is what keeps neighbours apart under colour-vision deficiency (tools/style-tiles/derive-viz.py). */

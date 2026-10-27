@@ -39,7 +39,7 @@ Releasing slices stack, one at a time, each from the merged tip. The owner's que
 3. **F3**, location from the first open. **Built**, [PR #138](https://github.com/SamuelLClemens/Mekonging/pull/138), `mk-v0.652.0`.
 4. **S1**, the style foundation: tokens and machinery (section 5). **Built**, [PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139), `mk-v0.653.0`.
 5. **F7a**, Emergency outside the four countries (decision 28). The owner placed it before F4 (2026-10-27). **Built**, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140), `mk-v0.654.0`.
-6. **F4**, the post-trip recap with charts (uses S1's chart palette).
+6. **F4**, the post-trip recap with charts (uses S1's chart palette). **Built**, [PR #143](https://github.com/SamuelLClemens/Mekonging/pull/143), `mk-v0.655.0`.
 7. **F5**, then **F7b**, the worldwide table of emergency numbers (the owner placed it right after F5, 2026-10-27; decision 26's outline measurement runs before it and changes no shipped file), then **L1**, **L2**, **L3** (uses S1's chart palette), **L4**.
 8. **Q3**, **Q4**, **Q5**, **Q6**, **Q7**, the sound base (section 5). Decision 10 is asked again after Q5.
 9. **T1**, fact freshness, then **T2**, border status (section 6).
@@ -78,7 +78,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | F2 | Journey on a world map, every stop editable | **built** 2026-10-26, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136) |
 | F1b | Every Cambodian village in the place list (12,128 places, 212.9 KB gzip) | **built** 2026-10-26, [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137) |
 | F3 | Location from the first open | **built** 2026-10-27, [PR #138](https://github.com/SamuelLClemens/Mekonging/pull/138) |
-| F4 | Post-trip recap with charts | after S1 |
+| F4 | Post-trip recap with charts (`#recap`: nights per country, route map, spend by category, country and day, journal and photos, places, legs by mode) | **built** 2026-10-27, [PR #143](https://github.com/SamuelLClemens/Mekonging/pull/143) |
 | F5 | Language check; Thai, Vietnamese, Khmer and Lao complete | after F4 |
 | L1 to L4 | Talk face to face; 25 interface languages; local languages and the map; their phrasebooks | after F7b |
 | L5 | Talk by invite | after M5 |
@@ -206,6 +206,10 @@ How far the outline is from the 50m file near the four fixes that sit at a land 
 |---|---|---|---|
 | Offline | The OCR language files are not in the service-worker manifest, so offline OCR after first use is untested | `grep -c traineddata sw.js`: 0; the files are `lib/tesseract/lang/{khm,lao,tha,vie}.traineddata.gz` | F5 (it touches the host languages) |
 | iOS wrapper | OCR from `mekong://` (a blob worker's `importScripts`) is untested | not measurable here (no Xcode) | next wrapper build; owner check |
+| Trip recap | Nights per country run from the date each stop was reached to the date the next was reached. `journeyStops` merges a place into one stop, so a return to an earlier city is not a second stay and its nights go to the first | F4 design (`js/recap-data.js` `timeline`) | none unless the owner wants visit-by-visit stays |
+| Trip recap | Distance is the straight line between consecutive stops, not the route taken; a leg's mode is the traveller's choice, else the route graph's, else a guess from distance and days (the screen says which) | F4 | none |
+| Trip recap | Monthly costs and spending dated outside the dates of the stops are in the total and the categories, in no country and on no day (the screen says so). An entry in a currency with no exchange rate is in none of the sums and is named | F4 | none |
+| Trip recap | The strings F4 added are English only, and the route is a static drawing from the app's own outlines (the live map is one tap away on `#journey`); the recap has no photo grid | F4 | L2 (strings); a live-map recap only if the owner asks |
 | Location | A GPS fix outranks a place picked by hand: a traveller in one town who picks another sees the town they are in. Unchanged by F3 | `docs/HANDOFF.md` (F1) | decision 29 is ruled (4.3): hold the pick; slice F6, which asks for how long |
 | Location | Today, Arrival, Transport and Explore's "Places in X" read the anchor, not the picked or fix place: at the Anlong Chambak fix they say "Near Pursat" and "Places in Pursat". Their content is keyed to curated cities, so this is by design; F3 changed the labels that say where the traveller is | F3 driver, 2026-10-27 | none unless the owner wants a place-level "Today" |
 | Location | A picked place, and now a fix's place (`prefs.fixPlace`), is saved only through the debounced store save | F1 probe (`Browser.close` lost it) | Q7 (store flush) |
@@ -266,7 +270,7 @@ How far the outline is from the 50m file near the four fixes that sit at a land 
 
 | Item | Measured 2026-10-25 | Owner |
 |---|---|---|
-| `js/main.js` size | 7,601 lines against ~1,500; no guard enforces a ceiling (no `1500` in `scripts/` or `.github/workflows/`) | T4 adds a ratchet. Until then, every slice that edits `main.js` moves the code it touches into a module (F4 moves `returnRecapCard`) |
+| `js/main.js` size | 7,617 lines against ~1,500 (F4 moved `returnRecapCard` out: 7,660 to 7,617); no guard enforces a ceiling (no `1500` in `scripts/` or `.github/workflows/`) | T4 adds a ratchet. Until then, every slice that edits `main.js` moves the code it touches into a module |
 | Test drivers outside the repo (S1 committed its own under `tools/style-digest/`: `digest.py`, `components.py`, and a copy of the stdlib CDP client that Q2's `tools/cdp/` absorbs) | `~/Library/Caches/mk-f1/`, `mk-f2/` and `mk-m4b1/` (plus their Chrome profiles); the Q1 driver and the M3b CDP client in the notes folder `local_45164220-ea74-40e6-851e-808583e5b9f4/` (`q1-audit-driver/`, `m3b-cdp/`) | Q2 commits the audit driver and one shared stdlib CDP client (`tools/cdp/cdp.py`) that later drivers import |
 | Spent worktrees | **Removed** (decision 25, 2026-10-27): f1b, f2 and f3 and the local branch `f3-base`. S1 found none of the 7 older ones either (best-tool-prompt, f1, fixes-plan, m3a, m4a, m4b1, rulings-1019): `git worktree list` showed only the main checkout. S1 adds two under `Mekong/.claude/worktrees/`: `s1-tokens` (the branch) and `s1-before` (detached at `b7dd04a`, the digest's baseline); both are spent when its PR merges | none; remove the two when the PR merges |
 | Spent remote branches | 14 merged (and, since 2026-10-27, three more: `data/f1b-cambodia-villages`, `feat/f2-journey-world`, `feat/f3-location-first-open`, from PRs #137, #136 and #138; the worktrees are gone, the remote branches are still on origin): `data/d4-local-names`, `data/d5-vietnam`, `data/f1-laos-villages`, `docs/bangkok-buildout-plan`, `docs/language-work-plan`, `docs/m3b-handoff`, `docs/m4b-split`, `docs/owner-rulings-2026-10-19`, `docs/q1-audit-375`, `feat/f1-place-list`, `feat/m3-signin`, `feat/m3a-csp-secrets`, `feat/m4a-listings`, `feat/m4b1-market-browse`. **New:** `fix/transport-leaving-reverse` (PR #95 merged; its one extra commit, 3533216, merges #96 into it, and both fixes are on the tip) | owner action: approve removal |

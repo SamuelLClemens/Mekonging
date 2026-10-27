@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.654.0';
+const CACHE_VERSION = 'mk-v0.655.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -123,6 +123,11 @@ const PRECACHE = [
   'js/screens/settings.js',
   'js/screens/calendar.js',
   'js/screens/journal.js',
+  'js/screens/trip-recap.js',
+  'js/journey-stops.js',
+  'js/recap-spend.js',
+  'js/recap-data.js',
+  'js/recap-charts.js',
   'js/screens/phrasebook.js',
   // The emergency screens and their data. main.js imports all four EAGERLY, so a miss here
   // is not a degraded feature — it is a module-evaluation failure that takes the whole app
@@ -377,12 +382,12 @@ const PRECACHE = [
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
   'css/market.css': 'd4a46cd8',
-  'css/refined.css': 'e9c66ef7',
+  'css/refined.css': 'a7ff407b',
   'css/style.css': '2fd10626',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'icons/ui.svg': '8b29a252',
-  'index.html': '3068addf',
+  'index.html': '5d86ccd3',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'f2ff527f',
@@ -552,10 +557,11 @@ const MANIFEST = {
   'js/icons.js': '2538ab47',
   'js/idb.js': 'c5e4e32a',
   'js/journey-share.js': 'e859a00d',
+  'js/journey-stops.js': '1d5a7385',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
   'js/location-ask.js': '2be4200d',
-  'js/main.js': '6cb64737',
+  'js/main.js': 'c284a96a',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'baf60785',
   'js/market-api.js': '0f0d76c5',
@@ -566,7 +572,7 @@ const MANIFEST = {
   'js/market-link.js': '0d4268b0',
   'js/market-listings.js': 'c008e8c7',
   'js/market-routes.js': '2b771207',
-  'js/nav-groups.js': 'b9a99a72',
+  'js/nav-groups.js': 'a9ee3d79',
   'js/offline-areas-ui.js': '01b8e952',
   'js/offline-pack.js': '146bfdb9',
   'js/offline-ready.js': 'c93785dc',
@@ -577,6 +583,9 @@ const MANIFEST = {
   'js/place-card.js': '553c14dc',
   'js/place-search.js': '1cafa9c7',
   'js/place-ui.js': '8937b287',
+  'js/recap-charts.js': 'a403434d',
+  'js/recap-data.js': '36fda65a',
+  'js/recap-spend.js': '3697b9e8',
   'js/reminders.js': 'f18165dd',
   'js/render-utils.js': '154dc807',
   'js/screens/arrival-info.js': 'a6846fa4',
@@ -597,8 +606,8 @@ const MANIFEST = {
   'js/screens/food.js': '4030bf02',
   'js/screens/giveback.js': '6ed0573a',
   'js/screens/help.js': '4af2770c',
-  'js/screens/home.js': '16b90136',
-  'js/screens/journal.js': '3091b0d4',
+  'js/screens/home.js': '8291cefc',
+  'js/screens/journal.js': '626968d6',
   'js/screens/journey-edit.js': '2ab9426e',
   'js/screens/map.js': '69c5faff',
   'js/screens/market-account.js': '7024bb25',
@@ -619,6 +628,7 @@ const MANIFEST = {
   'js/screens/streetfood.js': '0ca4e2ad',
   'js/screens/today.js': '67d1e3e4',
   'js/screens/transport.js': '88a31805',
+  'js/screens/trip-recap.js': '41d9b262',
   'js/screens/trip.js': '600962b1',
   'js/screens/vault.js': '4ad7cc26',
   'js/screens/visitors.js': '6746db81',
