@@ -1,69 +1,68 @@
-# Handoff — 2026-10-27 (F3: location known from the first open)
+# Handoff, 2026-10-27 (S1: the style foundation, tokens and machinery)
 
-The previous handoff (F1b) is `git show 9bc9166:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
+The previous handoff (F3) is `git show b7dd04a:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4; what S1 built, with its measurements, is 5.5.
 
 ## Shipped
-- **F3**, branch `feat/f3-location-first-open`, [PR #138](https://github.com/SamuelLClemens/Mekonging/pull/138), `mk-v0.652.0` (store version unchanged, 17). Waits for the owner's merge; S1 stacks on it.
-  - Welcome: the filled "Use my location" is step one's main action; Next is a ghost until location is on, and still works. The browser dialog is raised only by a tap.
-  - Home (`js/location-ask.js`, new): one card for a traveller who was never asked, one dismissible banner for one who refused or swiped the dialog away.
-  - `js/fix-place.js` (new): a live fix more than 15 km from a curated city is named by the nearest place-list entry (within 25 km). It reaches Home, the right-now card, Weather, Places, Nearby, Emergency (through `whereAmI`'s new `list` source) and the trail. A fix more than 250 km from every curated city no longer names a far city.
-  - Both F1b leftovers looked at: Anlong Chambak's pairing is by distance, not a fault (Pursat 56.1 km, Siem Reap 58.5 km); the Singapore trail naming is closed.
-  - Details and measurements: `docs/PLAN.md` (the F3 entry) and the PR body.
+- **S1**, branch `feat/s1-tokens-machinery`, [PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139), `mk-v0.653.0` (store version unchanged, 17). Waits for the owner's merge; F4 stacks on it. Items 1 to 10 of `docs/PROGRAM.md` 5.3 as tokens and components. **No existing screen uses any of it.**
+  - **The opt-in mechanism.** The refined `--fs-*` scale, the line heights and the reduced-motion rule are declared on `[data-refined]`, not at `:root`, because 241 places read the `--fs-*` tokens and the done criterion forbids moving them. R1 to R3 add `data-refined` to a screen group's root. The new place card carries it itself.
+  - `css/refined.css` (new, linked after `style.css`, precached): tokens (`--lh-*`, `--icon-*`, `--card-media-*`, `--dur-1/2`, `--hit`, `--viz-*`, `--skel-*`), `.num`, `.icon`, the place card (`.rf-*`), the artwork classes (`.pla-*`), `.rf-empty`, `[data-refined] .skeleton`. The `--viz-*` block at its end is generated.
+  - **Chart colours.** `--viz-1` to `--viz-8` for 16 surfaces. `tools/style-tiles/derive-viz.py` derives them into `round2.json`; `port-themes.py` writes them; `check-contrast.py` holds 3:1; `derive-viz.py --check` holds the dataviz checks. Fixed order: brick, plum, gold, teal, blue, green, violet, rose.
+  - **Icons.** `icons/ui.svg` (51 Lucide glyphs; ISC and MIT texts in `icons/LICENSE-lucide.txt`), `js/icons.js` (`iconNode(id)`, `iconSVG(id)`), an `icon:` id beside every `ic:` in `js/nav-groups.js`, `scripts/build-icon-sprite.py` (needs an unpacked `lucide-static` package), `scripts/check-icons.py`.
+  - **Place card and artwork** (lazy, not yet imported by any screen): `js/place-card.js` `placeCardRF(place, options)` and `js/place-art.js` (11 motifs, `placeArtKey(place)`).
+  - **Guards (3 new).** `check-font-sizes` (a ratchet, baseline `scripts/font-size-baseline.json`: 138 CSS declarations, 74 in JS strings), `check-icons`, `derive-viz.py --check`. All in `scripts/README.md`, `.github/workflows/guards.yml` and `CLAUDE.md`.
+  - **Proof tools** (committed, `tools/style-digest/`): `digest.py <before-url> <after-url>` (a computed-style digest of two running copies, per screen and theme, with `--allow` for R slices) and `components.py <url>` (mounts and measures the new components). Both need headless Chrome and a display kept awake.
+- **Housekeeping, recorded in `docs/PROGRAM.md` 4.2, 4.3 and 4.6.** Decision 25: the f1b, f2 and f3 worktrees and the `f3-base` branch are removed (2026-10-27). Decisions 28 and 29 are ruled (below), which adds slices F6 and F7 to 4.1.
 
 ## Verified
-Headless Chrome over CDP, fresh profiles on 127.0.0.1, 375 x 812 at DPR 2, `document.hidden` false, driver `~/Library/Caches/mk-f3/drive.py` (not in the repo): 25 of 25 checks.
-- Before the change, at `acbc7a3`: the welcome step made 0 calls and Skip set `geoAsked` true; Home offered no location control to an earlier traveller; a denied profile showed no banner; Koh Chang already read "Koh Chang" (it is an anchor, so the criterion passed before any change); Koh Mak read "Trat", Anlong Chambak "Pursat", and Singapore "Songkhla" (751 km), filed in the trail as `th`.
-- After: first open 0 calls on load and exactly 1 `getCurrentPosition` after the tap; the card and banner show once and stay dismissed after a reload; a denied profile makes 0 calls on load and on reload; Anlong Chambak (56.1 km from its anchor) and Don Không, Laos (16.9 km) read their own names on Home and Weather, with their own forecast; Singapore's trail pin is `{city: '', cc: ''}`. 0 overflow and 0 controls under 44 px on the welcome step, the card and the banner. Four screenshots were looked at.
-- Cost, renderer CPU time (`Performance.getMetrics` `ThreadTime`): 21 to 24 ms per resolution with the lists in memory, 84 ms cold (about 130 to 145 ms and 500 ms at 6x). A first version cost 65 to 75 ms.
-- All 16 CI guards, place-fields, port-themes, cache-version (against `origin/feat/scaffold-bangkok-slice`) and `jsc -m scripts/validate-jsc.mjs` pass; `jsc -m` parses every edited file. The preload block was regenerated for the two new eager modules; the manifest has 271 files.
-- Not verified: an iPhone; offline (the place is read from the store and the lists are precached, but it was not run with the server stopped); CI on the PR (one check was pending when this was written).
+Headless Chrome over CDP, fresh profiles on 127.0.0.1, 375 x 812 at DPR 2, `document.hidden` false for every page, every host except 127.0.0.1 unresolvable.
+- **Nothing outside the new components moved.** `tools/style-digest/digest.py` against `origin/feat/scaffold-bangkok-slice` at `b7dd04a`: 8 screens (Home, Places, a place card without a photo, Explore, Talk, Weather, the journey map, the Market home) by 3 themes (Mekong Retro light and dark, Night Market) = 24 pairs, 10,923 elements, each hashed over every computed property and its box (and `::before`, `::after`). 0 added, 0 removed, 0 changed; 0 existing custom properties changed value, 26 new ones appeared. A second load of the baseline flags 18 noisy elements (the Weather map's city chips); with them counted, three repeats showed 0 differences. One error kind on both sides (`Failed to fetch`, offline map tiles).
+- **The components work.** `components.py`: 24 checks per theme, 72 of 72 pass: 14 cards with 0 overflow, media 232.7 px at most (a 506 x 900 portrait is capped), name link 44 px, 11 motifs named "Artwork: ...", 51 icons drawn and every `<use>` resolved under the CSP, type scale and line heights as designed (the longest th, lo, km and vi strings clear their ink at 27.2 and 25.6 px; `line-height: 1` gives 16 px). Screenshots were looked at (photo card, tall portrait, archival label, artwork, icon grid, empty state, swatches); they are not committed, `components.py --out <dir>` makes them.
+- **Palette.** 160 chart colours at 3:1 or better on their card across 16 surfaces; worst neighbouring pair under colour-vision deficiency 16.4 (target 8); the `dataviz` skill's own `validate_palette.py` passes retro light and dark, Night Market and Flags.
+- **Guards fail when they should.** A planted literal font size, a misspelt icon id and a pale chart colour each failed their guard; files restored by hash.
+- All CI guards, place-fields, port-themes, derive-viz, cache-version (against `origin/feat/scaffold-bangkok-slice`; 8 code files changed, `mk-v0.652.0` to `mk-v0.653.0`) and `jsc -m scripts/validate-jsc.mjs` (19,297 of 19,297) pass. `jsc -m` parses every edited file. The manifest has 276 files.
+- Not verified: an iPhone; CI on the PR (pending when this was written); the card and artwork on a real screen of the app (nothing uses them yet).
 
 ## Owner checks
-- [ ] **Xcode (read only, F3 edited nothing).** The live Xcode project is not in the repo: `project.pbxproj` was removed from git in `4f06543` (2026-07-17), and no `Info.plist`, entitlements or `.xcconfig` is tracked, so the current tree declares no location usage description. The last committed project file declared `INFOPLIST_KEY_NSLocationWhenInUseUsageDescription` ("Mekonging uses your location to show places near you and to stamp journal entries."). Confirm your local project still has it; without it the iOS wrapper never shows the dialog.
-- [ ] **iPhone, Safari and the Home Screen app, fresh install:** the welcome step's button raises the dialog once; allow, and Home names the place with no tap; on a second install refuse, and the banner shows once with no dialog on reload.
+- [ ] **Xcode (read only).** The live Xcode project is not in the repo (`project.pbxproj` was removed in `4f06543`), so the tree declares no location usage description. Confirm your local project still has `INFOPLIST_KEY_NSLocationWhenInUseUsageDescription`; without it the iOS wrapper never shows the dialog. Carried from F3.
+- [ ] **iPhone, Safari and the Home Screen app, fresh install:** the welcome step's button raises the dialog once; allow, and Home names the place with no tap; on a second install refuse, and the banner shows once with no dialog on reload. Carried from F3.
 - Carried from M3b: [ ] sign in on the iPhone Home Screen app by code, then the user id goes into `private.admins` and `private.testers`; [ ] sign in by link in Safari, then delete a test account; [ ] from the first real email, whether `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has.
+- S1 changed nothing a traveller can see, so it has no owner check of its own.
 
 ## Not done / known issues
-- Everything open is in `docs/PROGRAM.md` section 4. New in F3 (4.4):
-  - **Safety, decision 28:** an outside-region fix still reaches Emergency as a region country. `countryOfFix` (`js/main.js:6320`) falls back to the nearest anchor's country, so Singapore would show Thailand's numbers ("Showing Thailand ... from your location"). Read from the code, not rendered. F3 guarded only `focusSpot`, `contextNow`, `refreshLocation`, the watch and Nearby; the other direct `nearestSpotGlobal` callers are `js/main.js` 2817, 3709, 6320 and 6880, `country-info.js:280`, `journal.js:349` and `places.js:999`.
-  - A second mislocated anchor: Ba Ria-Vung Tau is at 8.69, 106.61, which is Côn Sơn island (the city is near 10.35, 107.08), like Trat on Ko Mak. A fix on either island reads the anchor, so F3's list place never takes over there. G1 (Trat) and G3.
-  - `prefs.geoAsked` is now read by nothing (Skip and every Home button set it); `geoPrompted` is the working flag.
-  - The first-launch stall: in 1 of 8 fresh-profile runs the four list imports sat unrequested for 9 s. `js/fix-place.js` now times out and retries; the stall itself was not seen again, so the retry is shown to recover from a failed load, not from the original stall.
-  - Penang (165 km) and Yangon (238 km) still read their nearest anchor: the cap is a distance, not a border.
-  - Today, Transport and Explore's "Places in X" still read the anchor (by design); the new strings are English only until L2.
-- Carried (see `docs/PROGRAM.md` 4.4): the offline map outside the region (decision 26); the map credits plate opens expanded and covers part of the journey map (Q7); the `getSource` race (not seen in the F3 position runs, which collected console errors); the list is parsed on the main thread on first use (T3 and T13 would grow it).
+- Everything open is in `docs/PROGRAM.md` section 4. New in S1:
+  - **Deviations from 5.3, each on the record in `DESIGN_SYSTEM.md`.** The type scale, line heights and reduced-motion rule are scoped to `[data-refined]` (not global); the one easing token is the existing `--ease`, not a new one; the sprite has 51 glyphs (about 40 was the estimate); the literal font-size counts are 138 CSS declarations (50 distinct) against the register's "49 distinct".
+  - Which two Vietnamese photos are archival is not in the data; the label exists (`photo.archival`), R1 marks them. The five tab icons and chrome glyphs are in the sprite and not wired (R2, R3).
+  - The strings S1 added are English only (L2).
+  - Offline, the maps log `Failed to fetch` for every tile request (42 to 102 errors a load on Places and the journey map): 4.4, Map.
+  - `css/refined.css` is eager: about 8 KB gzip more on the first visit with the sprite; it is there so R1 does not flash unstyled.
+- Carried (see `docs/PROGRAM.md` 4.4): decision 28's code (`countryOfFix` and the other `nearestSpotGlobal` callers), the offline map outside the region (decision 26), the map credits plate (Q7), the `getSource` race, the list parsed on the main thread on first use, a second mislocated anchor (Ba Ria-Vung Tau).
 - Tooling:
-  - `preview_start` reads the PARENT folder's `.claude/launch.json`, not the worktree's. F3 added `mekong-f3` (port 8963) there, uncommitted like the others. `CLAUDE.md` now says so.
-  - A local branch `f3-base` appeared at `acbc7a3` beside the worktree; tooling created it. It is spent with the worktree.
-  - The F3 driver and screenshots are in `~/Library/Caches/mk-f3/` (`drive.py before|after`, `cdp.py`, `shots-before/`, `shots-after/`); the probes were in the session scratchpad and are gone. The driver warms the service worker's cache before a place-list test; do that in any fresh profile.
-  - Machine load swung between 13 and 210 during this session (another project's Python and the window server). Time code by CPU time, not wall-clock, and give every wait a generous bound.
+  - `preview_start` reads the PARENT folder's `.claude/launch.json`. S1 added no entry there: it served both trees with `python3 scripts/serve.py <port>` from Bash (8964 for `s1-before`, 8965 for the branch) and drove Chrome directly.
+  - The digest stalled once in 25 loads on Places (a navigation timeout); `digest.py` restarts Chrome and retries. Do not run another Chrome at the same time as a digest. Load both trees together and capture at the same age: a first version that captured one side later read a time-dependent status card as a change.
+  - `main` here is `feat/scaffold-bangkok-slice`; the main checkout `Mekong/` is at `ddf57b9` and stale. Read `CLAUDE.md` and the docs from a worktree, not from it.
+  - Worktrees `s1-tokens` and `s1-before` (detached at `b7dd04a`) are spent when the PR merges; the two servers on 8964 and 8965 can be stopped.
 
 ## Open decisions (need the user)
-The numbers below keep their old values. Closed on 2026-10-26: 23, 27.
+Closed on 2026-10-27: 25 (worktrees), 28, 29. The numbers keep their old values.
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese.
 8. Legal, for Omer Hanegbi or Omri Siri: `docs/EXCHANGE.md` §14, the terms and privacy policy, and the dispensary question. The terms and privacy policy gate M9; cash swap gates M10.
 10. Topbar icon spacing. Deferred until Q3 to Q5 are done; ask again after Q5.
-25. Remove the spent worktrees and branches in `docs/PROGRAM.md` 4.6: now also f1b and f2 (merged), `f3` and `f3-base` once PR #138 merges. Recommended: yes. One step per message, each branch checked against the tip first.
+25. (worktrees closed) The remote branches of merged work are still on origin: the 15 in `docs/PROGRAM.md` 4.6, plus `data/f1b-cambodia-villages`, `feat/f2-journey-world` and `feat/f3-location-first-open`, and the orphan screenshot branches. Recommended: remove them, one step per message, each checked against the tip first.
 26. A coarse world outline for the journey map offline. Owner, 2026-10-26: measure first. Not done.
-28. **New.** What should Emergency show for a fix outside the four countries? Recommended: say "outside these four countries", show the browsed country's numbers labelled as such, and never "from your location". It needs a ruling before a slice.
-29. **New.** Should a place picked by hand hold over a live fix for a while? Today the fix always wins. Recommended: no change.
+28. **Ruled (owner, 2026-10-27):** "no matter where you are in the world it should give you the emergency info". Slice F7 (4.1). Two things are not ruled and F7's first step is to ask them in one form: which numbers Emergency shows outside the four countries (the browsed country's, or the international ones), and whether it still says where the fix is.
+29. **Ruled (owner, 2026-10-27):** hold the pick. Slice F6 (4.1). Not ruled: for how long (a time, a distance moved, until the traveller asks), and what makes the pick let go.
+- **Placement of F6 and F7** (not asked yet): recommended F7 before F4, because it is safety; F6 with the other location work, after F4. The owner may move either.
 
 ## Next session prompts
-Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~ ([PR #138](https://github.com/SamuelLClemens/Mekonging/pull/138), built), **S1** (the style foundation), F4, F5, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4**, **R1 to R3**, Bangkok B1 to B8, city depth C1 onward, then T3 to T15. Each releasing slice stacks on the merged tip of the one before. Q2, S0, Q8 and the decision 26 measurement change no shipped file and can run alongside any of them.
+Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~, ~~S1~~ ([PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139), built), **F4**, F5, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4**, **R1 to R3**, Bangkok B1 to B8, city depth C1 onward, then T3 to T15; F6 and F7 are unplaced. Each releasing slice stacks on the merged tip of the one before. Q2, S0, Q8 and the decision 26 measurement change no shipped file and can run alongside any of them.
 
-**Next is S1.** PR #138 must be merged first.
+**Next is F4.** [PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139) must be merged first.
 
 ### F4 and F5, then L1 to L4 (and L5 after M5)
 > Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <F4, F5, L1 to L4 or L5>, as written there.
 > **Start.** `git fetch`; `gh pr list --state all`. The slice before it must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`. Reproduce the problem on a rendered screen before changing code. `preview_start` needs an entry in the PARENT folder's `.claude/launch.json` (CLAUDE.md).
 > F5, L1 and L5 end with a check by the owner on their iPhone in Safari, from a short checklist the slice writes. L5 starts only after M5 has merged.
-> F4 and L3 draw their charts with S1's `--viz-*` tokens. F5 checks the OCR language files against the service-worker manifest (`docs/PROGRAM.md` 4.4). Machine-fill strings added by F1 and F3 in L2.
-
-### S1: the style foundation (after F3, before F4)
-> Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md and section 5 of docs/PROGRAM.md (with S0's answers, if S0 has run). Run /slice for slice S1: tokens and machinery.
-> **Scope.** Section 5.3, items 1 to 10, as tokens and components, plus the guards: `check-contrast` reads the `--viz-*` tokens, and a ratchet holds the literal font-size count. Load the `dataviz` skill before the palette.
-> **Done when.** A computed-style digest shows that nothing outside the new components moved, on 8 screens and 3 themes at 375 px; every guard passes; the register is updated; the PR is open. Then run /handoff.
-> **Out of scope.** Applying the tokens to existing screens (R1 to R3); the tap-target and contrast fixes (Q3 to Q7).
+> F4 and L3 draw their charts with S1's `--viz-*` tokens (built: `css/refined.css`; slots in the fixed order brick, plum, gold, teal, blue, green, violet, rose, never cycled; lines, bars and stacks only, a scatter or a map takes the first three; the `dataviz` skill's rules apply). Their screens carry `data-refined` on the root to get the refined type scale; new text sizes use `--fs-*` (`check-font-sizes`), new icons `js/icons.js`. F5 checks the OCR language files against the service-worker manifest (`docs/PROGRAM.md` 4.4). Machine-fill strings added by F1 and F3 in L2.
 
 ### Q3 to Q7, then T1 and T2 (after L4)
 > Read CLAUDE.md, docs/HANDOFF.md, docs/AUDIT_375.md ("Proposed fix slices") and docs/PROGRAM.md (sections 4.4, 5.4 and 6). Run /slice for the next of Q3, Q4, Q5, Q6, Q7, T1 or T2, in that order. Re-measure with Q2's driver first. Decision 10 (topbar spacing) is asked after Q5.

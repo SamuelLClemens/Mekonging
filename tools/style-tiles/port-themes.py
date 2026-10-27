@@ -14,6 +14,10 @@ css/style.css, so a tie in specificity is won by the theme. It holds, per theme:
   * the chrome rules that preview.py draws for the candidate (the same ones the owner approved on the
     Phase 1 gallery), written once per theme selector.
 
+It also writes the data-visualisation palette, --viz-1 to --viz-8 for all 16 surfaces (11 skins, light and dark where a
+skin has both), from round2.json["viz"] (tools/style-tiles/derive-viz.py derives it) into the second generated block,
+at the end of css/refined.css.
+
 Theme ids: retro (Mekong Retro, the `retro-map` tuning the owner chose), river, flags, temples.
 Nothing here reads the network; the only inputs are round2.json and tools/style-tiles/preview.py.
 """
@@ -29,8 +33,11 @@ import measure as m  # noqa: E402
 import preview as pv  # noqa: E402
 
 CSS = os.path.join(ROOT, 'css', 'style.css')
+REFINED = os.path.join(ROOT, 'css', 'refined.css')
 BEGIN = '/* ==== BEGIN GENERATED THEMES (tools/style-tiles/port-themes.py; do not edit by hand) ==== */'
 END = '/* ==== END GENERATED THEMES ==== */'
+VIZ_BEGIN = '/* ==== BEGIN GENERATED VIZ (tools/style-tiles/port-themes.py; do not edit by hand) ==== */'
+VIZ_END = '/* ==== END GENERATED VIZ ==== */'
 PH = '@@P@@'
 
 # app id -> round2.json key
@@ -151,27 +158,58 @@ def build(spec):
     return css.replace('--pv-', '--th-'), report
 
 
+def build_viz(spec):
+    """One rule per surface: :root[data-skin][data-theme] { --viz-1 .. --viz-8 }. Specificity 0,3,0, like the theme blocks."""
+    viz = spec['viz']
+    out = [VIZ_BEGIN,
+           '/* --viz-1 to --viz-8 in the fixed slot order ' + ', '.join(viz['_order']) + ', one rule per surface. Never reorder or cycle:',
+           '   the order is what keeps neighbours apart under colour-vision deficiency (tools/style-tiles/derive-viz.py). */']
+    count = 0
+    for sid, pal in viz.items():
+        if sid.startswith('_'):
+            continue
+        skin, mode = sid.rsplit('-', 1)
+        if len(pal) != 8:
+            raise SystemExit(f'viz {sid}: {len(pal)} colours, expected 8')
+        out.append(f':root[data-skin="{skin}"][data-theme="{mode}"] {{ ' + ' '.join(f'--viz-{i + 1}: {c};' for i, c in enumerate(pal)) + ' }')
+        count += 1
+    out.append(VIZ_END)
+    return '\n'.join(out) + '\n', count
+
+
+def splice(path, begin, end, block):
+    cur = open(path, encoding='utf-8').read()
+    i, j = cur.find(begin), cur.find(end)
+    if (i < 0) != (j < 0):
+        raise SystemExit(f'{os.path.relpath(path, ROOT)} has one generated-block marker but not the other')
+    if i >= 0:
+        new = cur[:i] + block + cur[j + len(end) + 1:]
+    else:
+        new = cur.rstrip('\n') + '\n\n' + block
+    return cur, new
+
+
 def main():
     spec = json.load(open(os.path.join(HERE, 'round2.json'), encoding='utf-8'))
     block, report = build(spec)
-    cur = open(CSS, encoding='utf-8').read()
-    i, j = cur.find(BEGIN), cur.find(END)
-    if (i < 0) != (j < 0):
-        raise SystemExit('css/style.css has one generated-block marker but not the other')
-    if i >= 0:
-        new = cur[:i] + block + cur[j + len(END) + 1:]
-    else:
-        new = cur.rstrip('\n') + '\n\n' + block
+    vblock, vcount = build_viz(spec)
+    jobs = [(CSS, BEGIN, END, block, 'css/style.css'), (REFINED, VIZ_BEGIN, VIZ_END, vblock, 'css/refined.css')]
+    splices = [(path, name) + splice(path, b, e, blk) for path, b, e, blk, name in jobs]
     if '--check' in sys.argv:
-        if new != cur:
-            print('FAIL: the generated theme block in css/style.css is not what tools/style-tiles/port-themes.py writes from round2.json.')
+        stale = [name for _, name, cur, new in splices if new != cur]
+        if stale:
+            for name in stale:
+                print(f'FAIL: the generated block in {name} is not what tools/style-tiles/port-themes.py writes from round2.json.')
             print('Run: python3 tools/style-tiles/port-themes.py')
             return 1
-        print(f'PASS: the generated theme block matches round2.json ({len(block)} bytes, {len(THEMES)} themes).')
+        print(f'PASS: the generated blocks match round2.json ({len(block)} bytes of themes, {len(THEMES)} themes; '
+              f'{len(vblock)} bytes of viz tokens, {vcount} surfaces).')
         return 0
-    if new != cur:
-        open(CSS, 'w', encoding='utf-8').write(new)
-    print(f'wrote {len(block)} bytes of generated themes to css/style.css; --teal-deep per theme/mode:')
+    for path, name, cur, new in splices:
+        if new != cur:
+            open(path, 'w', encoding='utf-8').write(new)
+    print(f'wrote {len(block)} bytes of generated themes to css/style.css and {len(vblock)} bytes of viz tokens ({vcount} surfaces) '
+          f'to css/refined.css; --teal-deep per theme/mode:')
     for sid, mode, deep in report:
         print(f'  {sid:8s} {mode:5s} {deep}  white {m.contrast("#FFFFFF", deep):.2f}:1')
     return 0

@@ -516,5 +516,178 @@
    },
    "sea": "#A3D6D0"
   }
+ },
+ "viz": {
+  "_about": "Derived by tools/style-tiles/derive-viz.py; do not edit by hand. Eight slots per surface in the fixed order brick, plum, gold, teal, blue, green, violet, rose; css/refined.css is written from this by port-themes.py.",
+  "_order": [
+   "brick",
+   "plum",
+   "gold",
+   "teal",
+   "blue",
+   "green",
+   "violet",
+   "rose"
+  ],
+  "classic-light": [
+   "#892D00",
+   "#CB6AB2",
+   "#835B00",
+   "#009B92",
+   "#1E4CA4",
+   "#409D49",
+   "#603493",
+   "#CB6E85"
+  ],
+  "classic-dark": [
+   "#BA4F24",
+   "#CE6DB5",
+   "#956800",
+   "#00A89F",
+   "#3D6EC8",
+   "#1E812D",
+   "#A77CE1",
+   "#AD536B"
+  ],
+  "retro-light": [
+   "#892D00",
+   "#CB6AB2",
+   "#835B00",
+   "#009E95",
+   "#1E4CA4",
+   "#409D49",
+   "#603493",
+   "#CB6E85"
+  ],
+  "retro-dark": [
+   "#BE5228",
+   "#CE6DB5",
+   "#996B00",
+   "#00A89F",
+   "#4071CB",
+   "#228430",
+   "#A77CE1",
+   "#BC4A6B"
+  ],
+  "river-light": [
+   "#892D00",
+   "#CE6DB5",
+   "#835B00",
+   "#00A198",
+   "#1E4CA4",
+   "#46A34F",
+   "#603493",
+   "#D2748B"
+  ],
+  "river-dark": [
+   "#BA4F24",
+   "#CE6DB5",
+   "#956800",
+   "#00A89F",
+   "#3D6EC8",
+   "#1E812D",
+   "#A77CE1",
+   "#B94768"
+  ],
+  "flags-light": [
+   "#892D00",
+   "#D270B8",
+   "#835B00",
+   "#00A198",
+   "#1E4CA4",
+   "#46A34F",
+   "#603493",
+   "#D2748B"
+  ],
+  "flags-dark": [
+   "#B4481D",
+   "#CE6DB5",
+   "#8D6300",
+   "#00A89F",
+   "#3868C1",
+   "#157B27",
+   "#A77CE1",
+   "#A74D65"
+  ],
+  "temples-light": [
+   "#892D00",
+   "#CE6DB5",
+   "#835B00",
+   "#00A198",
+   "#1E4CA4",
+   "#46A34F",
+   "#603493",
+   "#D2748B"
+  ],
+  "temples-dark": [
+   "#BA4F24",
+   "#CE6DB5",
+   "#916500",
+   "#00A89F",
+   "#3A6BC5",
+   "#4DAA55",
+   "#A77CE1",
+   "#B94768"
+  ],
+  "night-dark": [
+   "#B4481D",
+   "#CE6DB5",
+   "#8A6000",
+   "#00A89F",
+   "#3868C1",
+   "#157B27",
+   "#A77CE1",
+   "#B24162"
+  ],
+  "psychnight-dark": [
+   "#B04519",
+   "#CE6DB5",
+   "#8A6000",
+   "#00A89F",
+   "#3564BE",
+   "#0F7824",
+   "#A77CE1",
+   "#AF3D60"
+  ],
+  "expedition-dark": [
+   "#B74B21",
+   "#CE6DB5",
+   "#916500",
+   "#00A89F",
+   "#3A6BC5",
+   "#1A7E2A",
+   "#A77CE1",
+   "#B64465"
+  ],
+  "silk-light": [
+   "#892D00",
+   "#D270B8",
+   "#835B00",
+   "#00A198",
+   "#1E4CA4",
+   "#46A34F",
+   "#603493",
+   "#D2748B"
+  ],
+  "tropical-light": [
+   "#892D00",
+   "#D270B8",
+   "#835B00",
+   "#00A198",
+   "#1E4CA4",
+   "#46A34F",
+   "#603493",
+   "#D2748B"
+  ],
+  "psych-light": [
+   "#892D00",
+   "#C867AF",
+   "#835B00",
+   "#009B92",
+   "#1E4CA4",
+   "#409D49",
+   "#603493",
+   "#CB6E85"
+  ]
  }
 }

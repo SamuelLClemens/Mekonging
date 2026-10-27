@@ -39,13 +39,17 @@ import re
 import sys
 
 CSS = 'css/style.css'
+# css/refined.css (slice S1) holds the generated --viz-* tokens for every surface, so it joins the cascade after
+# style.css, as index.html links it.
+REFINED = 'css/refined.css'
 # Stylesheets that hold rules but no skin blocks: their text colours are checked on the same
-# surfaces. css/market.css loads with the Market's screens (slice M4b-1).
-EXTRA_CSS = ['css/market.css']
+# surfaces. css/market.css loads with the Market's screens (slice M4b-1); css/refined.css is S1's.
+EXTRA_CSS = ['css/market.css', REFINED]
 THEME = 'js/theme.js'
 AA_TEXT = 4.5
 AA_LARGE = 3.0
 AA_GRAPHIC = 3.0
+VIZ_SLOTS = 8
 
 # Skins that shipped before the retro redesign. Their palettes are measured and reported, but
 # the page-colour and country-colour floors below are enforced only on the new themes, because
@@ -260,7 +264,7 @@ def main():
     raw = read(CSS)
     css = strip_comments(raw)
     modes = skin_modes(read(THEME))
-    surfaces, pending = build_surfaces(css, modes)
+    surfaces, pending = build_surfaces(css + '\n' + strip_comments(read(REFINED)), modes)
 
     # The surface count is asserted, so a skin that silently drops out of the cascade (a renamed
     # block, a selector this parser cannot read) fails here instead of going unchecked.
@@ -371,8 +375,27 @@ def main():
                 if ratio + 0.005 < AA_GRAPHIC:
                     failures.append(('country colour', f'country-{cc}', f'{name} on {ground}', ratio, AA_GRAPHIC, fg, bg, 'graphic'))
 
-    print(f'{checked} selector/surface colour pairs, {label_checked} label-on-fill stops and {country_checked} '
-          f'country colours checked across {len(surfaces)} surfaces ({len(EXCEPTIONS)} accepted exceptions).')
+    # The data-visualisation palette (S1, docs/PROGRAM.md 5.3 item 4): every series colour is a graphic on the card, 3:1 on
+    # every surface, legacy skins included (the tokens are new, so there is nothing old to excuse). --viz-axis is a
+    # graphic too; --viz-label is text, 4.5:1. The other checks (lightness band, chroma floor, colour-vision separation)
+    # are held by tools/style-tiles/derive-viz.py --check.
+    viz_checked = 0
+    for name, (toks, mode) in surfaces.items():
+        card = toks.get('card')
+        wanted = [(f'viz-{i}', AA_GRAPHIC, 'series colour') for i in range(1, VIZ_SLOTS + 1)]
+        wanted += [('viz-axis', AA_GRAPHIC, 'chart axis'), ('viz-label', AA_TEXT, 'chart label text')]
+        for token, need, what in wanted:
+            fg = toks.get(token)
+            ratio = contrast(fg, card) if fg and card else None
+            if ratio is None:
+                failures.append((what, token, f'{name} on card', 0.0, need, str(fg), str(card), 'missing or not a hex value'))
+                continue
+            viz_checked += 1
+            if ratio + 0.005 < need:
+                failures.append((what, token, f'{name} on card', ratio, need, fg, card, 'graphic' if need == AA_GRAPHIC else 'text'))
+
+    print(f'{checked} selector/surface colour pairs, {label_checked} label-on-fill stops, {country_checked} '
+          f'country colours and {viz_checked} chart colours checked across {len(surfaces)} surfaces ({len(EXCEPTIONS)} accepted exceptions).')
     print(f'  skipped: {skipped["label token"]} rules whose colour is a label on a fill (checked above), '
           f'{skipped["no hex value"]} pairs with a non-hex value; '
           f'ids awaiting a palette: {", ".join(sorted(pending)) or "none"}.')

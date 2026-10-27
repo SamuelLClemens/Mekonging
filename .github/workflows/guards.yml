@@ -87,11 +87,12 @@ jobs:
             fi
           }
 
-          for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot; do
+          for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot font-sizes icons; do
             guard python3 scripts/check-$g.py
           done
           guard python3 scripts/check-place-fields.py --assert
           guard python3 tools/style-tiles/port-themes.py --check
+          guard python3 tools/style-tiles/derive-viz.py --check
           guard python3 scripts/check-cache-version.py --base "$BASE"
           guard node scripts/validate.mjs
 

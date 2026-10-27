@@ -134,3 +134,59 @@ the new themes only by choosing one in Settings; two things change for everyone 
 - **First paint.** `js/theme-boot.js` paints a version-15 Classic profile as the default, so it never flashes Classic once.
 - **Tested** in headless Chrome on a fresh install, v15 Classic with auto and with forced dark, v16 Classic, and v15 Silk
   Route: the skin, the toast, Undo, the stored value and a reload after Undo all behave as above.
+
+## S1: tokens and machinery (2026-10-27, `mk-v0.653.0`)
+
+S1 builds the refinement of `docs/PROGRAM.md` section 5.3 as tokens and components and applies it to no existing screen (R1 to
+R3 do that). S0, the owner's style gate, has not run, so there are no S0 answers to record here: the values are section 5.3's
+own, and S0 or R1 may revise them. The stylesheet is the new `css/refined.css`, linked after `css/style.css` and precached.
+
+- **The mechanism: opt in, never override.** Item 1 keeps the existing `--fs-*` names and puts them on one ratio, which would
+  move the 241 places that read them. So the refined values are declared on `[data-refined]` and nowhere else, and `:root`
+  keeps today's values. A screen group opts in by putting `data-refined` on its root (R1 to R3); the new place card carries it
+  itself. The same holds for the line heights and the reduced-motion rule: a refined screen only. Everything else in the file is
+  a new token name, a new class, or the scoped override `[data-refined] .skeleton`.
+- **Type (item 1).** On the ratio 1.125 from 1 rem: `--fs-label` 0.75rem (a 12 px floor, the one exception to the ratio),
+  `--fs-xs` 0.79rem, `--fs-sm` 0.889rem, `--fs-base` and `--fs-body` 1rem, `--fs-h3` 1.125rem, `--fs-h2` 1.266rem, `--fs-h1`
+  `clamp(1.424rem, 1.3rem + 0.7vw, 1.6rem)`, `--fs-display` unchanged. `--fs-lg` is restated in the scope, because a `var()` is
+  resolved where it is declared. `scripts/check-font-sizes.py` holds the literal count at 138 CSS declarations (50 distinct) and
+  74 in the JavaScript (47 in pixels); R1 to R3 can only lower it (`--write` keeps the gain).
+- **Line height (item 2).** `--lh-tight` 1.2, `--lh-body` 1.5, `--lh-script` 1.7 under `:lang(th)`, `:lang(lo)` and `:lang(km)`,
+  `--lh-vi` 1.6 under `:lang(vi)`, all inside `[data-refined]`. A script rule outranks the heading rule, so a Thai heading keeps
+  its marks.
+- **Figures (item 3).** `.num` is `font-variant-numeric: tabular-nums`; the place card's meta row and its checked date wear it.
+- **Chart colours (item 4).** `--viz-1` to `--viz-8` for all 16 surfaces (11 skins; light and dark where a skin has both), plus
+  `--viz-grid` (`--line`), `--viz-axis` and `--viz-label` (`--ink-soft`). The method is the `dataviz` skill's. Eight hue families
+  in one fixed order, brick, plum, gold, teal, blue, green, violet, rose, never cycled; four are the countries' own hues, read
+  from Mekong Retro's `--country-*` (Thailand brick, Vietnam plum, Cambodia gold, Laos green), the other four are the logo's teal
+  and rose, the Flags theme's Laos blue and Classic's grape. The hue of a family is the same on every skin; a skin changes only
+  the lightness and chroma, stepped for its card. `tools/style-tiles/derive-viz.py` derives the palette into
+  `tools/style-tiles/round2.json` (`viz`), `port-themes.py` writes it into the generated block at the end of `css/refined.css`,
+  `derive-viz.py --check` holds the dataviz checks on every surface (lightness band, chroma at least 0.10, neighbouring slots at
+  least 6 apart under protanopia and deuteranopia, at least 15 apart in normal vision, 3:1 on the card), and `check-contrast.py`
+  holds the 3:1 and the label's 4.5:1 in CI. The skill's own `validate_palette.py` reproduces the checks. Worst neighbouring
+  pair under colour-vision deficiency across the 16 surfaces: 16.4 (target 8). The palette is for lines, bars and stacks; a
+  scatter or a map, where any two marks can touch, takes the first three slots only.
+- **Icons (item 5).** `icons/ui.svg` holds 51 Lucide glyphs (the scope said about 40; the 64 chrome emoji of `js/nav-groups.js`
+  and the tabs and controls need 51 distinct ones), 12.0 KB, 3.7 KB gzipped, built by `scripts/build-icon-sprite.py` from
+  lucide-static 1.62.0. Lucide is ISC licensed and the glyphs it took from Feather are MIT; `icons/LICENSE-lucide.txt` carries
+  both. An icon is `iconNode(id)` or `iconSVG(id)` from `js/icons.js`: a 20 px `--icon-size` `<svg class="icon">` at
+  `--icon-stroke` 1.75 in `currentColor`. Every group and feature of `js/nav-groups.js` gained an `icon:` id beside its `ic:`;
+  nothing reads it until the roll-out. `scripts/check-icons.py` keeps the sprite, those ids and every call in step.
+- **Place card and photos (items 6 and 8).** `js/place-card.js` `placeCardRF(place, options)`: media in a `--card-media-ratio`
+  3 / 2 box capped at `--card-media-max` 240 px, one crop rule (`object-fit: cover`, centred), one credit-line style, an
+  "Archival photo" label when the caller says so; the name (a link or a button, 44 px tall) and the local name in its own
+  script; a meta row of open now, price tier and distance in `.num`; the source chip and "Checked <month year>" from the
+  record's `verified` stamp. The card is a pure view: the caller supplies the photo, the open state and the distance, so the
+  module stays lazy. Which two Vietnamese photos are archival is not recorded in the data; R1 marks them.
+- **Artwork (item 7).** `js/place-art.js`: 11 inline-SVG motifs on the pattern of `js/market-art.js` (stay, food, culture,
+  market, nature, beach, viewpoint, transport, practical, nightlife, and `other`, which wellness uses), 9.1 KB. The colours are
+  classes that `css/refined.css` maps to tokens, so every skin repaints them; the family colour is one of the `--viz-*` slots,
+  so it is already held to 3:1. Each drawing is named "Artwork: a bed" for a screen reader and is never captioned as a photo.
+- **States and motion (item 9).** `--dur-1` 120 ms and `--dur-2` 200 ms; the one easing token is the existing `--ease`, not a
+  new one. One reduced-motion rule, scoped to `[data-refined]`, honouring both the device setting and Settings' own
+  `html[data-reduced-motion="on"]`. `[data-refined] .skeleton` takes `--skel-base` and `--skel-shine`, the ink laid over the
+  card (`color-mix`, with `--line` as the fallback). `.rf-empty` carries the retro stripe band.
+- **Target size (item 10).** `--hit` 44 px, used by the card's name link; Q3 to Q5 apply it to the rest.
+- **Strings.** The strings S1 added ("Open now", "Closed", "Checked", "Archival photo", the artwork names) are English only until
+  L2, like the other recent additions.

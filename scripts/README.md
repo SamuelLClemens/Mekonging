@@ -5,19 +5,20 @@ Python 3 (no dependencies, run it directly) or a browser module you import in th
 
 ## Before every commit
 
-Nineteen guards, plus the content validator below. Each one exists because the failure it catches actually shipped. Run all of
+Twenty-two guards, plus the content validator below. Each one exists because the failure it catches actually shipped. Run all of
 them; each prints one line and exits non-zero on failure.
 
 ```bash
-for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot font-sizes icons; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
 python3 tools/style-tiles/port-themes.py --check
+python3 tools/style-tiles/derive-viz.py --check
 python3 scripts/check-cache-version.py --base feat/scaffold-bangkok-slice
 ```
 
-The same nineteen also run in CI, from `.github/workflows/guards.yml`, on every pull request into
+The same twenty-two also run in CI, from `.github/workflows/guards.yml`, on every pull request into
 `feat/scaffold-bangkok-slice` and on every push to it. CI runs every guard even after one
 fails, prints the full output of each failure, and fails the check if any guard does. On a
 pull request `check-cache-version` compares against `origin/feat/scaffold-bangkok-slice`; on a
@@ -39,10 +40,13 @@ list above, so a new guard goes in both places.
 | `check-place-dupes` | duplicate ids, new name collisions | a merged place silently deletes travellers' saved data |
 | `check-js-syntax` | a JavaScript file that does not parse | every other guard reads JavaScript with regular expressions, so a stray token passed them all and the module never loaded. Uses `node --check` in CI and the macOS JavaScriptCore shell locally; it self-tests the parser on a broken module and script first, so it cannot pass without checking |
 | `check-sources` | homepage-only place citations and unsourced routes getting WORSE | the 2026-10-02 content-truth audit found 5 of 10 spot-checked places contradicted their own cited source; this ratchets the two structural gaps behind that (a citation that is just a homepage, a route with no source at all) so they can shrink but never silently grow |
-| `check-contrast` | text below its WCAG AA threshold on any skin; reads the text colours of `css/style.css` and `css/market.css` (the Market's lazy stylesheet) | `--good` was unreadable on all four dark skins for months |
+| `check-contrast` | text below its WCAG AA threshold on any skin; reads the text colours of `css/style.css`, `css/market.css` (the Market's lazy stylesheet) and `css/refined.css`. Also holds each `--viz-1` to `--viz-8` to 3:1 as a graphic on the card of every surface, `--viz-axis` to 3:1 and `--viz-label` to 4.5:1 | `--good` was unreadable on all four dark skins for months; the chart colours are new, so they start under the guard |
 | `check-skins` | a theme id that `js/theme.js`, the CSS blocks, the Settings picker, the first-paint script or the default profile disagree about | an unknown skin falls back to the default without any page failing, so a renamed or half-added theme would ship silently. Added with the retro redesign's theme table |
-| `port-themes.py --check` (in `tools/style-tiles/`) | the generated theme block at the end of `css/style.css` differing from what `round2.json` produces | the four regional themes' values are ported by a script, never typed; a hand edit to the block, or to `round2.json` without re-running the script, would ship a palette no one measured |
+| `port-themes.py --check` (in `tools/style-tiles/`) | the generated theme block at the end of `css/style.css`, or the generated viz block at the end of `css/refined.css`, differing from what `round2.json` produces | the four regional themes' values are ported by a script, never typed; a hand edit to the block, or to `round2.json` without re-running the script, would ship a palette no one measured |
+| `derive-viz.py --check` (in `tools/style-tiles/`) | a `--viz-*` palette in `round2.json` that fails the data-visualisation checks on any of the 16 surfaces: lightness band (OKLCH L 0.43 to 0.77 light, 0.48 to 0.67 dark), chroma floor 0.10, colour-vision separation of neighbouring slots at least 6 (the target is 8), neighbours at least 15 apart in normal vision, 3:1 on the card | a chart palette that two series cannot be told apart in is wrong for 1 reader in 12, and nothing else would notice; `check-contrast` holds only the contrast |
 | `check-spacing` | more inline spacing declarations than a file's ceiling | a ratchet: 651 inline margins, none using the `--sp-*` scale |
+| `check-font-sizes` | more literal `font-size` values than `scripts/font-size-baseline.json` allows: 138 declarations (50 distinct) in `css/*.css`, 74 (47 in pixels) in the strings of `js/` | a ratchet: the type scale exists and is used 241 times, yet literal sizes beside it can never follow it or honour its 12 px floor; the roll-out (R1 to R3) can only lower the count, and `--write` keeps the gain |
+| `check-icons` | an icon id that `icons/ui.svg` does not hold, in `js/nav-groups.js` or an `iconNode()`/`iconSVG()` call; a sprite that differs from `scripts/build-icon-sprite.py`; the Lucide licence file missing | a missing symbol draws an empty square where an icon should be, and nothing fails |
 | `check-cache-version` | `APP_VERSION`/`CACHE_VERSION` not moved when a shipped asset changed | the service worker is cache-first, so a stale version means nobody gets the fix |
 | `check-secrets` | a whole secret key in any file git would commit: a Supabase secret key, a service-role JWT, a Resend key, a PEM private key, a literal assigned to a `SERVICE_ROLE`, `VAPID_PRIVATE` or `TURNSTILE_SECRET` name, or a publishable key outside `js/market-config.js` | the site deploys from this repository, so a committed secret is published (docs/EXCHANGE.md §2, added in M3a before any sign-in code). It matches whole keys, not prefixes, so the design docs pass; it prints file, line and kind but never the value; and it self-tests on planted fakes first, so it cannot pass without checking. If it fires, rotate the key before removing it |
 | `check-market-sql` | a Supabase SQL file (`supabase/**/*.sql`) that is not pure ASCII (from 002 on), has unbalanced quotes, dollar quotes or brackets, an unmatched `begin` and `end;`, a migration without `begin;` and `commit;`, a table without `enable row level security`, a function without `set search_path = ''` or never named in a `revoke execute`, or a `private.contact_hit` pattern that lets a phone number, email, link or handle through (or refuses an ordinary price or date) | there is no Postgres on this machine and the owner runs the SQL by hand, so a typo costs a round trip. Migration 001 reached the database garbled by a clipboard (001b repaired it), which is why the files stay ASCII. It runs the contact-detail patterns in Python, read out of the SQL, so it proves the logic and not Postgres's regex engine; the owner's run of `supabase/tests/002_rls.sql` proves that. It self-tests on broken samples first, so it cannot pass without checking |

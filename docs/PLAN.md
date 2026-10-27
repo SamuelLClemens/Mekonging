@@ -122,6 +122,15 @@ The owner listed five fixes "we need to make for sure", then widened the languag
   - iOS wrapper: check whether `Mekonging Xcode/` declares a location usage description. If it does not, tell the owner; do not edit the wrapper in this slice.
 - **Done when.** In a fresh profile, the first open asks once. With a granted, emulated position on Koh Chang (CDP `Browser.grantPermissions` and `Emulation.setGeolocationOverride`), Home and Weather show Koh Chang without any tap. In a denied profile, the banner shows once and no dialog appears on reload. 375 px. All guards pass.
 
+### S1: the style foundation, tokens and machinery (`docs/PROGRAM.md` section 5)
+- **Built 2026-10-27** (`mk-v0.653.0`, store version unchanged at 17), [PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139). Items 1 to 10 of 5.3 as tokens and components; no existing screen uses them. What was built, where, and the proof: `docs/PROGRAM.md` 5.5 and `DESIGN_SYSTEM.md` ("S1").
+  - **The opt-in mechanism.** The refined `--fs-*` values, the line heights and the reduced-motion rule are declared on `[data-refined]`, so `:root` keeps today's values and nothing moves until R1 to R3 add the attribute to a screen group's root. Item 1's "keep the existing names" and the done criterion "nothing outside the new components moved" cannot both hold with a global change: 241 places read those tokens.
+  - **Chart colours.** `tools/style-tiles/derive-viz.py` derives `--viz-1` to `--viz-8` for 16 surfaces into `round2.json`; `port-themes.py` writes them into `css/refined.css`; `check-contrast.py` and `derive-viz.py --check` hold them. Method: the `dataviz` skill, and its own `validate_palette.py` reproduces the checks.
+  - **Guards.** `check-font-sizes.py` (a ratchet on literal font sizes: 138 CSS declarations, 74 in JS strings), `check-icons.py`, and the two checks above; all in `scripts/README.md` and `.github/workflows/guards.yml`.
+  - **Proof tools** (`tools/style-digest/`): `digest.py` compares two running copies of the app by a hash of every element's computed style and box, per screen and theme; `components.py` mounts and measures the new components on the live app. R1 to R3 reuse `digest.py` with `--allow`.
+- **Scope.** As written in `docs/PROGRAM.md` 5.3 and 5.4. Out of scope: applying the tokens to existing screens (R1 to R3), and the tap-target and contrast fixes (Q3 to Q7).
+- **Done when.** A computed-style digest shows that nothing outside the new components moved, on 8 screens and 3 themes at 375 px; every guard passes; the register is updated; the PR is open.
+
 ### F4: the post-trip recap, with charts
 - **Problem.** After a trip, Home should break down everything the traveller logged, with graphs and facts about the trip.
 - **Measured.** After a trip, Home shows `returnRecapCard` (`js/main.js`, about line 2860): counts of journal entries, places loved and rated and stops, plus one "Spent ≈" total. There is no breakdown and no chart anywhere in the app's screens.
