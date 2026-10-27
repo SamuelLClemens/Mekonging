@@ -31,7 +31,7 @@ NAV_ICONS = {
     '🍜': 'utensils', '🍢': 'utensils', '🍈': 'apple', '🧂': 'package', '🌿': 'leaf', '⚠️': 'triangle-alert',
     '🧭': 'compass', '🧳': 'luggage', '👣': 'footprints', '✅': 'circle-check', '🎯': 'target', '🌤': 'cloud-sun',
     '📅': 'calendar', '🎉': 'party-popper', '🚌': 'bus', '📋': 'clipboard-list', '🛂': 'stamp', '🗺️': 'map',
-    '🗺': 'map', '📍': 'map-pin', '📌': 'map-pin', '🕒': 'clock', '🏆': 'trophy', '🏅': 'trophy', '🏊': 'waves',
+    '🗺': 'map', '📊': 'clipboard-list', '📍': 'map-pin', '📌': 'map-pin', '🕒': 'clock', '🏆': 'trophy', '🏅': 'trophy', '🏊': 'waves',
     '🙏': 'landmark', '🛬': 'plane-landing', '📜': 'scroll-text', '♿': 'accessibility', '🍼': 'baby',
     '👪': 'users', '👥': 'users', '📔': 'notebook', '📸': 'camera', '📤': 'share-2', '⭐': 'star',
     '💬': 'message-circle', '🔒': 'lock', '📥': 'inbox', '❤️': 'heart', '⚙️': 'settings', '✉️': 'mail', '❓': 'circle-question-mark',

@@ -170,6 +170,7 @@ export const NAV_GROUPS = [
       { ic: '📔', icon: 'notebook', label: 'Journal', hash: '#journal', mine: true, own: 'journal', blurb: 'Dated entries, photos and places', live: 'journal' },
       { ic: '📸', icon: 'camera', label: 'Trip scrapbook', hash: '#scrapbook', mine: true, own: 'scrapbook', blurb: 'Your trip as one page to keep' },
       { ic: '🗺', icon: 'map', label: 'Your journey', hash: '#journey', mine: true, own: 'journey', blurb: 'Everywhere you have been, on a map' },
+      { ic: '📊', icon: 'clipboard-list', label: 'Trip recap', hash: '#recap', mine: true, own: 'trip recap', blurb: 'Your whole trip in numbers and charts' },
       { ic: '📤', icon: 'share-2', label: 'Share my journey', hash: '#sharejourney', blurb: 'One file or link, you choose what is in it' },
       { ic: '⭐', icon: 'star', label: 'Saved places', hash: '#saved', mine: true, own: 'saved places', blurb: 'Your stars and collections', live: 'saved' },
       { ic: '💬', icon: 'message-circle', label: 'Your dictionary', hash: '#dictionary', mine: true, own: 'dictionary', blurb: 'Phrases you saved and words you added', live: 'phrases' },

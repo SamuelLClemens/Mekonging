@@ -27,9 +27,10 @@
 // access row, the next-stop card) is written directly in this file instead, since it belongs
 // to Home alone.
 
-import { store, save, daysSinceFirstUse } from '../state.js';
+import { store, save, daysSinceFirstUse, getPlaceData } from '../state.js';
 import { h, money } from '../util.js';
-import { getCountry, loadCountry, isCountryLoaded, loadAllCountries } from '../data/regions.js';
+import { getCountry, getPlace, loadCountry, isCountryLoaded, loadAllCountries } from '../data/regions.js';
+import { spendTotal } from '../recap-spend.js';
 import { getActiveCountry } from '../app-state.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { fmtTemp, citySlug } from '../render-utils.js';
@@ -55,6 +56,43 @@ import {
   identifyRow, homeFold,
   homeBudgetFold, homeRightNowFold, liveStatus, QUICK_CHIPS, quickChipKeys, quickChipLabel,
 } from '../main.js';
+
+// Home's post-trip summary: a few counts, one total, and the way into the whole recap (#recap, js/screens/trip-recap.js). The total
+// is recap-spend.js's, the same one the recap shows. Moved here from main.js (returnRecapCard) with F4.
+function recapSummaryCard() {
+  const jEntries = (store.journal.entries || []).length;
+  const stops = (store.trip.stops || []).length;
+  const loved = Object.entries(store.placeData || {}).filter(([, d]) => d && (d.rating || 0) >= 4).length;
+  const ratedN = Object.values(store.placeData || {}).filter((d) => d && (d.rating || 0) > 0).length;
+  const spent = spendTotal();
+  if (!jEntries && !stops && !loved && !spent.any) {
+    return h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' }, [
+      h('strong', {}, '📖 Welcome back'),
+      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'Turn your trip into a keepsake — a scrapbook of your journal, photos, places and spending.'),
+      h('button', { class: 'btn', onclick: () => go('#scrapbook') }, 'Build your scrapbook'),
+    ]);
+  }
+  const card = h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' });
+  card.append(h('strong', {}, '📖 Welcome back'));
+  const stat = (n, label) => h('span', { class: 'recap-stat' }, [h('b', {}, String(n)), ' ' + label]);
+  const stats = [];
+  if (jEntries) stats.push(stat(jEntries, jEntries === 1 ? 'journal entry' : 'journal entries'));
+  if (loved) stats.push(stat(loved, loved === 1 ? 'place loved' : 'places loved'));
+  if (ratedN) stats.push(stat(ratedN, ratedN === 1 ? 'place rated' : 'places rated'));
+  if (stops) stats.push(stat(stops, stops === 1 ? 'stop' : 'stops'));
+  if (stats.length) card.append(h('div', { class: 'recap-stats' }, stats));
+  if (spent.total > 0) card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 0' }, `Spent ≈ ${money(Math.round(spent.total), spent.home)}${spent.allKnown ? '' : ' (some rates unknown)'}`));
+  const unrated = (store.favorites || []).filter((id) => (getPlaceData(id).rating || 0) === 0);
+  if (unrated.length) {
+    const first = getPlace(unrated[0]);
+    if (first) card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${first.id}`) },
+      unrated.length === 1 ? `⭐ Rate ${first.name}` : `⭐ Rate ${unrated.length} places you saved`));
+  }
+  card.append(h('button', { class: 'btn block btn-spaced', onclick: () => go('#recap') }, 'See your whole trip →'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#scrapbook') }, 'Build your scrapbook →'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#export') }, '📤 Save & share your trip (journal, reviews, photos, expenses)'));
+  return card;
+}
 
 export function homeScreen() {
   // "Right now" picks below need this country's place data; Home itself must never block
@@ -172,7 +210,7 @@ export function homeScreen() {
   // actual stage instead of showing "what's near you" to someone still at home or already back.
   // Kept as a variable (rather than appended inline) because the planning phase needs to
   // insert Search everything into its middle, below — see that block's comment.
-  const stageBlock = homeStageBlock(phase, leadCC);
+  const stageBlock = phase === 'post' ? recapSummaryCard() : homeStageBlock(phase, leadCC);
   // Planning and post still have a single stage block, and both were rendering as bare cards
   // outside the folding system entirely — which is why "Minimise all" appeared to skip part of
   // the screen in those two phases. They get their own key.
