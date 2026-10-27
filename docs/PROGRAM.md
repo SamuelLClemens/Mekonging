@@ -129,11 +129,76 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | 23 | `js/market-routes.js` and `js/market-link.js` into `PRECACHE`; `check-offline-boot` into CI | **closed: done** in F2 ([PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136)) |
 | 24 | Widen Cambodia's list to every village | **closed: yes** (against the recommendation), slice F1b, built in [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137) |
 | 25 | Remove the spent worktrees and branches (4.6) | **closed: done** for worktrees and local branches, 2026-10-27 (f1b, f2, f3). The remote branches stay until the owner approves their removal (4.6) |
-| 26 | A coarse world outline for the journey map offline (4.4) | open; owner, 2026-10-26: measure a simplified Natural Earth outline (KB, gzip) first, nothing built yet. Owner, 2026-10-27: run that measurement before F7b, which needs the same file. Not run yet; the download needs the owner's yes with file name, source and size |
+| 26 | A coarse world outline for the journey map offline (4.4) | **closed: ruled** (owner, 2026-10-27, as recommended): the map uses the Natural Earth 50m outline at 0.05 degrees (469.9 KB, 149.9 KB gzip), and F7b uses the same file. Measured the same day (the section below the table). Owner, 2026-10-26: measure a simplified Natural Earth outline (KB, gzip) first; 2026-10-27: before F7b. Nothing is built yet: F7b loads the file for the country of a fix, and the map layer has no slice placed in the order (section 2) |
 | 27 | The share-journey route carries stops added by hand | **closed: yes, keep** (owner, 2026-10-26) |
 | 28 | What Emergency shows for a fix outside the four countries (4.4): it named the nearest anchor's country, so Singapore showed Thailand's numbers | **closed: ruled** (owner, 2026-10-27, against the recommendation): "no matter where you are in the world it should give you the emergency info". Answers, 2026-10-27: show a **worldwide table of national numbers**, and say where the fix is **with the coordinates**. F7a ([PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140)) built the safe part with no new data: coordinates, 112 and the four-country chips. F7b is the table and the world outline; the owner placed it right after F5 (2026-10-27) |
 | 29 | Should a place picked by hand hold over a live fix for a while? Today the fix always wins | **closed: ruled** (owner, 2026-10-27, against the recommendation): hold the pick. Slice F6 (4.1). Not ruled: for how long |
 | (none) | A new source for more place photos (620 places have none) | open; S1's artwork makes a photo-less card deliberate, so no new photo source is proposed |
+
+#### Decision 26 measurement: a simplified Natural Earth outline (2026-10-27; documents only, no shipped file touched)
+
+**Source.** Natural Earth admin-0 countries (public domain), from `github.com/nvkelso/natural-earth-vector`, branch `master`, folder `geojson`: `ne_110m_admin_0_countries.geojson` (838,726 bytes, 177 features) and `ne_50m_admin_0_countries.geojson` (3,083,490 bytes, 242 features). Downloaded with the owner's yes (2026-10-27), each into its own new directory under `~/Library/Caches/` (`mk-d26-ne-110m`, `mk-d26-ne-50m`), never in the repo. Scripts and outputs are in `~/Library/Caches/mk-d26/` (`outline.py` simplifies and writes the data file, `lookup.py` runs the lookups, `pip.jsc.js` repeats them in JavaScriptCore).
+
+**Method.** Standard-library Python. Each ring is cut wherever the set of countries sharing an edge changes, and each shared border is simplified once (Douglas-Peucker, tolerance in degrees; 0.05 degrees is about 5.5 km), so neighbours keep one border with no gap. Coordinates are rounded to 2 decimals (1.1 km). A polygon is dropped when its box is under twice the tolerance, except each country's largest polygon. `id` is the lowercase ISO code from `ISO_A2_EH` (`ISO_A2` is -99 for France, Norway and Kosovo); Somaliland, Northern Cyprus and Siachen keep Natural Earth's codes `sol`, `cyn` and `kas`. Each output is an ES module shaped like `js/data/basemap.js` (a GeoJSON FeatureCollection, `export const WORLD_OUTLINE`, property `id` only; names would come from F7b's table). KB is 1,000 bytes and gzip is level 9, the way `js/data/basemap.js` is 26.3 KB (7.9 KB gzip, four countries).
+
+**Lookup.** Point in polygon (holes respected) on 17 fixes: the 15 of F7a's driver (`~/Library/Caches/mk-f7a/drive.py`), Mae Sot (16.71667, 98.56667, from `js/data/gazetteer.th.js`) and a point 30 km due west of it (16.7167, 98.2853, in Myanmar). "Nearest within 100 km" means: when no polygon holds the fix, name the country of the nearest outline edge if it is 100 km away or less.
+
+| File | Simplification | Ring points | KB | gzip KB | ISO codes | Right of 17: exact / with nearest within 100 km | Thailand-Myanmar border at Mae Sot, moved |
+|---|---|---|---|---|---|---|---|
+| `js/data/basemap.js` (shipped, for scale) | mledoze, 4 decimals | n/a | 26.3 | 7.9 | 4 | not run | not run |
+| 110m | as published | 10,594 | 169.7 | 52.2 | 177 | 12 / 15 | 8.6 km east (Mae Sot sits on the line) |
+| 50m | as published | 99,498 | 1,472.9 | 431.5 | 240 | 14 / 17 | 0 (the reference) |
+| 50m | 0.02 degrees (2.2 km) | 51,731 | 781.8 | 243.3 | 240 | 14 / 17 | 0 (1.8 km at most nearby) |
+| 50m | 0.05 degrees (5.5 km) | 30,352 | 469.9 | 149.9 | 240 | 13 / 17 | 4.6 km east |
+| 50m | 0.1 degrees (11 km) | 18,272 | 291.7 | 93.5 | 240 | 13 / 17 | 4.6 km east |
+| 50m | 0.2 degrees (22 km) | 10,434 | 175.8 | 54.9 | 240 | 12 / 16 | 8.7 km east (Mae Sot reads Myanmar) |
+
+The border column is where the Thailand to Myanmar border crosses a line due west of Mae Sot, against the 50m file, which puts it 8.7 km west of the Mae Sot point.
+
+What each file returns for each fix (a code is the polygon that holds it; "none" is no polygon, with the nearest outline's code and distance):
+
+| Fix (expected) | 110m | 50m | 50m 0.02 | 50m 0.05 | 50m 0.1 | 50m 0.2 |
+|---|---|---|---|---|---|---|
+| singapore (sg) | my WRONG | sg | sg | sg | sg | sg |
+| kuala-lumpur (my) | my | my | my | my | my | my |
+| yangon (mm) | mm | mm | mm | mm | mm | mm |
+| mawlamyine (mm) | mm | none (mm 2 km) | none (mm 2 km) | none (mm 2 km) | none (mm 5 km) | none (mm 7 km) |
+| kunming (cn) | cn | cn | cn | cn | cn | cn |
+| gulf-mid-sea (none) | none (th 150 km) | none (th 155 km) | none (th 155 km) | none (th 157 km) | none (th 153 km) | none (th 166 km) |
+| koh-tao (th) | none (th 66 km) | none (th 37 km) | none (th 37 km) | none (th 58 km) | none (th 71 km) | none (th 71 km) |
+| koh-phi-phi (th) | none (th 30 km) | none (th 29 km) | none (th 29 km) | none (th 30 km) | none (th 27 km) | none (th 28 km) |
+| con-dao (vn) | none (vn 87 km) | vn | vn | none (vn 92 km) | none (vn 92 km) | none (vn 92 km) |
+| phu-quoc (vn) | none (kh 28 km) | vn | vn | vn | vn | vn |
+| bangkok (th) | th | th | th | th | th | th |
+| hanoi (vn) | vn | vn | vn | vn | vn | vn |
+| don-det (la) | la | la | la | la | la | la |
+| phnom-penh (kh) | kh | kh | kh | kh | kh | kh |
+| vientiane (la) | la | la | la | la | la | la |
+| mae-sot (th) | th | th | th | th | th | mm WRONG |
+| mae-sot-west-30km (mm) | mm | mm | mm | mm | mm | mm |
+
+How far the outline is from the 50m file near the four fixes that sit at a land border (km; the largest distance from any vertex of the 50m outline within 25 km of the fix to this file's outline):
+
+| Fix | 110m | 50m 0.02 | 50m 0.05 | 50m 0.1 | 50m 0.2 |
+|---|---|---|---|---|---|
+| mae-sot | 9.6 | 1.8 | 4.5 | 4.5 | 16.6 |
+| mae-sot-west-30km | 7.2 | 1.8 | 4.5 | 4.5 | 12.7 |
+| vientiane (Mekong) | 13.7 | 1.6 | 5.7 | 5.7 | 5.7 |
+| don-det | 9.7 | 1.8 | 5.2 | 8.2 | 8.2 |
+
+**What the numbers say.**
+- **Size.** Only the 50m file finds every fix. At 0.05 degrees it is 469.9 KB, 149.9 KB gzip: 18 times `js/data/basemap.js` raw and 19 times gzipped, 3.9% of the 3,829 KB gzip precache (T4). At 0.1 degrees it is 93.5 KB gzip (2.4%). F7b and the offline map both exist for the offline case, so the file would be precached.
+- **110m cannot serve F7b.** It holds 177 of the 240 codes. The 63 missing include Singapore, Hong Kong, Macao, Malta, the Maldives, Bahrain, Monaco, San Marino, Liechtenstein and the Vatican. It returns Malaysia for Singapore, no polygon for Con Dao, Koh Tao, Koh Phi Phi and Phu Quoc, and its nearest-outline fallback names Cambodia for Phu Quoc (28 km). It also puts the Mae Sot border 8.6 km off.
+- **The tolerance is the border error.** The border moves by up to the tolerance: 4.6 km at 0.05 and 0.1 degrees (Mae Sot stays in Thailand, 3.8 km from the border), 8.7 km at 0.2 (Mae Sot reads Myanmar). A town within the tolerance of a border can flip. The 50m file puts Mae Sot 7.9 km and Vientiane 6.1 km from a border. The point 30 km west of Mae Sot reads Myanmar in every file (21 km past the 50m border).
+- **An exact lookup alone is not enough.** At every 50m tolerance Koh Tao and Koh Phi Phi (islands Natural Earth's 50m file does not hold) and Mawlamyine (1.6 km off Myanmar's outline, on the estuary) return no polygon, and Con Dao drops out from 0.05 degrees. "Nearest within 100 km" names the right country for all of them at 50m up to 0.1 degrees (the longest reach needed is 92 km, Con Dao at 0.05) and leaves the Gulf of Thailand fix (153 to 166 km from land) unanswered; a reach above 150 km would name Thailand for open water.
+- **Cost, measured in JavaScriptCore on this Mac, not on a phone.** Parse plus indexing takes 23 ms (0.1 degrees) to 26 ms (0.05 degrees), against 67 ms for the unsimplified 50m file; one lookup takes 0.01 to 0.04 ms. The JavaScript lookup returned the same country as the Python one for all 17 fixes on four files (110m, 50m at 0.05 and 0.1 degrees, 50m as published).
+
+**Can one admin-0 file serve both the journey map (land) and F7b (the country of a fix)?** Yes, if it is the 50m file at 0.05 or 0.1 degrees; the 110m file cannot. Every polygon is land and carries its country code, so one lazy module could feed a MapLibre `geojson` source (as `BASEMAP` does at `js/map.js:486`) and the lookup, with no second download. Three conditions:
+- Natural Earth's `vn` is the app's `vi` (`js/data/basemap.js`, `js/main.js:466`): F7b maps it.
+- Admin-0 keeps inland lakes inside their country: Tonle Sap, Lake Victoria, Lake Michigan and Lake Baikal read as land (the Caspian does not). `js/data/basemap.js` already does this for Tonle Sap.
+- The tolerance is a ground distance, so the outline is crude when zoomed in: 5.5 km is about 36 px at zoom 9 in MapLibre (0.153 km per pixel at the equator) and 2 px at zoom 5. It fits a fallback outside the region, under `basemap.js`, not a replacement for it. No map was drawn in this measurement.
+
+**Caveats.** The "off" figures are distances from Natural Earth's own 50m file, which is itself generalised, not from the ground; the distance from the Mae Sot point to the Moei River was not measured. Neighbouring countries kept one shared border in the simplified 50m files, except 0.3% (0.02 degrees) to 3.1% (0.2 degrees) of border edges, almost all around Liechtenstein, San Marino, Monaco, the Vatican, Macao and Brunei, whose rings stay unsimplified; none among Thailand, Vietnam, Cambodia, Laos, Myanmar and China (Macao aside). Phone timings, a rendered map and a 10m file were not measured. Owner's ruling (2026-10-27): the map uses the 50m file at 0.05 degrees, and F7b uses the same file. Nothing is built; the map layer has no slice placed yet.
 
 ### 4.4 Known defects
 
@@ -154,7 +219,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | Layout | Tall portrait photos are uncapped (Phanom Rung renders 548 px tall at 375 px) | 548 px (carried) | **built in S1** (the card's media box is capped at 240 px; a 548 px portrait measures 240 px in the box, 5.5); applied in R1 |
 | Layout | Malay "Laman utama" is truncated in the tab bar | string at `js/data/ui-strings.ms.js:10`; truncation carried, not re-rendered | L2 |
 | Map | The `#map` `getSource` race | 1 of 4 runs (F1), 1 of 3 light loads (Q1), 1 of 15 picker loads (F1b) | Q7 |
-| Map | With no signal and no cached imagery, the journey map is bare sea outside the four countries, at every zoom from 1 to 9. Rendered `land` features: 0 at Singapore from zoom 5 and 0 at London at every zoom; imagery tiles: 0 of 124 requested loaded across the 18 views (online, 75 of 75). A pin and its name still save, and the pin hint says so. The offline geometry (`js/data/basemap.js`, 26 KB) holds the four countries only; a coarse world outline would be a new data file | F2 probe, 2026-10-26: headless Chrome with every external host unresolvable (`~/Library/Caches/mk-f2/world.py`) | open: owner decision (measure the outline's size first) |
+| Map | With no signal and no cached imagery, the journey map is bare sea outside the four countries, at every zoom from 1 to 9. Rendered `land` features: 0 at Singapore from zoom 5 and 0 at London at every zoom; imagery tiles: 0 of 124 requested loaded across the 18 views (online, 75 of 75). A pin and its name still save, and the pin hint says so. The offline geometry (`js/data/basemap.js`, 26 KB) holds the four countries only; a coarse world outline would be a new data file | F2 probe, 2026-10-26: headless Chrome with every external host unresolvable (`~/Library/Caches/mk-f2/world.py`) | ruled 2026-10-27 (4.3, decision 26): use the 50m outline at 0.05 degrees; not built, no slice placed |
 | Map | The MapLibre credits plate opens expanded and covers 16.6% of the journey map and its first pin | 16.6% (Q1, 2026-10-19) | Q7 |
 | Map | With no network, the maps log `TypeError: Failed to fetch` for every tile request: per load 42 to 63 errors on Places, 86 to 102 on the journey map, 44 to 57 on a place page and 8 to 9 on Weather (609 over the 24 loads of the S1 digest, one kind of error) | `tools/style-digest/digest.py`, 2026-10-27; offline only | Q7 (with the `getSource` race), or none |
 | Accessibility | 66 of 77 routes carry body controls under 44 px (1,315 controls, 199 under 24 px); topbar icons 30 to 36 px wide | Q1, 2026-10-19; not re-measured since M4b-1 and F1 merged | Q2 re-measures; Q3 to Q5 fix |
