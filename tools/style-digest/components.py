@@ -39,7 +39,7 @@ DEMO = r"""
   const cc = ['th', 'vi', 'kh', 'la'];
   const sample = (id, name, cats, i, extra) => Object.assign({
     id, name, country: cc[i % 4], localName: local[cc[i % 4]], categories: cats,
-    sources: [{ org: 'Wikivoyage — Chiang Mai' }], verified: '2026-09',
+    sources: [{ org: 'Wikivoyage, Chiang Mai' }], verified: '2026-09',
   }, extra || {});
   const cards = [];
   const mk = (p, o) => { const el = placeCardRF(p, o); host.append(el); cards.push({ el, id: p.id, kind: (o && o.photo) ? 'photo' : 'art' }); return el; };

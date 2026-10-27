@@ -1,4 +1,4 @@
-# Handoff — 2026-10-27 (S1: the style foundation, tokens and machinery)
+# Handoff, 2026-10-27 (S1: the style foundation, tokens and machinery)
 
 The previous handoff (F3) is `git show b7dd04a:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4; what S1 built, with its measurements, is 5.5.
 
