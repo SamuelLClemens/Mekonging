@@ -1,75 +1,63 @@
-# Handoff — 2026-10-26 (F1b: every village in Cambodia)
+# Handoff — 2026-10-27 (F3: location known from the first open)
 
-The previous handoff (F2) is `git show 563c1d5:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
+The previous handoff (F1b) is `git show 9bc9166:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
 
 ## Shipped
-- **F1b**, branch `data/f1b-cambodia-villages`, [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137), `mk-v0.651.0` (store version unchanged, 17). Waits for the owner's merge; F3 stacks on it.
-  - `EVERY_VILLAGE = {'LA', 'KH'}` in `scripts/build-gazetteer.py`. Cambodia goes from 2,192 to 12,128 places (10,596 villages added), 44.5 KB to 212.9 KB gzip (cap 250). Thailand, Vietnam and Laos are byte for byte unchanged. The four lists now total 36,131 places.
-  - 660 communes are now dropped, each as the duplicate of a village with the same name within 5 km (all 660 checked with the build's own key, which strips `khum` and `sangkat`). Their label changes from "Commune" to "Village" and their position by up to 5 km. A picked place is stored with its coordinates, so saved data does not depend on the dropped rows.
-  - `js/place-search.js`: two cheaper checks in `rankNames` (one joined string for the "contains" test, a bitmask for the first-letter gate), with identical answers: 7,229 queries at two limits each (14,458 comparisons, and the curated-city search for each), 0 differences.
-  - Owner rulings of 2026-10-26: decision 27 is closed (keep hand-added stops in the share-journey route); decision 26 starts with a measurement (see Open decisions).
+- **F3**, branch `feat/f3-location-first-open`, [PR #138](https://github.com/SamuelLClemens/Mekonging/pull/138), `mk-v0.652.0` (store version unchanged, 17). Waits for the owner's merge; S1 stacks on it.
+  - Welcome: the filled "Use my location" is step one's main action; Next is a ghost until location is on, and still works. The browser dialog is raised only by a tap.
+  - Home (`js/location-ask.js`, new): one card for a traveller who was never asked, one dismissible banner for one who refused or swiped the dialog away.
+  - `js/fix-place.js` (new): a live fix more than 15 km from a curated city is named by the nearest place-list entry (within 25 km). It reaches Home, the right-now card, Weather, Places, Nearby, Emergency (through `whereAmI`'s new `list` source) and the trail. A fix more than 250 km from every curated city no longer names a far city.
+  - Both F1b leftovers looked at: Anlong Chambak's pairing is by distance, not a fault (Pursat 56.1 km, Siem Reap 58.5 km); the Singapore trail naming is closed.
+  - Details and measurements: `docs/PLAN.md` (the F3 entry) and the PR body.
 
 ## Verified
-- A rebuild with the script unchanged first reproduced all four committed gazetteer files, so the GeoNames snapshot is the one that built them. It is now kept in `~/Library/Caches/mk-geonames/` (the eight zips, 20 MB; pass that folder to `build-gazetteer.py`).
-- Keystroke cost, renderer CPU time per call (`Performance.getMetrics` `ThreadTime`) times 6 as the 6x-slowdown estimate, cheapest of 3 batches of 20, 39 queries:
+Headless Chrome over CDP, fresh profiles on 127.0.0.1, 375 x 812 at DPR 2, `document.hidden` false, driver `~/Library/Caches/mk-f3/drive.py` (not in the repo): 25 of 25 checks.
+- Before the change, at `acbc7a3`: the welcome step made 0 calls and Skip set `geoAsked` true; Home offered no location control to an earlier traveller; a denied profile showed no banner; Koh Chang already read "Koh Chang" (it is an anchor, so the criterion passed before any change); Koh Mak read "Trat", Anlong Chambak "Pursat", and Singapore "Songkhla" (751 km), filed in the trail as `th`.
+- After: first open 0 calls on load and exactly 1 `getCurrentPosition` after the tap; the card and banner show once and stay dismissed after a reload; a denied profile makes 0 calls on load and on reload; Anlong Chambak (56.1 km from its anchor) and Don Không, Laos (16.9 km) read their own names on Home and Weather, with their own forecast; Singapore's trail pin is `{city: '', cc: ''}`. 0 overflow and 0 controls under 44 px on the welcome step, the card and the banner. Four screenshots were looked at.
+- Cost, renderer CPU time (`Performance.getMetrics` `ThreadTime`): 21 to 24 ms per resolution with the lists in memory, 84 ms cold (about 130 to 145 ms and 500 ms at 6x). A first version cost 65 to 75 ms.
+- All 16 CI guards, place-fields, port-themes, cache-version (against `origin/feat/scaffold-bangkok-slice`) and `jsc -m scripts/validate-jsc.mjs` pass; `jsc -m` parses every edited file. The preload block was regenerated for the two new eager modules; the manifest has 271 files.
+- Not verified: an iPhone; offline (the place is read from the store and the lists are precached, but it was not run with the server stopped); CI on the PR (one check was pending when this was written).
 
-  | | Base data, old matcher | Cambodia added, old matcher | Cambodia added, tuned |
-  |---|---|---|---|
-  | Worst query | 58.9 ms (battambang) | 93.9 ms (preah) | 80.9 ms (kompong) |
-  | Sum of 39 | 1,582 ms | 2,408 ms | 1,813 ms |
-
-  - Wall-clock runs were unusable: the load average was 70 to 124, and the worst median moved from 64 to 132 ms between runs of the same code. The plan's 73 ms came from another query set and method.
-  - First-use load of the list (main thread): about 0.36 to 0.42 s unthrottled, 2.1 to 2.5 s at the 6x estimate. The data growth is not separable from noise; the new index fields add about 35 ms.
-- Headless Chrome over CDP, fresh profiles on 127.0.0.1, 375 x 812 at DPR 2, `document.hidden` false on every load. Villages absent before: Anlong Chambak (Siem Reap), Phum Prêk Smăch (Kampot), Kŏk Lak Nhai (Ratanakiri).
-  - Before: 0 of 15 lookups found one (five pickers by three villages). After: 15 of 15, 0 overflow, 0 picker controls under 44 px.
-  - Each picked in the Places sheet: coordinates equal the data's, a 16-day forecast named after the place, the pin inside the map, 0 overflow and 0 errors on `#weather` and `#map`. Two screenshots were looked at.
-  - Offline: five list files cached and the service worker in control; with the server stopped (`curl` HTTP 000), the location sheet and the Places sheet both found all three villages, 0 errors.
-  - 1 console error in the 15 picker loads: the known `getSource` race from `js/map.js` (Q7).
-- All 16 CI guards (including secrets, market-sql and offline-boot), place-fields, port-themes and cache-version against `origin/feat/scaffold-bangkok-slice` (0.650.0 to 0.651.0) pass; `jsc -m scripts/validate-jsc.mjs` exits 0. The manifest moved three hashes.
-- Sizes (before to after): `gazetteer.kh.js` 132.0 to 717.0 KB raw, 44.5 to 212.9 KB gzip; `PRECACHE` 221 files, 13,101 to 13,687 KB raw, 3,834 to 4,002 KB gzip; manifest 269 files, 21,594 to 22,179 KB raw, 6,958 to 7,126 KB gzip.
-- Not checked: CI on the PR (one check was pending when this was written), and an iPhone.
-
-## Owner checks for M3b (carried; the first two are done)
-- [x] Migration 001 run, repaired by 001b; `001_rls.sql` 65 of 65 PASS. Security Advisor after 001: 0 errors.
-- [ ] The owner signs in on the iPhone Home Screen app by code. Then their user id goes into `private.admins` and `private.testers`.
-- [ ] The owner signs in by link in Safari, then deletes a test account there.
-- [ ] From the first real email: whether `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has.
+## Owner checks
+- [ ] **Xcode (read only, F3 edited nothing).** The live Xcode project is not in the repo: `project.pbxproj` was removed from git in `4f06543` (2026-07-17), and no `Info.plist`, entitlements or `.xcconfig` is tracked, so the current tree declares no location usage description. The last committed project file declared `INFOPLIST_KEY_NSLocationWhenInUseUsageDescription` ("Mekonging uses your location to show places near you and to stamp journal entries."). Confirm your local project still has it; without it the iOS wrapper never shows the dialog.
+- [ ] **iPhone, Safari and the Home Screen app, fresh install:** the welcome step's button raises the dialog once; allow, and Home names the place with no tap; on a second install refuse, and the banner shows once with no dialog on reload.
+- Carried from M3b: [ ] sign in on the iPhone Home Screen app by code, then the user id goes into `private.admins` and `private.testers`; [ ] sign in by link in Safari, then delete a test account; [ ] from the first real email, whether `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has.
 
 ## Not done / known issues
-- Everything open is in `docs/PROGRAM.md` section 4. New in F1b:
-  - The list is parsed on the main thread on first use (about 2.1 to 2.5 s at the 6x estimate). Nothing was tuned there. T3 (landmarks) and T13 (Vietnam) would grow the list again; measure the load before them.
-  - The `getSource` race was seen once in 15 picker loads (Q7's count is now 1 of 4 (F1), 1 of 3 (Q1), 1 of 15 (F1b)).
-  - Anlong Chambak (Siem Reap) was paired with the Pursat anchor when picked. The pairing is by distance, not province, and the distances were not measured; F3's "nearest place" work should look at it.
-  - Khmer-script names: 4,296 of 12,128 Cambodian rows carry one (about 3,300 of the added villages); the rest have none in GeoNames.
-  - Screenshots and the drivers are not in the repo. They are in `~/Library/Caches/mk-f1b/` (`drive_kh.py` the picker, forecast, pin and offline driver, built on `~/Library/Caches/mk-f1/drive.py`; `measure3.py` the CPU-time keystroke harness; `measure4.py` the load-time harness; `diff.py` the old-against-new matcher comparison, which needs the old `place-search.js` copied to `js/_ps_ref.js` in the served worktree, and removed afterwards; `shots-kh/` the screenshots).
-- Carried from F2:
-  - the automatic trail names a far-off place for a fix outside the region (Singapore recorded as "Songkhla, th"): `logTrail` accepts an approximate `whereAmI` name; for F3;
-  - the offline map outside the region (decision 26);
-  - the map credits plate opens expanded and covers part of the journey map (Q7, already in the register).
+- Everything open is in `docs/PROGRAM.md` section 4. New in F3 (4.4):
+  - **Safety, decision 28:** an outside-region fix still reaches Emergency as a region country. `countryOfFix` (`js/main.js:6320`) falls back to the nearest anchor's country, so Singapore would show Thailand's numbers ("Showing Thailand ... from your location"). Read from the code, not rendered. F3 guarded only `focusSpot`, `contextNow`, `refreshLocation`, the watch and Nearby; the other direct `nearestSpotGlobal` callers are `js/main.js` 2817, 3709, 6320 and 6880, `country-info.js:280`, `journal.js:349` and `places.js:999`.
+  - A second mislocated anchor: Ba Ria-Vung Tau is at 8.69, 106.61, which is Côn Sơn island (the city is near 10.35, 107.08), like Trat on Ko Mak. A fix on either island reads the anchor, so F3's list place never takes over there. G1 (Trat) and G3.
+  - `prefs.geoAsked` is now read by nothing (Skip and every Home button set it); `geoPrompted` is the working flag.
+  - The first-launch stall: in 1 of 8 fresh-profile runs the four list imports sat unrequested for 9 s. `js/fix-place.js` now times out and retries; the stall itself was not seen again, so the retry is shown to recover from a failed load, not from the original stall.
+  - Penang (165 km) and Yangon (238 km) still read their nearest anchor: the cap is a distance, not a border.
+  - Today, Transport and Explore's "Places in X" still read the anchor (by design); the new strings are English only until L2.
+- Carried (see `docs/PROGRAM.md` 4.4): the offline map outside the region (decision 26); the map credits plate opens expanded and covers part of the journey map (Q7); the `getSource` race (not seen in the F3 position runs, which collected console errors); the list is parsed on the main thread on first use (T3 and T13 would grow it).
 - Tooling:
-  - This session was launched in the parent folder's repository (Nomadic Almanac) and moved to Mekong. The work ran in `Mekong/.claude/worktrees/f1b`, which is spent once PR #137 merges.
-  - Machine load: another project's build ran during this session. Time code by CPU time (`Performance.getMetrics` `ThreadTime`), not wall-clock.
-  - A headless Chrome run cannot go offline through `Network.emulateNetworkConditions`: the service worker's own requests ignore it. Stop the server, or block the hosts (`--host-resolver-rules="MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"`). The offline driver's "server up" line is the service worker answering its own fetch; use `curl` to show the server is down.
-  - A granted emulated position makes the app record an automatic pin on load: grant it after the page has loaded when the test must not have one.
+  - `preview_start` reads the PARENT folder's `.claude/launch.json`, not the worktree's. F3 added `mekong-f3` (port 8963) there, uncommitted like the others. `CLAUDE.md` now says so.
+  - A local branch `f3-base` appeared at `acbc7a3` beside the worktree; tooling created it. It is spent with the worktree.
+  - The F3 driver and screenshots are in `~/Library/Caches/mk-f3/` (`drive.py before|after`, `cdp.py`, `shots-before/`, `shots-after/`); the probes were in the session scratchpad and are gone. The driver warms the service worker's cache before a place-list test; do that in any fresh profile.
+  - Machine load swung between 13 and 210 during this session (another project's Python and the window server). Time code by CPU time, not wall-clock, and give every wait a generous bound.
 
 ## Open decisions (need the user)
-The numbers below keep their old values. Closed on 2026-10-25: 13, 14, 19, 22 and 24. Closed on 2026-10-26: 23 (done in F2) and 27 (keep).
+The numbers below keep their old values. Closed on 2026-10-26: 23, 27.
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese.
 8. Legal, for Omer Hanegbi or Omri Siri: `docs/EXCHANGE.md` §14, the terms and privacy policy, and the dispensary question. The terms and privacy policy gate M9; cash swap gates M10.
-10. Topbar icon spacing. Deferred by the owner until Q3 to Q5 are done; ask again after Q5.
-25. Remove the spent worktrees and branches listed in `docs/PROGRAM.md` 4.6: 7 worktrees, 15 merged or spent remote branches, 3 orphan screenshot branches, and the stale `mekong*` preview entries in the parent folder's `.claude/launch.json`. The F2 and F1b worktrees (`Mekong/.claude/worktrees/f2` and `f1b`) and their branches join the list once their PRs merge. Recommended: yes (#135 is merged). The removal is one step per message, and each branch is checked against the tip first.
-26. A coarse world outline for the journey map offline (`docs/PROGRAM.md` 4.4). **Owner, 2026-10-26: measure first.** Not done. Measure a simplified Natural Earth land outline (size in KB and gzip, at two simplification levels) and bring the number; it would be a new data file. Downloading it needs the owner's yes, with the file name, source and size stated first.
+10. Topbar icon spacing. Deferred until Q3 to Q5 are done; ask again after Q5.
+25. Remove the spent worktrees and branches in `docs/PROGRAM.md` 4.6: now also f1b and f2 (merged), `f3` and `f3-base` once PR #138 merges. Recommended: yes. One step per message, each branch checked against the tip first.
+26. A coarse world outline for the journey map offline. Owner, 2026-10-26: measure first. Not done.
+28. **New.** What should Emergency show for a fix outside the four countries? Recommended: say "outside these four countries", show the browsed country's numbers labelled as such, and never "from your location". It needs a ruling before a slice.
+29. **New.** Should a place picked by hand hold over a live fix for a while? Today the fix always wins. Recommended: no change.
 
 ## Next session prompts
-Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~ (merged, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136)), ~~F1b~~ (built, [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137)), **F3**, **S1** (the style foundation), F4, F5, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4** (coordinates checks), **R1 to R3** (the style roll-out), Bangkok B1 to B8, city depth C1 onward, then T3 to T15. Each releasing slice stacks on the merged tip of the one before. Q2, S0 (the style gate), Q8 and the decision 26 measurement change no shipped file and can run alongside any of them. The F and L slices are in `docs/PLAN.md`; S, Q, T, G and R are in `docs/PROGRAM.md`.
+Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~ ([PR #138](https://github.com/SamuelLClemens/Mekonging/pull/138), built), **S1** (the style foundation), F4, F5, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4**, **R1 to R3**, Bangkok B1 to B8, city depth C1 onward, then T3 to T15. Each releasing slice stacks on the merged tip of the one before. Q2, S0, Q8 and the decision 26 measurement change no shipped file and can run alongside any of them.
 
-**Next is F3.** PR #137 must be merged first.
+**Next is S1.** PR #138 must be merged first.
 
-### F3 to F5, then L1 to L4 (and L5 after M5)
-> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <F3 to F5 or L1 to L5>, as written there.
-> **Start.** `git fetch`; `gh pr list --state all`. The slice before it must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`. Reproduce the problem on a rendered screen before changing code.
+### F4 and F5, then L1 to L4 (and L5 after M5)
+> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <F4, F5, L1 to L4 or L5>, as written there.
+> **Start.** `git fetch`; `gh pr list --state all`. The slice before it must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`. Reproduce the problem on a rendered screen before changing code. `preview_start` needs an entry in the PARENT folder's `.claude/launch.json` (CLAUDE.md).
 > F5, L1 and L5 end with a check by the owner on their iPhone in Safari, from a short checklist the slice writes. L5 starts only after M5 has merged.
-> F3 also reports whether `Mekonging Xcode/` declares a location usage description (read only). F4 and L3 draw their charts with S1's `--viz-*` tokens. F5 checks the OCR language files against the service-worker manifest (`docs/PROGRAM.md` 4.4).
+> F4 and L3 draw their charts with S1's `--viz-*` tokens. F5 checks the OCR language files against the service-worker manifest (`docs/PROGRAM.md` 4.4). Machine-fill strings added by F1 and F3 in L2.
 
 ### S1: the style foundation (after F3, before F4)
 > Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md and section 5 of docs/PROGRAM.md (with S0's answers, if S0 has run). Run /slice for slice S1: tokens and machinery.
