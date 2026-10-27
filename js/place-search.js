@@ -269,5 +269,8 @@ export function placeForKey(key) {
   if (!key) return null;
   if (picked.has(key)) return picked.get(key);
   const p = store.profile.prefs.focusPlace;
-  return p && spotKey(p) === key ? p : null;
+  if (p && spotKey(p) === key) return p;
+  // F3: the place a live fix is in (js/fix-place.js), which Weather and the pickers resolve by key too.
+  const f = store.profile.prefs.fixPlace;
+  return f && f.city && spotKey(f) === key ? f : null;
 }

@@ -37,6 +37,7 @@ import { planRoutes, isRouteNode } from '../journey.js';
 import { confirmAction, netMode, setNetMode, online, collapsibleCard } from '../ui-widgets.js';
 import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
+import { locationAsk } from '../location-ask.js';
 import { packState, onPackChange, deferPack, resumePack, PACK_BYTES } from '../offline-pack.js';
 import { seedWeatherKey } from '../weather-ui.js';
 // setupRecapCard moved to js/screens/welcome.js with the onboarding flow it belongs to
@@ -105,7 +106,11 @@ export function homeScreen() {
   // traveller who moved on without a fresh fix keeps reading their old city (e.g. still "Hanoi"
   // days after reaching Sapa) with no visible reason or way to correct it. Pre-trip, no fix is
   // normal (they have not left yet), so the hint stays silent until phase is actually 'traveling'.
-  if (onGround && focus.source !== 'gps') {
+  // F3: a traveller who was never asked, or refused, gets the card or banner from js/location-ask.js
+  // here instead; the stale-location hint below stays for a traveller whose permission is granted.
+  const ask = locationAsk();
+  if (ask) wrap.append(ask);
+  else if (onGround && focus.source !== 'gps') {
     wrap.append(h('button', { class: 'btn ghost block location-stale-hint', onclick: () => locationSheet() },
       focus.source === 'focus'
         ? `📍 Showing ${focus.displayCity} from earlier — moved on? Tap to update`

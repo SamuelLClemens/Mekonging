@@ -12,6 +12,7 @@ import { getCountry, allPlaces } from '../data/regions.js';
 import { attrTag, driveLabel, withinNear, withinDayTrip, rankNearMe } from '../render-utils.js';
 import { dietEatCard } from './food.js';
 import { retranslate } from '../i18n.js';
+import { OUTSIDE_KM } from '../fix-place.js';
 import {
   go, mount, topbar, whereAmI, nearestSpotGlobal, setFocusSpot, locationSheet, catEmoji, chipIcon,
   nearCat, nearbySafetyStrip, arrivalEssentials, placeFitReason, rnThumb, openStateNow,
@@ -43,7 +44,7 @@ export function nearbyScreen() {
 
   function nearestCityInfo(f) {
     const w = whereAmI(f);
-    if (w) return { city: w.name, country: w.country, km: w.km != null ? w.km : 0, near: !!w.approx };
+    if (w) return { city: w.name, country: w.country, km: w.km != null ? w.km : 0, near: !!w.approx || w.source === 'list' };
     return null;
   }
 
@@ -62,7 +63,7 @@ export function nearbyScreen() {
     const info = nearestCityInfo(f);
     const country = info ? info.country : getActiveCountry();
     setActiveCountry(country);
-    const nb = nearestSpotGlobal(f); if (nb) setFocusSpot(nb.spot);   // remember where they are for weather/today
+    const nb = nearestSpotGlobal(f); if (nb && nb.km <= OUTSIDE_KM) setFocusSpot(nb.spot);   // remember where they are for weather/today (F3: not from outside the region)
     const cName = getCountry(country) ? getCountry(country).name : '';
     status.innerHTML = '';
     status.append(

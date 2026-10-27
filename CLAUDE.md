@@ -11,8 +11,8 @@ relevant section of the docs below, not the whole repo.
   `/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc`). A `ReferenceError` about
   `navigator` means it parsed fine. `check-js-syntax` parses every tracked file; still load the app.
   It parses a file as a module only if it has a static `import`/`export`; a top-level-await-only file needs `export {};`.
-- Preview: `preview_start {name:'mekong'}` runs `python3 scripts/serve.py 8742` (no-cache). Every worktree has its own
-  `.claude/launch.json`; check the entry exists before relying on it.
+- Preview: `preview_start {name:'mekong'}` runs `python3 scripts/serve.py 8742` (no-cache). It reads the PARENT folder's
+  `.claude/launch.json`, never a worktree's: add `bash -c "cd '<worktree>' && python3 scripts/serve.py <port>"` there.
 - The in-app browser pane is always `document.hidden`: timers are clamped, `javascript_tool` times out at 30 s, maps
   never paint and layout reads 0. Measure layout and take screenshots with headless Chrome over CDP, not the pane.
 - `fetch-place-photos.py` (`--suggest`, `--fetch`) exits 0 even when curl cannot resolve Wikipedia. Grep its log for
@@ -29,7 +29,7 @@ relevant section of the docs below, not the whole repo.
   `scripts/fetch-place-citations.py --install`, which keeps each one's format, not with a regex.
 - Keep this project off `~/Desktop`, `~/Documents` and `~/Downloads` (macOS permission denials).
 - Headless Chrome here needs `--no-sandbox` (its network sandbox cannot open sockets, so a load of 127.0.0.1 hangs) and a
-  profile outside `/private/tmp`. The scratchpad is wiped when the app restarts: keep drivers in `~/Library/Caches/`.
+  profile outside `/private/tmp`. The scratchpad is wiped when the app restarts: keep drivers in `~/Library/Caches/`. A fresh profile's first minute is not representative (the service worker is still installing): wait for `caches` to hold the files under test.
 - No Postgres here (the owner declined a local install, 2026-10-19): Supabase SQL is reviewed by reading and run by the owner
   in the SQL editor. A PR whose code needs that SQL opens as a draft until the owner's run passes (PR #125 merged first).
 - Market SQL rules: no policy names `owner` (they call `private.owns` and `private.can_see`); a client picks a listing's id and reads it back, because `INSERT ... RETURNING` is refused; every read names its columns. `scripts/check-market-sql.py` reads the SQL.
@@ -83,7 +83,7 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
   A regex or an edit written for one style silently misses the other; `scripts/fetch-local-names.py` handles both.
 - `js/nav-groups.js` is the single manifest for feature navigation; every feature has one label and one home.
 - The offline place list (`js/data/gazetteer.<cc>.js`, built by `scripts/build-gazetteer.py`, searched by `js/place-search.js`)
-  is never added to `WEATHER_SPOTS`. A picked list place rides beside its nearest anchor as `focusSpot().place`.
+  is never added to `WEATHER_SPOTS`. A picked list place, or a live fix more than 15 km from an anchor (`js/fix-place.js`), rides beside its nearest anchor as `focusSpot().place`.
 - `js/state.js` is the on-device store. Schema changes bump its version. Deleting or merging a place record also needs a
   line in `js/data/place-merges.js` in the same commit, or travellers' saved data is lost.
 - The journey screen builds its stops from trail points, journal entries and trip stops. A change to an entry's or trip stop's stop is

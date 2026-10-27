@@ -41,6 +41,7 @@ import { marketRedirect } from './market-routes.js';
 import { takeSigninLink } from './market-link.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
+import { OUTSIDE_KM, ANCHOR_KM, fixPlaceFor, resolveFixPlace } from './fix-place.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
 import { EMERGENCY_NUMBERS } from './data/emergency-numbers.js';
 import { loadHospitals, isHospitalsLoaded, sosCare } from './data/hospitals.js';
@@ -819,7 +820,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.651.0';
+export const APP_VERSION = 'mk-v0.652.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1223,7 +1224,7 @@ export function languageSheet() {
 // a manual pick); the GPS button otherwise updates its own label in place rather than forcing
 // a full re-render, so callers that do not need one (onboarding) do not pay for one.
 export function locationFixCard(opts = {}) {
-  const { onChange } = opts;
+  const { onChange, lead } = opts;
   const card = h('div', { class: 'card' });
   // Once the browser holds a granted permission, this card must stop asking for it. Putting
   // "Use your location?" in front of a traveller who answered that question weeks ago is the
@@ -1231,9 +1232,12 @@ export function locationFixCard(opts = {}) {
   // statement of what is already on, and only an unanswered one gets the question.
   const granted = geoPermission() === 'granted';
   card.append(h('h3', {}, granted ? '📍 Your location' : '📍 Use your location?'));
-  card.append(h('p', { class: 'muted' }, granted
-    ? 'Location is on, so the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'
-    : 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
+  // F3: `lead` is the welcome step, where this is the main action: one line of reason, not two sentences.
+  card.append(h('p', { class: 'muted' }, lead
+    ? 'One tap, and weather, near-me and the closest help follow you. It stays on your device.'
+    : granted
+      ? 'Location is on, so the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'
+      : 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
   if (typeof navigator !== 'undefined' && navigator.geolocation) {
     const lb = h('button', { class: 'btn block' }, getLastFix() ? '📍 Location is on' : (granted ? '📍 Find me now' : '📍 Use my location'));
     lb.onclick = async () => {
@@ -1694,12 +1698,13 @@ export function hoursStatusLabel(hours, hour = regionNow().hour) {
 }
 
 export function contextNow() {
-  const gps = getLastFix();
-  let near = gps ? nearestSpotGlobal(gps) : null;
+  const { gps, near: gnear } = regionFix();
+  let near = gnear;
   // F-05: only a REAL gps-proximity pick can mislabel (see satelliteDisplayCity above) — the two
   // fallbacks below deliberately choose a specific spot, not a geometric nearest search, so they
   // need no override. near.spot (the weather/places anchor) is never touched here either way.
-  if (near) near = { ...near, displayCity: satelliteDisplayCity(gps, near) };
+  // F3: the same name and place focusSpot() gives, and no fix at all from outside the region.
+  if (near) { const f = gpsFocus(gps, near); near = { ...near, displayCity: f.displayCity, place: f.place }; }
   let fix = gps, approx = false, seeded = false;
   if (!near) {
     // No GPS: fall back to the city the traveller is focused on (last scoped or planned),
@@ -1942,9 +1947,21 @@ function satelliteDisplayCity(fix, near) {
   const dParent = haversineKm(fix, { lat: parent.lat, lng: parent.lng });
   return (dParent - near.km > SATELLITE_MARGIN_KM) ? near.spot.city : parent.city;
 }
+// F3. A fix farther than OUTSIDE_KM from every curated city is outside the four countries: it still
+// serves distances, but it must not name a far-off city as where the traveller is (Singapore read
+// "Songkhla"), so the focus ignores it. Inside, when no curated city is within ANCHOR_KM, the
+// place-list entry the fix is in (js/fix-place.js) names the spot; `spot` stays the anchor.
+function regionFix() {
+  const fix = getLastFix();
+  const near = fix ? nearestSpotGlobal(fix) : null;
+  return near && near.km <= OUTSIDE_KM ? { gps: fix, near } : { gps: null, near: null };
+}
+function gpsFocus(gps, near) {
+  const place = near.km > ANCHOR_KM ? fixPlaceFor(gps) : null;
+  return { spot: near.spot, source: 'gps', km: near.km, displayCity: place ? place.city : satelliteDisplayCity(gps, near), place };
+}
 export function focusSpot(explicitCountry) {
-  const gps = getLastFix();
-  const near = gps ? nearestSpotGlobal(gps) : null;
+  const { gps, near } = regionFix();
   const focus = focusCitySpot();
   if (explicitCountry && getCountry(explicitCountry)) {
     // A country was explicitly requested (e.g. "Today in Vietnam"): a live GPS fix inside
@@ -1953,9 +1970,7 @@ export function focusSpot(explicitCountry) {
     // first, so once a traveller had ever browsed, say, Chiang Mai, a later live GPS fix in
     // Pai was silently ignored — the map kept showing Chiang Mai). Else the focused/located
     // city within it, else the capital.
-    if (near && near.spot && near.spot.country === explicitCountry) {
-      return { spot: near.spot, source: 'gps', km: near.km, displayCity: satelliteDisplayCity(gps, near) };
-    }
+    if (near && near.spot && near.spot.country === explicitCountry) return gpsFocus(gps, near);
     if (focus && focus.country === explicitCountry) {
       const place = focusPlace(focus);
       return { spot: focus, source: 'focus', displayCity: place ? place.city : focus.city, place };
@@ -1963,7 +1978,7 @@ export function focusSpot(explicitCountry) {
     const ds = defaultSpot(explicitCountry);
     return { spot: ds, source: 'default', displayCity: ds.city };
   }
-  if (near && near.spot) return { spot: near.spot, source: 'gps', km: near.km, displayCity: satelliteDisplayCity(gps, near) };
+  if (near && near.spot) return gpsFocus(gps, near);
   if (focus) {
     const place = focusPlace(focus);
     return { spot: focus, source: 'focus', displayCity: place ? place.city : focus.city, place };
@@ -1980,11 +1995,32 @@ export function focusSpot(explicitCountry) {
 // activeCountry the fix disagreed with it. Mirrors what nearbyScreen/the Settings location
 // toggle already did by hand; this just gives every other call site the same fix.
 export async function refreshLocation() {
+  // F3: this is also where "the browser's dialog was raised by a tap" is recorded
+  // (prefs.geoPrompted, read by Home's location card and banner in js/location-ask.js).
+  store.profile.prefs.geoPrompted = true; save();
   const pos = await geolocate();
   setLastFix(pos);
-  const nb = nearestSpotGlobal(pos);
-  if (nb) setFocusSpot(nb.spot);
-  return { pos, nearest: nb };
+  return { pos, nearest: adoptFix(pos) };
+}
+// A fix becomes the app's notion of where the traveller is: the nearest curated city becomes the
+// focus (not for a fix outside the region), and for a remote fix the place-list entry is resolved
+// in the background, then the screens that read it are redrawn and `then(place)` runs.
+function adoptFix(fix, then) {
+  const nb = nearestSpotGlobal(fix);
+  if (!nb || nb.km > OUTSIDE_KM) return nb;
+  setFocusSpot(nb.spot);
+  ensureFixPlace(fix, nb, then);
+  return nb;
+}
+// Resolves the place-list entry for a remote fix, once, in the background. The watch calls it on
+// every tick as well as on a move, so a first attempt that stalled (js/fix-place.js) is retried.
+function ensureFixPlace(fix, nb, then) {
+  if (!nb || nb.km <= ANCHOR_KM || nb.km > OUTSIDE_KM || fixPlaceFor(fix)) return;
+  resolveFixPlace(fix).then((r) => { if (r.changed) { if (then) then(r.place); redrawFixScreens(); } }).catch(() => { /* the list is not cached yet */ });
+}
+function redrawFixScreens() {
+  const hash = location.hash || '';
+  if (hash === '' || hash === '#' || hash === '#home' || hash === '#nearby' || hash === '#explore' || hash === '#weather' || hash.startsWith('#places')) render();
 }
 // Map a scoped city (by display name) to its nearest listed weather city, so browsing a
 // city page quietly makes that city the traveller's focus for weather + picks.
@@ -6296,7 +6332,11 @@ let _waiCache = { key: '', val: null };
 // province is what decides which hospital is actually reachable, not the nearest hub town.
 export function whereAmI(fix) {
   if (!fix || fix.lat == null || fix.lng == null) return null;
-  const key = fix.lat.toFixed(3) + ',' + fix.lng.toFixed(3);
+  // F3: the place-list entry this fix is in (js/fix-place.js), once resolved. It is in the memo's
+  // key so the answer changes when the place lands; it never replaces `province`, which the
+  // medical screen matches hospitals against.
+  const fp = fixPlaceFor(fix);
+  const key = fix.lat.toFixed(3) + ',' + fix.lng.toFixed(3) + (fp ? '|' + fp.city : '');
   if (_waiCache.key === key) return _waiCache.val;
   let best = null, bestKm = Infinity;
   for (const p of allPlaces()) {
@@ -6315,6 +6355,7 @@ export function whereAmI(fix) {
   let val;
   if (best && bestKm <= 6 && best.city) val = { name: best.city, province, country: best.country || provCc, km: bestKm, source: 'town', approx: false };
   else if (hub && hub.km <= 15) val = { name: hub.spot.city, province, country: hub.spot.country, km: hub.km, source: 'hub-town', approx: false };
+  else if (fp) val = { name: fp.city, province, country: fp.country, km: haversineKm(fix, fp), source: 'list', approx: false };
   else if (province) val = { name: province, province, country: provCc, km: null, source: 'province', approx: false };
   else if (best) val = { name: best.city || best.name, country: best.country, km: bestKm, source: 'place-far', approx: true };
   else val = hub ? { name: hub.spot.city, country: hub.spot.country, km: hub.km, source: 'hub', approx: true } : null;
@@ -6343,7 +6384,8 @@ function startLocationWatch() {
         // until they happened to hit an explicit "use my location" button that itself
         // re-derived the country. Resolving+applying the nearest spot here means the whole
         // app's notion of "where I am" now actually tracks GPS continuously, in the background.
-        if (moved) { const nb = nearestSpotGlobal(next); if (nb) setFocusSpot(nb.spot); }
+        const named = (p) => logTrail(next, p);
+        if (moved) adoptFix(next, named); else ensureFixPlace(next, nearestSpotGlobal(next), named);
         // First fix of the session is the one that means "opened here" — see logOpenLocation.
         logOpenLocation();
         // The journey trail records EVERY fix, unlike the visit pin above which is once per
@@ -6372,11 +6414,18 @@ function stopLocationWatch() {
 // without them having to add a single pin. Deliberately unlike logOpenLocation below: on by
 // default, at real precision, every fix rather than one a session, and never offered to any
 // feed. City name comes from whereAmI() so a pin reads "Ninh Binh" rather than a coordinate.
-function logTrail(fix) {
+function logTrail(fix, place) {
   if (!trailEnabled()) return;
   try {
+    // F3: only a name the traveller can trust. whereAmI() also returns a far guess (approx: true,
+    // "Songkhla" for Singapore, 751 km off), which must never label a pin; a remote village is named
+    // from the place list instead (`place`, once js/fix-place.js has resolved it), else left blank.
     const wai = whereAmI(fix);
-    noteTrail(fix, (wai && wai.country) || getActiveCountry(), (wai && wai.name) || '', todayISO());
+    const sure = wai && !wai.approx ? wai : null;
+    const near = nearestSpotGlobal(fix);
+    const inRegion = !!near && near.km <= OUTSIDE_KM;
+    noteTrail(fix, (sure && sure.country) || (place && place.country) || (inRegion ? getActiveCountry() : ''),
+      (sure && sure.name) || (place && place.city) || '', todayISO());
   } catch { /* a pin is never worth breaking a location update over */ }
 }
 
@@ -6405,6 +6454,7 @@ function logOpenLocation() {
 // 'granted' | 'prompt' | 'denied' | 'unknown'.
 let _geoPerm = 'unknown';
 export function geoPermission() { return _geoPerm; }
+function redrawHome() { const hh = location.hash || ''; if (hh === '' || hh === '#' || hh === '#home') render(); }
 
 function initLocation() {
   if (typeof navigator === 'undefined' || !navigator.geolocation) return;
@@ -6436,13 +6486,16 @@ function initLocation() {
       .then((st) => {
         _geoPerm = st.state;
         if (st.state === 'granted') begin();
+        // F3: Home's location card or banner (js/location-ask.js) reads this state, which is not
+        // known until now. Redraw Home once, here, rather than on every render.
+        else redrawHome();
         try {
           st.onchange = () => {
             _geoPerm = st.state;
             // A fresh grant starts the watch; a revocation must stop it, or the app keeps
             // consuming a permission the traveller has just taken away.
             if (st.state === 'granted') { begin(); render(); }
-            else stopLocationWatch();
+            else { stopLocationWatch(); redrawHome(); }
           };
         } catch { /* noop */ }
       })

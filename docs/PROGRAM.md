@@ -104,7 +104,8 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | M7: GitHub secret-scanning push protection; the publishable key as a repository variable for the keep-awake workflow | M7 | open |
 | M8: generate the VAPID key pair; the private half stored as a secret only | M8 | open |
 | Native-speaker review of "Market" (decision 6; least sure: Korean, Polish, Turkish, Filipino, Chinese, Japanese) and the Thai, Vietnamese, Khmer and Lao block terms | none; quality | open; no native speaker available (owner, 2026-10-19) |
-| F3: report whether `Mekonging Xcode/` declares a location usage description | none; F3 reports it | for F3 (read only, no edit) |
+| F3, Xcode: the live Xcode project is not in the repo (its `project.pbxproj` was removed from git in `4f06543`, 2026-07-17; no `Info.plist`, entitlements or `.xcconfig` is tracked), so the current tree declares no location usage description. Its last committed version did: `INFOPLIST_KEY_NSLocationWhenInUseUsageDescription` = "Mekonging uses your location to show places near you and to stamp journal entries." Confirm the owner's local project still has it. If it does not, the WKWebView never shows the location dialog | none | **owner check**, read only; F3 edited nothing |
+| F3, iPhone: open the app fresh in Safari, then as a Home Screen app. The welcome step's "Use my location" raises the dialog once; allow it and Home names the place with no further tap; on a second fresh install refuse it and check the banner shows once and no dialog appears on reload | F3 | open |
 | **New (decision 25):** approve removing the spent worktrees and branches listed in 4.6 | none | open; recommended yes, after #135 merges |
 
 ### 4.3 Open decisions (numbers as in `docs/HANDOFF.md`)
@@ -123,6 +124,8 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | 25 | Remove the spent worktrees and branches (4.6) | open; the F2 and F1b worktrees join once their PRs merge |
 | 26 | A coarse world outline for the journey map offline (4.4) | open; owner, 2026-10-26: measure a simplified Natural Earth outline (KB, gzip) first, nothing built yet |
 | 27 | The share-journey route carries stops added by hand | **closed: yes, keep** (owner, 2026-10-26) |
+| 28 | What Emergency shows for a fix outside the four countries (4.4): today it names the nearest anchor's country, so Singapore shows Thailand's numbers | open; recommended: say "outside these four countries", show the browsed country's numbers labelled as such, never "from your location" |
+| 29 | Should a place picked by hand hold over a live fix for a while? Today the fix always wins | open; recommended: no change (the fix is the truth; the picker is for when there is none) |
 | (none) | A new source for more place photos (620 places have none) | open; S1's artwork makes a photo-less card deliberate, so no new photo source is proposed |
 
 ### 4.4 Known defects
@@ -131,10 +134,14 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 |---|---|---|---|
 | Offline | The OCR language files are not in the service-worker manifest, so offline OCR after first use is untested | `grep -c traineddata sw.js`: 0; the files are `lib/tesseract/lang/{khm,lao,tha,vie}.traineddata.gz` | F5 (it touches the host languages) |
 | iOS wrapper | OCR from `mekong://` (a blob worker's `importScripts`) is untested | not measurable here (no Xcode) | next wrapper build; owner check |
-| Location | The automatic trail names a far-off place for a fix outside the region: an emulated fix in Singapore was recorded as "Songkhla", country `th`. `logTrail` (`js/main.js:6372`) takes `whereAmI(fix).name` whatever its `approx` flag (`place-far` and `hub` are guesses). F2's own pin naming uses only `town` and `hub-town` results | F2 driver, 2026-10-26: trail point `{city: 'Songkhla', cc: 'th'}` at 1.283, 103.851 | F3 |
-| Location | A GPS fix outranks a place picked by hand | `docs/HANDOFF.md` (F1) | F3 |
-| Location | Today, Arrival and the transport screens read the anchor, not the picked place | `docs/HANDOFF.md` (F1) | F3 |
-| Location | A picked place is saved only through the debounced store save | F1 probe (`Browser.close` lost it) | F3 |
+| Location | A GPS fix outranks a place picked by hand: a traveller in one town who picks another sees the town they are in. Unchanged by F3 | `docs/HANDOFF.md` (F1) | decision 29 (should a pick hold for a while?) |
+| Location | Today, Arrival, Transport and Explore's "Places in X" read the anchor, not the picked or fix place: at the Anlong Chambak fix they say "Near Pursat" and "Places in Pursat". Their content is keyed to curated cities, so this is by design; F3 changed the labels that say where the traveller is | F3 driver, 2026-10-27 | none unless the owner wants a place-level "Today" |
+| Location | A picked place, and now a fix's place (`prefs.fixPlace`), is saved only through the debounced store save | F1 probe (`Browser.close` lost it) | Q7 (store flush) |
+| Location | Two anchors sit on islands: Trat at 11.82, 102.47 is Ko Mak (decision 22), and **new:** Ba Ria-Vung Tau at 8.69, 106.61 is Côn Sơn island (the city is near 10.35, 107.08). A fix on either island reads the anchor's name (1.6 km and 0.4 km), so F3's list place never takes over | F3 driver, 2026-10-27 | G1 (Trat), G3 (Ba Ria-Vung Tau) |
+| Location | **New, safety:** a fix outside the region still reaches Emergency as a region country. `countryOfFix` (`js/main.js:6320`) falls back to the nearest anchor's country, so Singapore shows Thailand's numbers ("Showing Thailand ... from your location"). F3 guarded only `focusSpot`, `contextNow`, `refreshLocation`, the watch and Nearby. Unguarded direct `nearestSpotGlobal` callers: `js/main.js` 2817, 3709, 6320 and 6880, `js/screens/country-info.js:280`, `js/screens/journal.js:349`, `js/screens/places.js:999` | grep, 2026-10-27; Singapore read from the code, not rendered | decision 28 (what Emergency shows outside the region), then one slice |
+| Location | `prefs.geoAsked` is now read by nothing: `finish()` and every Home button set it, so it never meant "asked". `prefs.geoPrompted` is the working flag | grep, 2026-10-27 | D5 tidy (remove it) |
+| Location | First launch, fresh profile: the imports of the four place lists sat unrequested for 9 s in 1 of 8 runs while the service worker installed. `js/fix-place.js` now times out each attempt (12 s) and retries 3 times; 5 later runs resolved in 1.5 to 2.7 s, and with the lists blocked for 6.7 s the place landed at 10.7 s. The stall itself was not seen again | F3 probes, 2026-10-27 | none; watch |
+| Location | Out-of-region distance is a cap, not a border: Penang (165 km from Satun) and Yangon (238 km from Mae Sariang) still read their nearest anchor | measured from `js/weather.js` anchors | T14 or never |
 | Layout | The forecast calendar inside its closed `<details>` lays out 68 px columns to 495 px at 375 px | 495 px (F1, 2026-10-25) | Q3 |
 | Layout | The top ~3 px of the tab bar show content scrolled beneath the retro stripe | ~3 px (exchange slices) | Q4 |
 | Layout | Tall portrait photos are uncapped (Phanom Rung renders 548 px tall at 375 px) | 548 px (carried) | S1 (photo treatment), applied in R1 |
@@ -147,7 +154,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | Copy | Free places print "฿0 (≈ $0)": `range()` returns `money(0)` when low equals high (`js/util.js:111`), so the `\|\| 'Free'` fallbacks after `priceLine()` (`js/screens/places.js:774`, `1095`, `1734`) never fire | code read, 2026-10-25 | T6 |
 | Copy | "Traveller board" remains on the Travel circle card (`js/screens/circle.js:62`) and the Near me chip (`js/screens/nearby.js:91`) | grep, 2026-10-25 | R2 |
 | Copy | The on-phone board chips (Items, Rooms, Rides, Cash) are English only, and two show as pressed on `#market-items` | carried (exchange slices) | M4b-2 |
-| Copy | The strings added by M3b, M4a, M4b-1 and F1 are English only | carried; every table has the same 369 keys (`check-ui-strings`) | F5 (host languages), L2 (the rest) |
+| Copy | The strings added by M3b, M4a, M4b-1, F1 and F3 are English only | carried; every table has the same 369 keys (`check-ui-strings`) | F5 (host languages), L2 (the rest) |
 | Copy | Topbar titles with an emoji or flag prefix, which `CLAUDE.md` forbids: `${c.flag} Culture & etiquette` (`js/screens/etiquette.js:62`), `${catOpen.emoji} Market products` (`js/screens/produce.js:32`), and **new:** `${emoji} ${title}` on saved collections such as "⭐ Favourites" (`js/main.js:4642`) | grep, 2026-10-25 | Q4 |
 | Market | "Reset everything" does not clear recent searches: `mk-market-recent` is named only in `js/screens/market-home.js:39`, and the reset (`js/screens/settings.js:694`) clears the store keys (`js/state.js:582`) | grep, 2026-10-25 | M4b-2 |
 | Market | Price sorts compare amounts across currencies | carried (M4a, M4b-1) | M4b-2 |
@@ -160,6 +167,10 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | Tooling | `fetch-place-photos.py` exits 0 when lookups fail: `main()` ends in `return 0` with no failure path, and `sys.exit(main())` is at `scripts/fetch-place-photos.py:466` | code read, 2026-10-25 | Q2 |
 | Tooling | `scripts/route-sweep.js` has no `#market` in `EXTRA` (`scripts/route-sweep.js:60`) and reports `content-visibility` cards as zero-size controls | grep, 2026-10-25 | Q2 |
 | Data | **New:** one place has no `hours`: `la-ext-rental-vang-vieng` (`check-place-fields`: hours 881 of 882) | jsc, 2026-10-25 | D5 tidy |
+
+**Closed in 4.4**
+- The automatic trail named a far-off place for a fix outside the region (F2's leftover): closed by F3 (`mk-v0.652.0`). `logTrail` now names a pin only from a `whereAmI` result that is not a guess, or from the place list; before, an emulated Singapore fix was filed `{city: 'Songkhla', cc: 'th'}`, after, `{city: '', cc: ''}`.
+- Anlong Chambak was paired with the Pursat anchor (F1b's leftover): measured, not a fault. The pairing is by distance, as Nearby ranks: Pursat 56.1 km, Siem Reap 58.5 km, Kampong Thom 83.9 km. The village is in Siem Reap province. F3 keeps the distance rule and names the village itself (Home, Weather and Places read "Anlong Chambak").
 
 ### 4.5 Data gaps and disputes
 
@@ -184,10 +195,10 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 |---|---|---|
 | `js/main.js` size | 7,601 lines against ~1,500; no guard enforces a ceiling (no `1500` in `scripts/` or `.github/workflows/`) | T4 adds a ratchet. Until then, every slice that edits `main.js` moves the code it touches into a module (F4 moves `returnRecapCard`) |
 | Test drivers outside the repo | `~/Library/Caches/mk-f1/`, `mk-f2/` and `mk-m4b1/` (plus their Chrome profiles); the Q1 driver and the M3b CDP client in the notes folder `local_45164220-ea74-40e6-851e-808583e5b9f4/` (`q1-audit-driver/`, `m3b-cdp/`) | Q2 commits the audit driver and one shared stdlib CDP client (`tools/cdp/cdp.py`) that later drivers import |
-| Spent worktrees | 7 under `Mekong/.claude/worktrees/`: best-tool-prompt, f1, fixes-plan, m3a, m4a, m4b1, rulings-1019. Each HEAD is an ancestor of the tip, and each has 0 uncommitted files | owner action (4.2): approve removal |
+| Spent worktrees | 7 under `Mekong/.claude/worktrees/`: best-tool-prompt, f1, fixes-plan, m3a, m4a, m4b1, rulings-1019; **since 2026-10-27** also f1b and f2 (PRs #137 and #136 merged), and f3 once PR #138 merges. A local branch `f3-base` (at `acbc7a3`) was created by tooling beside f3 and is spent with it. Each HEAD is an ancestor of the tip, and each has 0 uncommitted files | owner action (4.2): approve removal |
 | Spent remote branches | 14 merged: `data/d4-local-names`, `data/d5-vietnam`, `data/f1-laos-villages`, `docs/bangkok-buildout-plan`, `docs/language-work-plan`, `docs/m3b-handoff`, `docs/m4b-split`, `docs/owner-rulings-2026-10-19`, `docs/q1-audit-375`, `feat/f1-place-list`, `feat/m3-signin`, `feat/m3a-csp-secrets`, `feat/m4a-listings`, `feat/m4b1-market-browse`. **New:** `fix/transport-leaving-reverse` (PR #95 merged; its one extra commit, 3533216, merges #96 into it, and both fixes are on the tip) | owner action: approve removal |
 | Orphan screenshot branches | `assets/f1-shots` (0cda8bc), `assets/f1-laos-shots` (ab20737) and **new** `assets/m4b1-shots` (229be7f); the PRs that link to them are merged | owner action: approve removal (the PR pages' images then break) |
-| Preview entries | The parent folder's `/Users/zim/Claude Code/.claude/launch.json` holds 57 entries, 33 named `mekong*`, several for removed worktrees; it is modified and uncommitted in that folder's own repository | owner action: approve pruning with the worktrees |
+| Preview entries | The parent folder's `/Users/zim/Claude Code/.claude/launch.json` holds 58 entries (F3 added `mekong-f3`, port 8963), 33 named `mekong*`, several for removed worktrees; it is modified and uncommitted in that folder's own repository | owner action: approve pruning with the worktrees |
 | The main checkout | `Mekong/` sits at ddf57b9, behind the tip | none; sessions start from `origin/` in a worktree (`CLAUDE.md`) |
 | Precache size | 3,829 KB gzip after #133 (`docs/HANDOFF.md`); no budget guard | T4 |
 

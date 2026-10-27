@@ -67,6 +67,12 @@ function defaults() {
         placesSort: 'best',   // 'best' | 'near' — order by fit/rating, or by distance from you
         streetView: 'list',   // 'list' | 'map'  — Street-food screen: rate-list or map of stalls
         geoAsked: false,      // have we offered the one-time "use my location" invite on Home?
+        // F3 (self-defaulting through migrate(), no store-version bump). geoAsked above is set by
+        // leaving the welcome flow and by every Home button, so it says nothing about whether the
+        // browser's dialog was ever raised; geoPrompted is set only where the app calls the API.
+        geoPrompted: false,   // the browser's location dialog has been raised by a tap
+        geoNudgeOff: false,   // the Home location card or banner was dismissed
+        fixPlace: null,       // the place-list entry the last live fix is in (js/fix-place.js)
         // --- personal phrasebook: the user's own pinned + hidden phrases, per language.
         // Keys are derived (lang|categoryId|slug-of-english) since phrases carry no id.
         phrasePins: {},       // { th: ['th|basics|hello', …] } — pin order IS the display order
