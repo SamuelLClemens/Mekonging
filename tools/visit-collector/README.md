@@ -2,7 +2,7 @@
 
 Mekonging's **Where people are** screen always works: it maps the places *your own device* has
 opened the app from, stored locally and rounded to a ~55 km grid cell so no pin can place
-anyone. The shared half of that map — everyone else's pins — needs somewhere to aggregate them,
+anyone. The shared half of that map, everyone else's pins, needs somewhere to aggregate them,
 and this project deliberately does not run one. A static travel app that quietly collects its
 users' locations is exactly what it declines to be.
 

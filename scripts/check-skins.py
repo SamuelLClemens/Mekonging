@@ -7,13 +7,13 @@ js/theme.js is the table (DEFAULT_SKIN, SKIN_MODE). Four other places repeat its
 drift on its own without any page failing to render, because an unknown skin silently falls back to
 the default:
 
-  1. css/style.css  — a `:root[data-skin="<id>"]` block per skin. A fixed-mode skin needs a base
+  1. css/style.css , a `:root[data-skin="<id>"]` block per skin. A fixed-mode skin needs a base
                       block; an 'auto' skin needs a base block or BOTH a light and a dark block.
-  2. js/screens/settings.js — the Theme picker's options. Every selectable id must be in SKIN_MODE,
+  2. js/screens/settings.js, the Theme picker's options. Every selectable id must be in SKIN_MODE,
                       and every id with a palette must be selectable.
-  3. js/theme-boot.js — the first-paint script (Phase 3). Once it exists, every skin id it names
+  3. js/theme-boot.js, the first-paint script (Phase 3). Once it exists, every skin id it names
                       must be in SKIN_MODE and it must name DEFAULT_SKIN.
-  4. js/state.js    — the default profile's `skin:` must equal DEFAULT_SKIN, and js/main.js must
+  4. js/state.js   , the default profile's `skin:` must equal DEFAULT_SKIN, and js/main.js must
                       take its table from theme.js rather than carrying a copy.
 
 PENDING lists ids that theme.js defines before their palette lands (Phase 3 of the retro redesign).
@@ -43,12 +43,12 @@ def main():
     theme = strip_comments(read('js/theme.js'))
     m = re.search(r"export const DEFAULT_SKIN = '(\w+)'", theme)
     if not m:
-        print('FAIL — js/theme.js has no DEFAULT_SKIN.')
+        print('FAIL: js/theme.js has no DEFAULT_SKIN.')
         return 1
     default = m.group(1)
     m = re.search(r'export const SKIN_MODE = \{([^}]*)\}', theme)
     if not m:
-        print('FAIL — js/theme.js has no SKIN_MODE.')
+        print('FAIL: js/theme.js has no SKIN_MODE.')
         return 1
     table = dict(re.findall(r"(\w+):\s*'(\w+)'", m.group(1)))
     for sid, mode in table.items():
@@ -126,12 +126,12 @@ def main():
         errors.append('main.js: carries its own SKIN_MODE; it must come from js/theme.js')
 
     if errors:
-        print(f'FAIL — {len(errors)} disagreement(s):\n')
+        print(f'FAIL: {len(errors)} disagreement(s):\n')
         for e in errors:
             print('  ' + e)
         return 1
     live = [s for s in table if s not in PENDING]
-    print(f'PASS — {len(table)} ids in js/theme.js ({len(live)} with palettes, {len(table) - len(live)} pending), '
+    print(f'PASS: {len(table)} ids in js/theme.js ({len(live)} with palettes, {len(table) - len(live)} pending), '
           f'default {default!r}; CSS, Settings, state and main agree ({boot_note}).')
     return 0
 

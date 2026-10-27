@@ -8,7 +8,7 @@ earlier failures were 406s from sending no User-Agent; a real one is accepted.
 
 WHAT IS AND IS NOT INCLUDED, AND WHY.
 
-  Hiking trails = `route=hiking` relations (the named treks — Doi Inthanon's summit trail,
+  Hiking trails = `route=hiking` relations (the named treks: Doi Inthanon's summit trail,
   the Kep circuit) PLUS `highway=path`/`highway=track` ways that carry a NAME. The name
   filter is the whole quality gate: SE Asia has hundreds of thousands of unnamed paths,
   most of them field edges and motorbike shortcuts that would bury the real trails in
@@ -27,7 +27,7 @@ WHAT IS AND IS NOT INCLUDED, AND WHY.
   (~4,000 and sparse) and deliberately left out: useful, but not the same category, and
   every extra layer is another chip competing for the same 375px of screen.
 
-  Train stations are NOT here — that is a transport layer alongside buses, not an outdoor
+  Train stations are NOT here, that is a transport layer alongside buses, not an outdoor
   one, and it wants the bus layer's fare/route treatment rather than this file's.
 
 GEOMETRY IS SIMPLIFIED. Raw OSM way geometry is far denser than a phone map needs: the
@@ -55,7 +55,7 @@ OUT_DIR = os.path.join(ROOT, 'js', 'data')
 
 # Several mirrors, tried in turn. The main instance regularly answers a heavy `out geom`
 # query with "Dispatcher_Client::request_read_and_idx::timeout. The server is probably too
-# busy" — a load-shedding message, not a problem with the query, and a different mirror
+# busy", a load-shedding message, not a problem with the query, and a different mirror
 # usually answers the identical query immediately.
 ENDPOINTS = [
     'https://overpass-api.de/api/interpreter',

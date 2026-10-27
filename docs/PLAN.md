@@ -1,4 +1,4 @@
-# Plan — data gaps and the traveller exchange (2026-10-12)
+# Plan, data gaps and the traveller exchange (2026-10-12)
 
 ## How the slices run
 - One slice per fresh session. Start it from `CLAUDE.md`, `docs/HANDOFF.md`, this file and the files the slice names.
@@ -113,7 +113,7 @@ The owner listed five fixes "we need to make for sure", then widened the languag
   - **Deviations from the scope above.** (1) The scope's test `prefs.geoAsked` false cannot find travellers who finished setup (`finish()` sets it), so the card and banner read the new `geoPrompted`. (2) Koh Chang being an anchor, the criterion was also run on a remote village. (3) Today, Transport and Explore's "Places in X" still read the anchor: their content is keyed to curated cities. (4) A GPS fix still outranks a place picked by hand (F1's item, left).
   - **Not done.** The iPhone (owner check); offline was not re-run (the place is read from the on-device store, and the lists are precached: `check-offline-boot`). Details and the open items: `docs/HANDOFF.md`, `docs/PROGRAM.md` 4.4.
 - **Problem.** The app must know where the traveller is from the first visit and use it everywhere, not only after they search or tap.
-- **Measured.** Once permission is granted, a location watch starts silently on every launch (`js/main.js:6371` to `6420`). While the permission is unanswered, the app waits for a tap on a "Use my location" control. This is by design, after an earlier "asks me every single time" report. The welcome flow's first step already shows `locationFixCard` (`js/screens/welcome.js:84`), but "Next" and "Skip — just explore" both pass it without asking, and travellers who finished setup earlier are never asked again.
+- **Measured.** Once permission is granted, a location watch starts silently on every launch (`js/main.js:6371` to `6420`). While the permission is unanswered, the app waits for a tap on a "Use my location" control. This is by design, after an earlier "asks me every single time" report. The welcome flow's first step already shows `locationFixCard` (`js/screens/welcome.js:84`), but "Next" and "Skip, just explore" both pass it without asking, and travellers who finished setup earlier are never asked again.
 - **Scope.**
   - Make the location request the welcome step's main action, with a one-line reason. "Next" still works.
   - Travellers who were never asked (`prefs.geoAsked` false and permission still "prompt") get one Home card that asks on a tap.
@@ -219,7 +219,7 @@ Other gaps:
 
 ## Data slices (owner order, 2026-10-12)
 
-### D1 — Place text and the validator in CI
+### D1: Place text and the validator in CI
 - **Status:** done in PR #103 (`mk-v0.630.0`). The 8 place "inversions" were missing `low`/`high`, and the 2 route ones were "from" fares with `high: null`; see `scripts/README.md`.
 - The 35 records with no `whyItFits` are Thai stay-area cards, such as `th-chiang-mai-old-city-hostels` and `th-bangkok-khaosan-hostels`. Each one also lacks `tips` and `mapQuery`.
 - Four beaches lack only `tips`: `th-ext-chaweng-beach`, `vi-ext-mui-ne-beach`, `vi-ext-vung-tau-back-beach` and `kh-ext-kep-beach`.
@@ -230,7 +230,7 @@ Other gaps:
 - Then add `validate.mjs` to `.github/workflows/guards.yml`. CI has Node.
 - Done when `validate.mjs` reports 0 errors in CI and the 39 places show their text at 375 px.
 
-### D2 — City gaps
+### D2: City gaps
 - **Status:** done in PR #106 (`mk-v0.631.0`): 18 anchors and 24 history entries. Duy Phu was a name mismatch, and Ponhea Krek was a mislabelled duplicate of Wat Nokor Bachey, merged via `place-merges.js`.
 - **Weather spots for 19 cities.** A city with places but no spot gets another city's places ranked as Nearby. Spots go in `WEATHER_SPOTS`, `js/weather.js`:
   - Thailand: Kamphaeng Phet, Nakhon Pathom, Nakhon Si Thammarat, Lampang, Phitsanulok, Songkhla.
@@ -242,14 +242,14 @@ Other gaps:
   - Check Duy Phu first: history files it as "Duy Phu (My Son)", so it may be a name mismatch rather than a missing entry.
 - Done when every city that has places has a weather spot and a history entry.
 
-### Q1 — Rendered-screen audit at 375 px
+### Q1: Rendered-screen audit at 375 px
 - Queued from the earlier plan; the owner's data order comes first.
 - Load every route in `js/nav-groups.js` in headless Chrome. Use `launch` and `CDP` from `tools/style-tiles/capture.py`, in Mekong Retro light and dark.
 - For each route, record: horizontal overflow, controls under 44 × 44 px, console errors, contrast failures, and controls covered by overlays. The journey map's credits panel is a known case of the last one.
 - Write the results to `docs/AUDIT_375.md`.
 - **Status (2026-10-19):** done, documents only: `docs/AUDIT_375.md` covers 77 routes in Mekong Retro light and dark (154 cold loads). No horizontal overflow and no failed request. The findings are tap targets (66 routes with body controls under 44 px; topbar icons 30 to 36 px wide), contrast (27 routes in light, 6 in dark) and the map credits panel (open as loaded; covers 16.6% of the journey map and its first pin). Its last section proposes the follow-up slices Q2 (commit the audit driver, first) to Q8.
 
-### D3 — Place photos (one session per country: th 247, vi 202, kh 131, la 163)
+### D3: Place photos (one session per country: th 247, vi 202, kh 131, la 163)
 - **Status, Thailand:** PR #109 (`mk-v0.632.0`): 47 photos, so Thailand has 93 of 293. Of the 247 gaps, 186 have no article of their own and 14 have an unusable lead image. Every decision is in `scripts/place-photo-articles.json`.
 - **Status, Vietnam:** PR #110 (`mk-v0.634.0`): 37 photos, so Vietnam has 76 of 241. Of the 202 gaps, 159 have no article of their own and 6 have an unusable lead image. Every decision is in `scripts/place-photo-articles.json`.
 - **Status, Cambodia:** PR #113 (`mk-v0.637.0`): 21 photos, so Cambodia has 54 of 163. The report counted 130 gaps, not 131. Of the 130, 101 have no article of their own and 8 have an unusable or unrepresentative lead image (five with no lead image, one site map, two that do not show the place). Every decision is in `scripts/place-photo-articles.json`.
@@ -264,12 +264,12 @@ Other gaps:
 - **Caching:** photos are cached at runtime and never precached.
 - Done when a country's coverage is reported with its new count and 10 sample cards are checked by eye at 375 px.
 
-### D4 — Local-script names (th 164, vi 144, kh 108, la 156)
+### D4: Local-script names (th 164, vi 144, kh 108, la 156)
 - **Status (2026-10-17):** PR #116 (`mk-v0.639.0`): 59 names from Wikipedia and Wikidata, so 370 of 882 places have a `localName` (was 311). 512 remain (th 153, vi 125, kh 92, la 142). Each name and its source is in `scripts/local-names.json`, with 37 refused candidates and their reasons. No OpenStreetMap lane: Overpass is unreachable or failing from the build machine and Nominatim found a name for 1 of 12 places (see `docs/HANDOFF.md`).
 - Take each name from the matching local-language Wikipedia title or the OpenStreetMap `name` tag, in native script.
 - Leave the field unset when neither source has the place.
 
-### D5 — Citations (all four country sessions done 2026-10-19; one session per country: places th 64, vi 78, kh 59, la 46; routes th 13, vi 14, kh 4, la 6)
+### D5: Citations (all four country sessions done 2026-10-19; one session per country: places th 64, vi 78, kh 59, la 46; routes th 13, vi 14, kh 4, la 6)
 - **Status, Thailand:** PR #117 (`mk-v0.640.0`). 63 places cite a page about the place, and Nan Walking Street is filed `open`. All 13 routes cite their 12Go route page. Homepage-only records are 184 (was 247) and unsourced routes 24 (was 37); the baselines match. The coordinates of Mae Surin Waterfall, Huai Nam Dang viewpoint and both Pang Ung cards are fixed. Every decision is in `scripts/place-citations.json`.
 - **Status, Vietnam:** PR #118 (`mk-v0.641.0`). 71 places cite a page about the place: 50 vietnam.travel pages, 5 of the cited organisation's own pages, 10 Wikipedia articles (2 Vietnamese) and 6 Wikivoyage sections. 7 are filed `open`. The 5 URL-less records now cite real pages. 6 train routes cite Vietnam Railways' Train routes page (plus 12Go), Hanoi to Ha Giang cites Cat Ba Express, and 7 bus and flight routes cite 12Go. Homepage-only records are 113 and unsourced routes 10; the baselines match.
 - **Status, Cambodia:** PR #121 (`mk-v0.642.0`). 54 places cite a page about the place: 29 Tourism Cambodia pages, the National Museum's own visitor page, 9 Wikipedia articles and 15 Wikivoyage sections (Kampi dolphins also has a Tourism Cambodia page). 5 are filed `open`. The 2 URL-less records now cite real pages, 4 routes have sources (Giant Ibis for Phnom Penh to Kep, 12Go and Wikivoyage for the other three), and the Wat Nokor Bachey blurb was corrected from the 11th century to the last years of Jayavarman VII's reign (about 1200). Homepage-only records are 59 and unsourced routes 6; the baselines match.
@@ -285,7 +285,7 @@ Other gaps:
   - The Wat Nokor Bachey date (kh): done, corrected in D5 Cambodia.
   - The That Sikhottabong and Nong Fa Lake coordinates (la): done, fixed in D5 Laos.
 
-### D6 — Access, kids, after dark
+### D6: Access, kids, after dark
 - Use genuine sources only. The `afterDark` contract in `js/data/places.th.js` says to omit a field rather than infer it.
 - Expect low yield. This has the lowest value per credit, so it runs last.
 
@@ -386,7 +386,7 @@ Sources: supabase.com/pricing, supabase.com/docs/guides/auth/auth-smtp, resend.c
 - The Supabase publishable key is committed in `js/market-config.js` (`docs/EXCHANGE.md` §16).
 - M3 tightens the CSP before sign-in tokens exist (`docs/EXCHANGE.md` §16). Done in M3a (PR #124).
 
-### M0 — Exchange planning session (documents only) — done 2026-10-12, `docs/EXCHANGE.md`
+### M0: Exchange planning session (documents only), done 2026-10-12, `docs/EXCHANGE.md`
 Write `docs/EXCHANGE.md` with:
 - Tables and row-level security policies.
 - The sign-in flow.

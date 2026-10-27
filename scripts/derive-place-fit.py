@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Set access.stepFree and kidFriendly ONLY where a record's own prose already asserts it.
 
-Same contract as the afterDark pass: no inference from category, city, price or vibe — the
+Same contract as the afterDark pass: no inference from category, city, price or vibe, the
 record has to say it. That keeps the yield small (tens, not hundreds) and every entry
 defensible by pointing at the sentence it came from. The rest genuinely needs per-venue
 research and stays absent, which the UI already reports honestly.
@@ -67,7 +67,7 @@ def main():
                     samples.append((rid, 'kidFriendly', val, ev))
             if edits:
                 # Insert right after the id line, matching the record's own quoting style and
-                # indentation — never a text splice at a guessed offset.
+                # indentation, never a text splice at a guessed offset.
                 line_end = src.index('\n', pos) + 1
                 indent = re.match(r'\s*', src[line_end:]).group(0)
                 ins = ''.join(
@@ -80,7 +80,7 @@ def main():
     print('stepFree +%d, kidFriendly +%d' % (added['stepFree'], added['kidFriendly']))
     for s in samples[:14]:
         print('   %-42s %-12s %-6s <- "%s"' % s)
-    print('APPLIED' if apply_changes else 'DRY RUN — nothing written')
+    print('APPLIED' if apply_changes else 'DRY RUN, nothing written')
     return 0
 
 

@@ -268,7 +268,7 @@ def main():
         print("REFERENCE (not counted)\n  " + "\n  ".join(ref_fails))
     if warns:
         print("WARN\n  " + "\n  ".join(warns))
-    print("FAIL\n  " + "\n  ".join(fails) if fails else "PASS — every pair clears its floor")
+    print("FAIL\n  " + "\n  ".join(fails) if fails else "PASS: every pair clears its floor")
     sys.exit(1 if fails else 0)
 
 

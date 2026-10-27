@@ -2,7 +2,7 @@
 """Every module on the eager launch path must be precached, or the app cannot boot offline.
 
 WHY THIS EXISTS. On 2026-09-20 the app was found to be completely broken offline: with no
-network it rendered "Loading your companion…" and nothing else — no map, no screens. Three
+network it rendered "Loading your companion…" and nothing else, no map, no screens. Three
 modules (js/offline-pack.js, js/data/place-months.js, js/data/month-verdict.js) were imported
 eagerly by main.js but absent from sw.js's PRECACHE list. Offline they returned 504, module
 evaluation stopped there, and the whole app died.
@@ -35,7 +35,7 @@ def precache_entries():
     src = open(os.path.join(ROOT, "sw.js"), encoding="utf-8").read()
     m = re.search(r"PRECACHE\s*=\s*\[(.*?)\]", src, re.S)
     if not m:
-        print("FAIL — could not find the PRECACHE array in sw.js")
+        print("FAIL: could not find the PRECACHE array in sw.js")
         sys.exit(1)
     block = strip_comments(m.group(1))
     pairs = re.findall(r"'([^']+)'|\"([^\"]+)\"", block)
@@ -59,12 +59,12 @@ def main():
     print("PRECACHE entries:              %d" % len(pre))
 
     if absent:
-        print("\nFAIL — preloaded files that do not exist on disk:")
+        print("\nFAIL: preloaded files that do not exist on disk:")
         for m in absent:
             print("   ", m)
 
     if missing:
-        print("\nFAIL — on the eager launch path but NOT precached.")
+        print("\nFAIL: on the eager launch path but NOT precached.")
         print("Offline these return 504 and module evaluation stops, so the app never boots:")
         for m in missing:
             print("   ", m)
@@ -73,7 +73,7 @@ def main():
     if missing or absent:
         sys.exit(1)
 
-    print("\nPASS — every module needed before first paint is precached.")
+    print("\nPASS: every module needed before first paint is precached.")
 
 
 if __name__ == "__main__":

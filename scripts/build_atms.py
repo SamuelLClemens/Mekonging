@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Build js/data/atms.js — the "lowest-fee ATM" layer: real, OpenStreetMap-sourced ATM
+"""Build js/data/atms.js, the "lowest-fee ATM" layer: real, OpenStreetMap-sourced ATM
 locations for the ONE bank per country that genuinely charges travellers the least.
 
 WHY THIS EXISTS. Foreign-card ATM withdrawal fees are bank policy, not a place, so they can
-never be shown as a blanket "no fee here" pin — the fee is set by which bank owns the machine,
+never be shown as a blanket "no fee here" pin, the fee is set by which bank owns the machine,
 not where it stands. Researched 2026-09-19 (see WORK_ORDER.md / memory for the citations):
 
   - Vietnam:  VPBank is the only bank confirmed to charge NO fee on a foreign card (limit
@@ -33,13 +33,13 @@ Source: OpenStreetMap contributors, ODbL, queried via the public Overpass API
   la BCEL    operator~"BCEL"            bbox 13.9,100.0,22.5,107.7
 
 The public Overpass instance intermittently 406/504s automated clients from this project's
-dev environment as of 2026-09-19 (cause unconfirmed — plausibly a fingerprint- or load-based
-block, since the SAME query succeeds on retry or via a different client) — large bounding
+dev environment as of 2026-09-19 (cause unconfirmed, plausibly a fingerprint- or load-based
+block, since the SAME query succeeds on retry or via a different client), large bounding
 boxes may need splitting into smaller sub-boxes and retrying, same as this file's own input
 data was gathered. A [out:csv(::id,::lat,::lon,name,operator,brand;false)] query is far more
 compact and easier to sanity-check by row count than [out:json] for bulk pulls.
 
-Input:  tab-separated files (id, lat, lon, name[, operator, brand]) — one per country, in the
+Input:  tab-separated files (id, lat, lon, name[, operator, brand]), one per country, in the
         directory given on the command line. Expected filenames: vi.tsv, th.tsv, kh.tsv, la.tsv
 Usage:  python3 scripts/build_atms.py <tsv-dir>
 """

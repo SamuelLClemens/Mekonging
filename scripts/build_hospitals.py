@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build js/data/hospitals.<cc>.js — every hospital, clinic and doctors' surgery in
+"""Build js/data/hospitals.<cc>.js, every hospital, clinic and doctors' surgery in
 Thailand, Vietnam, Cambodia and Laos, from OpenStreetMap.
 
 WHY THIS EXISTS. js/data/medical.js is a hand-written list of ~136 facilities travellers
@@ -7,7 +7,7 @@ and embassies actually use, carrying capability tiers, notes and evacuation cont
 open dataset has. It is deliberately not exhaustive. This file is the other half: complete
 coverage, so that "the nearest hospital" is a real answer from a village, a mountain pass or
 a bus, not just from a city the curators happened to write about. The two are merged at
-render time — a curated entry wins on name match and keeps its tier and note.
+render time, a curated entry wins on name match and keeps its tier and note.
 
 Source: OpenStreetMap contributors, ODbL. Self-hosted per the project's static-site rule:
 an emergency screen must never depend on a live API.
@@ -27,13 +27,13 @@ KIND = {'hospital': 1, 'clinic': 2, 'doctors': 3}
 #    สุขภาพตำบล, universally abbreviated รพ.สต.) as amenity=hospital. They are nurse-led posts
 #    with no surgeon and usually no doctor. Vietnam does the same with commune health stations
 #    (Trạm Y tế) and Laos with ສຸກສາລາ. Leaving them as kind=1 means the app's answer to
-#    "closest hospital" is frequently a health post — which is fine for a fever and useless
+#    "closest hospital" is frequently a health post, which is fine for a fever and useless
 #    for a fracture. They are kept, because they are real care and often the only care for
 #    50 km, but reclassified as clinics so the hospital list means what it says.
 #
 # 2. READABILITY. Many are named only by the abbreviation, which tells a foreign traveller
-#    nothing. The primary name is left EXACTLY as mapped — that string is what gets shown to a
-#    driver — and the expansion goes in the English field, which is otherwise empty.
+#    nothing. The primary name is left EXACTLY as mapped, that string is what gets shown to a
+#    driver, and the expansion goes in the English field, which is otherwise empty.
 DOWNGRADE = [
     # (pattern, English gloss to use when name:en is missing)
     ('รพ.สต.', 'Sub-district health post'),
@@ -52,7 +52,7 @@ DOWNGRADE = [
     ('health station', 'Health station'),
     ('dispensary', 'Dispensary'),
 ]
-# Read as a hospital even though the string matched a downgrade pattern above — a provincial
+# Read as a hospital even though the string matched a downgrade pattern above, a provincial
 # or district hospital that happens to contain "health centre" in its name is still a hospital.
 KEEP_HOSPITAL = ('provincial hospital', 'district hospital', 'general hospital', 'referral hospital',
                  'โรงพยาบาลศูนย์', 'โรงพยาบาลทั่วไป', 'bệnh viện', 'benh vien')
@@ -73,7 +73,7 @@ LETTERS = re.compile(r'[^\W\d_]', re.UNICODE)
 
 
 def unreadable(name, en):
-    """A name that is mostly digits and punctuation identifies nothing to anybody — a mapper's
+    """A name that is mostly digits and punctuation identifies nothing to anybody, a mapper's
     shorthand such as "อบ19". Dropped only when there is no English name to fall back on."""
     if en:
         return False
@@ -81,7 +81,7 @@ def unreadable(name, en):
 
 
 def load_provinces(cc):
-    """Province polygons from the app's own self-hosted ADM1 data — the same geometry
+    """Province polygons from the app's own self-hosted ADM1 data, the same geometry
     whereAmI() uses, so a hospital's country here agrees with the traveller's country there."""
     src = open(f'js/data/regions.{cc}.js', encoding='utf-8').read()
     m = re.search(r'=\s*(\{.*\});?\s*$', src, re.S)
@@ -109,7 +109,7 @@ def in_province(prov, lng, lat):
 
 
 # The province polygons are simplified to ~2 km (scripts/build_basemap.py's EPS), so a facility
-# genuinely inside the country can fall a few hundred metres outside its own province outline —
+# genuinely inside the country can fall a few hundred metres outside its own province outline,
 # most often on a coast or a riverbank. Recovering those means allowing a small tolerance, and
 # the tolerance has to be small: measured over the 1,449 points that fail a strict test, 49 sit
 # within 1 km (Vietnamese and Cambodian names, all genuinely inside), while by 1-3 km the set is

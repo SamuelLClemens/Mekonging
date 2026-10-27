@@ -16,7 +16,7 @@ actually changed. It knows which those are by comparing the manifest below again
 stored last time.
 
 THE SHARP EDGE. A stale manifest is worse than no manifest: it tells the worker a file is
-unchanged when it is not, and that file is then served from cache forever — the exact silent
+unchanged when it is not, and that file is then served from cache forever, the exact silent
 failure that "bump CACHE_VERSION" exists to prevent. That is why the default mode here is
 verify, why it is wired into scripts/check-cache-version.py (the one command already run before
 every deploy), and why the hashes are read from disk rather than maintained by hand.
@@ -77,7 +77,7 @@ def main():
     block = render()
     pattern = re.compile(re.escape(BEGIN) + r'.*?' + re.escape(END), re.S)
     if not pattern.search(src):
-        print(f'FAIL — no generated-manifest block in sw.js. Expected a line reading:\n  {BEGIN}')
+        print(f'FAIL: no generated-manifest block in sw.js. Expected a line reading:\n  {BEGIN}')
         return 1
     current = pattern.search(src).group(0)
     if '--write' in sys.argv:
@@ -91,7 +91,7 @@ def main():
         now = dict(re.findall(r"'([^']+)': '([0-9a-f]{8})'", current))
         want = dict(re.findall(r"'([^']+)': '([0-9a-f]{8})'", block))
         drifted = sorted(set(now) ^ set(want)) + sorted(k for k in set(now) & set(want) if now[k] != want[k])
-        print(f'FAIL — sw.js manifest is stale against the working tree ({len(drifted)} file(s) differ).')
+        print(f'FAIL: sw.js manifest is stale against the working tree ({len(drifted)} file(s) differ).')
         for f in drifted[:12]:
             print(f'   {f}')
         if len(drifted) > 12:
@@ -99,7 +99,7 @@ def main():
         print('\nThe worker would keep serving the OLD copy of each of these from cache, with no\n'
               'error anywhere. Run: python3 scripts/build-sw-manifest.py --write')
         return 1
-    print(f'PASS — manifest matches the working tree ({len(shipped_files())} files)')
+    print(f'PASS: manifest matches the working tree ({len(shipped_files())} files)')
     return 0
 
 

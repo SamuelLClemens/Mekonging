@@ -37,7 +37,7 @@ THE FOUR STEPS, one run each:
 LICENSING. Public domain, CC0, CC BY, CC BY-SA and GFDL only, checked on the Commons file
 itself. The credit is the file's own attribution text (or its author field), HTML stripped but
 otherwise verbatim and never truncated, then the licence short name, then "via Wikimedia
-Commons" — the format photos.js already uses.
+Commons", the format photos.js already uses.
 """
 import argparse
 import html
@@ -201,7 +201,7 @@ def search_variants(name):
     bare = re.sub(r'\s*\([^)]*\)', '', name).strip()
     seen, out = set(), []
     for v in [name.replace('(', ' ').replace(')', ' ')] + paren + [bare]:
-        v = re.sub(r'\s+', ' ', v).strip(' -–—&')
+        v = re.sub(r'\s+', ' ', v).strip(' -–-&')
         if v and v.lower() not in seen:
             seen.add(v.lower())
             out.append(v)

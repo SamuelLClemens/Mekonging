@@ -5,7 +5,7 @@
 
 WHY THIS EXISTS. The app ships as native ES modules with no build step, so nothing checks the
 module graph before a browser does. A named import that does not match an export fails at
-MODULE EVALUATION — which in an ES-module app means main.js never runs and the traveller gets
+MODULE EVALUATION, which in an ES-module app means main.js never runs and the traveller gets
 the splash screen forever, with one line in a console they cannot open. That is the worst
 failure this codebase can ship, and it is exactly what a refactor that moves a function
 between modules risks. So: resolve every import specifier and check every named binding.
@@ -43,7 +43,7 @@ def files():
 def strip_comments(s):
     # ORDER MATTERS. Line comments go first: this codebase's prose comments mention paths like
     # `js/screens/*.js`, and that `/*` opens a phantom block comment that a naive block-first
-    # pass then closes at the next `*/` far below — silently deleting every export in between
+    # pass then closes at the next `*/` far below, silently deleting every export in between
     # and reporting the importers as broken. Only whole-line `//` is stripped, so a `//` inside
     # a URL in the middle of a line of code is left alone.
     s = re.sub(r'(?m)^[ \t]*//.*$', '', s)
@@ -62,7 +62,7 @@ def names(clause):
 
 
 # `export` must be followed by something exportable. A script that adds `export ` to a
-# declaration can easily prepend it to the declaration's COMMENT instead — which is exactly
+# declaration can easily prepend it to the declaration's COMMENT instead, which is exactly
 # what happened during the main.js split, producing `export // Does the saved profile...` and
 # a main.js that would not parse at all. Every one of the twelve guards passed on it, because
 # none of them parses JavaScript; the app simply never left its splash screen. This is not a
@@ -85,7 +85,7 @@ def check_export_shape(paths):
 def main():
     shape = check_export_shape(files())
     if shape:
-        print('FAIL — `export` is not attached to a declaration (the file will not parse):')
+        print('FAIL: `export` is not attached to a declaration (the file will not parse):')
         print('\n'.join(shape))
         return 1
 
@@ -95,7 +95,7 @@ def main():
     for p, s in src.items():
         ex = set(EXPORT_DECL_RE.findall(s))
         for m in EXPORT_LIST_RE.finditer(s):
-            # `export { a as b }` exports b, not a — take the alias when present.
+            # `export { a as b }` exports b, not a, take the alias when present.
             for part in m.group(1).split(','):
                 part = part.strip()
                 if part:
@@ -125,7 +125,7 @@ def main():
             specs.add(m.group('spec'))
             tgt = resolve(p, m.group('spec'))
             if tgt is False:
-                problems.append(f'{p}: imports {m.group("spec")!r} — no such file')
+                problems.append(f'{p}: imports {m.group("spec")!r}, no such file')
                 continue
             if tgt is None:
                 continue
@@ -141,16 +141,16 @@ def main():
                 for n in names(clause):
                     checked += 1
                     if n not in avail:
-                        problems.append(f'{p}: imports {{{n}}} from {m.group("spec")} — not exported there')
+                        problems.append(f'{p}: imports {{{n}}} from {m.group("spec")}, not exported there')
             if m.group('default'):
                 checked += 1
                 if 'default' not in avail:
-                    problems.append(f'{p}: default-imports {m.group("spec")} — it has no default export')
+                    problems.append(f'{p}: default-imports {m.group("spec")}, it has no default export')
         for m in BARE_IMPORT_RE.finditer(s):
             if m.group('spec') in specs:
                 continue
             if resolve(p, m.group('spec')) is False:
-                problems.append(f'{p}: imports {m.group("spec")!r} — no such file')
+                problems.append(f'{p}: imports {m.group("spec")!r}, no such file')
 
     # cycles, reported but not fatal
     cycles, seen = [], set()
@@ -178,7 +178,7 @@ def main():
         for pr in problems:
             print('  - ' + pr)
         return 1
-    print('\nPASS — every named import resolves to a real export.')
+    print('\nPASS: every named import resolves to a real export.')
     return 0
 
 

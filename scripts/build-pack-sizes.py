@@ -4,7 +4,7 @@
     python3 scripts/build-pack-sizes.py            # verify; exit 1 if stale
     python3 scripts/build-pack-sizes.py --write    # regenerate the block
 
-WHY THIS EXISTS. The app states the size of a download before it starts ("88 MB more — on
+WHY THIS EXISTS. The app states the size of a download before it starts ("88 MB more, on
 Wi-Fi?", audit F-03), and the photos are not fetched until then, so the size has to ship with the
 code. A hand-kept number drifts the first time a photo is added. These are summed from the files,
 and scripts/check-cache-version.py runs this in verify mode.
@@ -61,7 +61,7 @@ def tier_bytes():
 def main():
     sizes, missing = tier_bytes()
     if missing:
-        print(f'FAIL — {len(missing)} registered file(s) do not exist, e.g. {missing[0]}')
+        print(f'FAIL: {len(missing)} registered file(s) do not exist, e.g. {missing[0]}')
         return 1
     block = '\n'.join([BEGIN, 'export const PACK_BYTES = { safety: %d, guide: %d, places: %d };'
                        % (sizes['safety'], sizes['guide'], sizes['places']), END])
@@ -69,18 +69,18 @@ def main():
     pattern = re.compile(re.escape(BEGIN) + r'.*?' + re.escape(END), re.S)
     found = pattern.search(src)
     if not found:
-        print(f'FAIL — no generated block in js/offline-pack.js. Expected a line reading:\n  {BEGIN}')
+        print(f'FAIL: no generated block in js/offline-pack.js. Expected a line reading:\n  {BEGIN}')
         return 1
     mb = ', '.join(f'{t} {b / 1048576:.1f} MB' for t, b in sizes.items())
     if found.group(0) == block:
-        print(f'PASS — pack sizes match the files ({mb})')
+        print(f'PASS: pack sizes match the files ({mb})')
         return 0
     if '--write' in sys.argv:
         with open(PACK, 'w', encoding='utf-8') as fh:
             fh.write(pattern.sub(lambda _: block, src, count=1))
         print(f'pack sizes rewritten ({mb})')
         return 0
-    print(f'FAIL — js/offline-pack.js PACK_BYTES is stale ({mb} on disk).\n'
+    print(f'FAIL: js/offline-pack.js PACK_BYTES is stale ({mb} on disk).\n'
           'The app would state the wrong download size. Run: python3 scripts/build-pack-sizes.py --write')
     return 1
 

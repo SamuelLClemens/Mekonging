@@ -7,7 +7,7 @@
 WHY THIS EXISTS. profileFit() in js/main.js opens with a paragraph of measured figures ("set on
 426 of 808") that justify the whole design: an unrecorded field must say "not recorded" rather
 than "no". Those figures were written once against 586 records and were never recomputed, so by
-August 2026 every number in them was wrong — the record count had grown by 38% and each claimed
+August 2026 every number in them was wrong, the record count had grown by 38% and each claimed
 coverage figure understated reality. A stale justification is worse than none, because it reads
 as measured fact. This recomputes them from the data on demand.
 
@@ -15,7 +15,7 @@ It also enforces the `afterDark` contract documented in js/data/places.th.js: th
 CHECKABLE OPERATIONAL FACT, never a safety verdict, so `lit` may only appear alongside an
 explicit `openAfterDark`, and `openAfterDark` must be a real boolean.
 
-Note on parsing: these files carry two formatting conventions side by side — hand-authored
+Note on parsing: these files carry two formatting conventions side by side, hand-authored
 records with bare keys (`id: "x"`) and pretty-printed ones with quoted keys (`"id": "x"`).
 Both are matched. A bare-key-only pass silently misses about 8% of records.
 """
@@ -33,7 +33,7 @@ FIELDS = ['hours', 'priceRange', 'kidFriendly', 'afterDark', 'scamWarnings', 'ac
 
 def key_re(name):
     # Keys appear BOTH on their own line and inline after another key on the same line
-    # (`mapQuery: "...", coords: { ... },`). Anchoring to line start undercounts badly —
+    # (`mapQuery: "...", coords: { ... },`). Anchoring to line start undercounts badly,
     # it reported kidFriendly on 290 records where the real figure is 426.
     return re.compile(r'(?:^|[\s{,])"?' + re.escape(name) + r'"?:', re.M)
 
@@ -94,7 +94,7 @@ def main():
     if '--assert' in sys.argv:
         main_js = open('js/main.js', encoding='utf-8').read()
         # The figures this file expects js/main.js to be quoting. Bump BOTH together when a
-        # data pass moves one — that pairing is the whole point of the check.
+        # data pass moves one, that pairing is the whole point of the check.
         #
         # A LIST, not a dict, and it has to stay one: afterDark and stepFree both read 187
         # as of August 2026, and as dict keys the second silently replaced the first, which
@@ -107,7 +107,7 @@ def main():
         # quotes the figure properly. Whenever you bump a number here, confirm the new value
         # appears in the profileFit() PARAGRAPH, not merely somewhere in the file.
         # September 2026: all six dropped by exactly one when th-ext-chatuchak-weekend-market
-        # was merged into th-bkk-chatuchak — the deleted record carried every one of these
+        # was merged into th-bkk-chatuchak, the deleted record carried every one of these
         # fields, which is why they moved together.
         # October 2026 (D2): total and scamWarnings dropped by one when kh-ext-banteay-prey-nokor
         # was merged into kh-ext-wat-nokor-bachey; its scamWarnings was an empty list.
@@ -118,7 +118,7 @@ def main():
         for quoted, actual, _label in expect:
             if int(quoted) != actual:
                 problems.append(f'js/main.js quotes {quoted} where the data now says {actual} '
-                                f'— update the profileFit() comment')
+                                f'update the profileFit() comment')
             elif quoted not in main_js:
                 problems.append(f'js/main.js no longer quotes {quoted}; recheck the '
                                 f'profileFit() comment against this table')
@@ -129,7 +129,7 @@ def main():
         for p in problems:
             print('  - ' + p)
         return 1
-    print('PASS — figures consistent, afterDark contract holds.')
+    print('PASS: figures consistent, afterDark contract holds.')
     return 0
 
 

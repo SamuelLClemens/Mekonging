@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Build js/data/bus.th.js — Bangkok bus stops, each carrying the route numbers that serve it.
+"""Build js/data/bus.th.js: Bangkok bus stops, each carrying the route numbers that serve it.
 
 WHY STOPS, NOT ROUTE LINES. The source feed has 1,264 distinct bus route_ids (many are the
-same rider-facing number run by different operators/vehicle classes — e.g. route "1" has a
+same rider-facing number run by different operators/vehicle classes, e.g. route "1" has a
 BMTA ordinary-bus variant AND a private minibus variant as separate GTFS rows). Drawing 1,264
-overlapping polylines on a phone-sized map is unreadable, not just a large-file problem — so
+overlapping polylines on a phone-sized map is unreadable, not just a large-file problem, so
 this ships the far more useful shape instead: tap a stop, see which route NUMBERS stop there.
 Route numbers/destinations are stable info; exact timetables are not (see WHY NO TIMES below).
 

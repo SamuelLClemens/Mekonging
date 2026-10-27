@@ -167,7 +167,7 @@ def self_test():
 def main(argv):
     problems, caught = self_test()
     if problems:
-        print('FAIL — the self-test did not behave, so a scan would prove nothing:')
+        print('FAIL: the self-test did not behave, so a scan would prove nothing:')
         for p in problems:
             print(f'   {p}')
         return 1
@@ -177,11 +177,11 @@ def main(argv):
         rels = repo_files()
     hits, scanned = scan(ROOT, rels)
     if hits:
-        print(f'FAIL — {len(hits)} secret(s) found. Rotate each key first, then remove it:')
+        print(f'FAIL: {len(hits)} secret(s) found. Rotate each key first, then remove it:')
         for rel, ln, kind in hits:
             print(f'   {rel}:{ln}: {kind}')
         return 1
-    print(f'PASS — no secrets in {scanned} text files (self-test caught all {caught} planted fakes)')
+    print(f'PASS: no secrets in {scanned} text files (self-test caught all {caught} planted fakes)')
     return 0
 
 

@@ -5,7 +5,7 @@
 
 WHY THIS EXISTS. The service worker serves app code CACHE-FIRST from a cache named after
 CACHE_VERSION, and activate() deletes every other cache. That is what makes a repeat launch
-instant — it issues no network request for code at all — but it has one sharp edge: if a
+instant, it issues no network request for code at all, but it has one sharp edge: if a
 release changes JavaScript and does NOT bump CACHE_VERSION, returning visitors keep being
 served the previous build out of the old cache, forever, with no error anywhere. The app looks
 deployed, the files are on the host, and every existing user is on stale code.
@@ -74,12 +74,12 @@ def main():
             'build indefinitely. Bump CACHE_VERSION in sw.js.')
     if now_cache != now_app:
         problems.append(
-            f'CACHE_VERSION ({now_cache!r}) and APP_VERSION ({now_app!r}) disagree — Settings '
+            f'CACHE_VERSION ({now_cache!r}) and APP_VERSION ({now_app!r}) disagree: Settings '
             'would report a build the cache is not serving.')
 
     # The version strings are only half the bookkeeping now. sw.js keeps its cache across
     # releases and deletes only the entries whose hash moved in its generated MANIFEST, so a
-    # stale manifest means a changed file is served from cache forever — the same silent
+    # stale manifest means a changed file is served from cache forever, the same silent
     # failure this script was written to catch, one level down. Run as part of THIS check
     # rather than as its own step, because a separate step is a step that gets skipped.
     print()
@@ -88,20 +88,20 @@ def main():
         [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build-sw-manifest.py')],
     ).returncode
     if manifest_rc != 0:
-        problems.append('sw.js MANIFEST is stale — see the file list above.')
+        problems.append('sw.js MANIFEST is stale, see the file list above.')
     # Same reasoning for the field guide's stated download sizes (js/offline-pack.js PACK_BYTES).
     sizes_rc = subprocess.run(
         [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build-pack-sizes.py')],
     ).returncode
     if sizes_rc != 0:
-        problems.append('js/offline-pack.js PACK_BYTES is stale — run scripts/build-pack-sizes.py --write.')
+        problems.append('js/offline-pack.js PACK_BYTES is stale, run scripts/build-pack-sizes.py --write.')
 
     if problems:
         print('\nFAIL')
         for p in problems:
             print('  - ' + p)
         return 1
-    print('\nPASS — versioning is consistent with what changed.')
+    print('\nPASS: versioning is consistent with what changed.')
     return 0
 
 

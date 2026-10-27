@@ -1,4 +1,4 @@
-# Program — open work, the style refinement and the feature backlog (session 0, 2026-10-25)
+# Program, open work, the style refinement and the feature backlog (session 0, 2026-10-25)
 
 Written by session 0 of `BEST_TOOL_PROMPT.md`, against `origin/feat/scaffold-bangkok-slice` at e98f4a7 (`mk-v0.649.0`).
 Between 1e98e6f (PR #133) and e98f4a7 only `BEST_TOOL_PROMPT.md` and `CLAUDE.md` changed, so the shipped files are the

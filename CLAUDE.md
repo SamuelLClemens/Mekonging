@@ -1,4 +1,4 @@
-# Mekong (Mekonging) — project rules for Claude
+# Mekong (Mekonging), project rules for Claude
 
 An offline-first travel PWA for Thailand, Vietnam, Cambodia and Laos: plain ES modules, no build step, no
 framework. Live at www.mekonging.com. Remote: github.com/SamuelLClemens/Mekonging. Read this file and the

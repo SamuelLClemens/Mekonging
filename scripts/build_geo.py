@@ -16,12 +16,12 @@ COUNTRIES = [('th', 'tha'), ('vi', 'vnm'), ('kh', 'khm'), ('la', 'lao')]
 SRC = 'https://raw.githubusercontent.com/mledoze/countries/master/data/{}.geo.json'
 # Frame window: drop distant offshore island claims so the map frames the mainland.
 WIN = dict(lng_min=97.0, lng_max=110.2, lat_min=5.4, lat_max=23.6)
-AREA_MIN = 0.02      # deg^2 — drops specks, keeps real islands (Phuket, Phu Quoc)
-RDP_EPS = 0.022      # degrees (~2.4 km) — outline smoothness
+AREA_MIN = 0.02      # deg^2, drops specks, keeps real islands (Phuket, Phu Quoc)
+RDP_EPS = 0.022      # degrees (~2.4 km), outline smoothness
 VIEW_W = 700
 PAD = 22
 
-# Mekong River main stem — a hand-traced polyline of (lng, lat) waypoints from the
+# Mekong River main stem, a hand-traced polyline of (lng, lat) waypoints from the
 # Golden Triangle down through Laos, along the Lao–Thai border, into Cambodia and out
 # through the Vietnamese delta. Projected with the SAME transform as the outlines so
 # it lines up on the map. The river is the app's namesake.
@@ -99,7 +99,7 @@ def point_in_ring(pt, ring):
 
 def poly_label(rings):
     """Pole of inaccessibility (the interior point farthest from any edge) of a
-    projected polygon — a label position guaranteed to sit on a wide part of the
+    projected polygon, a label position guaranteed to sit on a wide part of the
     shape. Coarse grid search then local refinement."""
     ext = rings[0]; holes = rings[1:]
     xs = [p[0] for p in ext]; ys = [p[1] for p in ext]
