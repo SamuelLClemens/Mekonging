@@ -24,16 +24,17 @@ WHAT IS KEPT, per country:
     Cambodia's communes, which cover each country evenly where the villages carry no figure;
   * every populated place that GeoNames links to Wikipedia or Wikidata ("notable"), which is where
     traveller villages without a figure come from (Railay Beach, Nong Khiaw);
-  * in Laos only (EVERY_VILLAGE), every other populated place too: GeoNames gives a population to
-    108 of its 13,388 villages, so the rule above kept 294 places for the whole country. The village
-    (ban) is the administrative unit there, and all of them come to 182 KB after gzip, under the cap
-    (owner, 2026-10-25, open decision 21). Measured the same way, every village would be 213 KB in
-    Cambodia (fits), 478 KB in Vietnam and 1,474 KB in Thailand (do not).
+  * in Laos and Cambodia only (EVERY_VILLAGE), every other populated place too. Laos: GeoNames gives
+    a population to 108 of its 13,388 villages, so the rule above kept 294 places for the whole
+    country. The village (ban) is the administrative unit there, and all of them come to 182 KB
+    after gzip, under the cap (owner, 2026-10-25, open decision 21). Cambodia followed (F1b, owner
+    decision 24): the village (phum) is the unit below the commune. Measured the same way, every
+    village would be 478 KB in Vietnam and 1,474 KB in Thailand (do not fit).
 Left out: sections of towns (PPLX), historical, abandoned and destroyed places (PPLH, PPLQ, PPLW,
-PPLCH), and, outside Laos, villages with no population and no article.
+PPLCH), and, outside Laos and Cambodia, villages with no population and no article.
 
 ORDER IS RANK. Rows are written best first (towns by population, islands, villages by
-population, notable villages, Laos's other villages, then subdistricts and communes by population; within one of
+population, notable villages, the other villages of Laos and Cambodia, then subdistricts and communes by population; within one of
 those, a place with a Wikipedia or Wikidata entry, then one with a province), so the picker ranks
 equal matches by file order and never needs the population itself. That is what puts Trat's
 Ko Mak ahead of the two other islands of the name.
@@ -64,7 +65,7 @@ POPULATED = SEATS | {'PPL', 'PPLL', 'PPLS', 'PPLF', 'PPLR', 'PPLG'}
 ISLANDS = {'ISL', 'ISLS', 'ISLET'}
 # Kind codes the app reads (js/gazetteer.js KIND_LABEL): town, island, village, subdistrict, commune.
 TIER = {'t': 0, 'i': 1, 'v': 2, 'n': 3, 'w': 3.5, 's': 4}   # 'n' notable and 'w' every-village rows ship as 'v'
-EVERY_VILLAGE = {'LA'}
+EVERY_VILLAGE = {'LA', 'KH'}
 PROVINCE_PREFIX = re.compile(r'^(Changwat|Tỉnh|Thành phố|Khouèng)\s+')
 PROVINCE_NOTE = re.compile(r'\s*\([^)]*\)$')   # "Ho Chi Minh City (HCMC)" -> "Ho Chi Minh City"
 SIZE_CAP = 250 * 1024   # the plan's per-country cap, after gzip

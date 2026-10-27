@@ -67,18 +67,18 @@ function nearPrefix(w, x) {
 // puts Kratie ahead of Sambor (Kratie) and Enter takes the one meant. A whole name one letter
 // off ranks just after the names that start with what was typed ("chiang" finds Chiang Mai before
 // Chang); every typed word starting a word of the name ranks 4, and with one letter off, 4.5.
-// `qw` is the folded query split into words, once per search. This runs for each of the 26,000
-// names on every keystroke, on a phone, so it is plain loops: no closure or array per name
-// (measured 2026-10-25: 250 ms a keystroke with closures, under a 6x CPU slowdown).
-function rankNames(c, fq, tq, qw) {
+// `qw` is the folded query split into words, once per search, and `qm` its first-letter mask. This
+// runs for each of the 36,000 names on every keystroke, on a phone, so it is plain loops: no
+// closure or array per name (measured 2026-10-25: 250 ms a keystroke with closures, under a 6x
+// CPU slowdown).
+function rankNames(c, fq, tq, qw, qm) {
   const t = c.tight, own = t[0], words = c.words, nq = qw.length;
   if (own === tq) return 0;
   for (let k = 1; k < t.length; k++) if (t[k] === tq) return 1;
   if (own.startsWith(tq)) return 2;
   // Every word of the query must begin a word of the name, or one letter off its start: the
   // slips are inside a word. A name with no word starting with a typed letter skips those checks.
-  let open = true;
-  for (let k = 0; k < nq && open; k++) if (c.init.indexOf(qw[k][0]) < 0) open = false;
+  const open = (c.im & qm) === qm;
   if (open) for (let n = 0; n < words.length; n++) {     // the whole name, a letter off in each word
     const nw = words[n];
     if (nw.length !== nq) continue;
@@ -105,17 +105,26 @@ function rankNames(c, fq, tq, qw) {
     if (near) fuzzy = true;
   }
   if (fuzzy) return 4.5;
-  if (tq.length >= 3) for (let k = 0; k < t.length; k++) if (t[k].includes(tq)) return 5;
+  // `hay` is the tight names joined by "|", which a folded query (letters and digits) never holds,
+  // so one search of it is the same as one search of each name.
+  if (tq.length >= 3 && c.hay.includes(tq)) return 5;
   return -1;
 }
 function tighten(names) { return names.map((n) => n.replace(/ /g, '')); }
 function splitWords(names) { return names.map((n) => n.split(' ')); }
-// The distinct first letters of every word of every name, so a search can drop a name that has
-// no word starting with what was typed before it looks at one.
-function initialsOf(words) {
-  let s = '';
-  for (const nw of words) for (const w of nw) if (w && s.indexOf(w[0]) < 0) s += w[0];
-  return s;
+// One bit per first letter, a to z, and the 27th for a digit. A search drops a name that has no
+// word starting with what was typed before it looks at one, with one AND per name. A mask too
+// generous (two digits share a bit) only costs time: the checks it lets through find nothing.
+function initBit(ch) { const k = ch.charCodeAt(0) - 97; return k >= 0 && k < 26 ? 1 << k : 1 << 26; }
+function initMask(words) {
+  let m = 0;
+  for (const nw of words) for (const w of nw) if (w) m |= initBit(w[0]);
+  return m;
+}
+function queryMask(qw) {
+  let m = 0;
+  for (const w of qw) if (w) m |= initBit(w[0]);
+  return m;
 }
 
 let cityIndex = null;
@@ -124,18 +133,19 @@ function rankCities(q) {
   if (!fq) return [];
   const tq = fq.replace(/ /g, '');
   const qw = fq.split(' ');
+  const qm = queryMask(qw);
   if (!cityIndex) {
     cityIndex = WEATHER_SPOTS.map((s, i) => {
       const inBrackets = (s.city.match(/\(([^)]+)\)/) || [])[1];
       const names = [s.city.replace(/\(.*?\)/g, ''), inBrackets, ...(CITY_AKA[spotKey(s)] || [])]
         .filter(Boolean).map(foldPlace);
-      const words = splitWords(names);
-      return { s, i, names, tight: tighten(names), words, init: initialsOf(words), country: foldPlace((getCountry(s.country) || {}).name) };
+      const words = splitWords(names), tight = tighten(names);
+      return { s, i, names, tight, hay: tight.join('|'), words, im: initMask(words), country: foldPlace((getCountry(s.country) || {}).name) };
     });
   }
   const hits = [];
   for (const c of cityIndex) {
-    let rank = rankNames(c, fq, tq, qw);
+    let rank = rankNames(c, fq, tq, qw, qm);
     // A country's name lists its cities: the whole name ahead of the place list's look-alikes
     // ("laos" is not Lao Suea Kok), the start of one only after everything else.
     if (c.country === fq) rank = Math.min(rank < 0 ? 1.6 : rank, 1.6);
@@ -167,10 +177,10 @@ function parseList(cc, mod) {
   return mod.ROWS.split('\n').map((line, i) => {
     const [name, local, lat, lng, prov, kind, aka] = line.split('\t');
     const names = [name, ...(aka ? aka.split(';') : [])].map(foldPlace);
-    const words = splitWords(names);
+    const words = splitWords(names), tight = tighten(names);
     return {
       cc, i, name, local: local || '', lat: Number(lat), lng: Number(lng),
-      prov: prov ? (mod.PROVINCES[Number(prov)] || '') : '', kind: kind || 'v', names, tight: tighten(names), words, init: initialsOf(words),
+      prov: prov ? (mod.PROVINCES[Number(prov)] || '') : '', kind: kind || 'v', names, tight, hay: tight.join('|'), words, im: initMask(words),
     };
   });
 }
@@ -223,6 +233,7 @@ export function findPlaces(q, limit = 6) {
   const raw = String(q || '').trim();
   const tq = fq.replace(/ /g, '');
   const qw = fq.split(' ');
+  const qm = queryMask(qw);
   const script = /[^\u0000-\u024f]/.test(raw);
   if (listIndex && (fq || script)) {
     // A list place named like a curated city, within NEAR_CURATED_KM of it, is that city again.
@@ -230,7 +241,7 @@ export function findPlaces(q, limit = 6) {
     for (const x of cities) for (const n of x.c.tight) curatedNames.add(n);
     for (let i = 0; i < listIndex.length; i++) {
       const e = listIndex[i];
-      let rank = fq ? rankNames(e, fq, tq, qw) : -1;
+      let rank = fq ? rankNames(e, fq, tq, qw, qm) : -1;
       if (rank < 0 && script && e.local) rank = e.local === raw ? 0 : e.local.startsWith(raw) ? 2 : e.local.includes(raw) ? 5 : -1;
       if (rank < 0) continue;
       if (curatedNames.has(e.tight[0]) && cities.some((x) => x.s.country === e.cc && x.c.tight.includes(e.tight[0])

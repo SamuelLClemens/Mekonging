@@ -71,6 +71,7 @@ The owner listed five fixes "we need to make for sure", then widened the languag
   the offline probe finds one with the server stopped; file, `PRECACHE` and manifest sizes are reported before and after;
   all guards and the validator pass.
 - **Out of scope.** Landmarks (T3 in `docs/PROGRAM.md`), Vietnam (T13).
+- **Built 2026-10-26** ([PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137), `mk-v0.651.0`). 12,128 places, 212.9 KB gzip; the worst keystroke is 80.9 ms at the 6x estimate (renderer CPU time times 6; 93.9 ms with the old matcher). The matcher got two cheaper checks with identical answers. 660 communes are now dropped as duplicates of a village within 5 km. Details: `docs/HANDOFF.md`.
 
 ### F2: Your journey, the whole world, fully editable
 - **Built** 2026-10-26 ([PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136), `mk-v0.650.0`). Proof: headless Chrome over CDP at 375 px, light and dark, `document.hidden` false,

@@ -1,23 +1,33 @@
-# Handoff — 2026-10-26 (F2: your journey on a world map, every stop editable)
+# Handoff — 2026-10-26 (F1b: every village in Cambodia)
 
-The previous handoff (program session 0) is `git show f74d75a:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
+The previous handoff (F2) is `git show 563c1d5:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
 
 ## Shipped
-- **F2**, branch `feat/f2-journey-world`, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136), `mk-v0.650.0` (store version 17). Waits for the owner's merge; F1b stacks on it.
-  - The journey map covers the world (`worldBounds`, floor at zoom 1).
-  - A stop is placed three ways, in one form for adding and for moving (`js/screens/journey-edit.js`): the F1 picker, a pin dropped by a tap on the map, and "I am here".
-  - Every stop is renamed, re-dated, moved and removed from the journey screen. A stop from a journal entry or a trip stop keeps the change as a journey override (`js/trail.js`, `profile.trail.over`, keyed `entry:<id>` or `trip:<id>`); the entry and the trip plan are untouched. "Bring back removed stops" restores them.
-  - The empty state keeps the map and "Add a stop you missed". Re-dating a stop moves it in the list.
-  - The share-journey route carries stops added by hand (decision 27).
-  - Decision 23: `js/market-routes.js` and `js/market-link.js` are in `PRECACHE`; `check-offline-boot` runs in CI and is in `scripts/README.md` and `CLAUDE.md`.
+- **F1b**, branch `data/f1b-cambodia-villages`, [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137), `mk-v0.651.0` (store version unchanged, 17). Waits for the owner's merge; F3 stacks on it.
+  - `EVERY_VILLAGE = {'LA', 'KH'}` in `scripts/build-gazetteer.py`. Cambodia goes from 2,192 to 12,128 places (10,596 villages added), 44.5 KB to 212.9 KB gzip (cap 250). Thailand, Vietnam and Laos are byte for byte unchanged. The four lists now total 36,131 places.
+  - 660 communes are now dropped, each as the duplicate of a village with the same name within 5 km (all 660 checked with the build's own key, which strips `khum` and `sangkat`). Their label changes from "Commune" to "Village" and their position by up to 5 km. A picked place is stored with its coordinates, so saved data does not depend on the dropped rows.
+  - `js/place-search.js`: two cheaper checks in `rankNames` (one joined string for the "contains" test, a bitmask for the first-letter gate), with identical answers: 7,229 queries at two limits each (14,458 comparisons, and the curated-city search for each), 0 differences.
+  - Owner rulings of 2026-10-26: decision 27 is closed (keep hand-added stops in the share-journey route); decision 26 starts with a measurement (see Open decisions).
 
 ## Verified
-- Before the change, at 375 px with `document.hidden` false: map bounds `[92, 2, 115, 27.5]` (a jump to Singapore landed at latitude 3.65); 1 of 3 stops (Bangkok, from the trail) had an Edit control.
-- After, headless Chrome over CDP (`~/Library/Caches/mk-f2/drive.py`), light and dark: 60 of 60 checks pass: 26 in light and 26 in dark on a journey with stops, 4 and 4 on the empty state.
-  - Singapore (a real tap on the map canvas) and Koh Mak (the picker) are numbered pins in date order; a journal-derived stop was renamed, re-dated, moved and removed, then restored, with the journal entry and the trip plan identical before and after.
-  - 0 overflow at 375 px at every step, `document.hidden` false, 0 console errors.
-- Basemap outside the region (`~/Library/Caches/mk-f2/world.py`, zooms 1 to 9 at Singapore, Koh Mak and London): online, 75 imagery tiles loaded across 18 views and none failed; offline with every external host unresolvable, 0 of 124 loaded and the map is bare sea outside the four countries. Registered as `docs/PROGRAM.md` 4.4 and decision 26.
-- All 16 CI guards (with `check-offline-boot`), place-fields, port-themes and cache-version against `origin/feat/scaffold-bangkok-slice` pass; `jsc -m scripts/validate-jsc.mjs` passes 19,297 of 19,297. The manifest is regenerated.
+- A rebuild with the script unchanged first reproduced all four committed gazetteer files, so the GeoNames snapshot is the one that built them. It is now kept in `~/Library/Caches/mk-geonames/` (the eight zips, 20 MB; pass that folder to `build-gazetteer.py`).
+- Keystroke cost, renderer CPU time per call (`Performance.getMetrics` `ThreadTime`) times 6 as the 6x-slowdown estimate, cheapest of 3 batches of 20, 39 queries:
+
+  | | Base data, old matcher | Cambodia added, old matcher | Cambodia added, tuned |
+  |---|---|---|---|
+  | Worst query | 58.9 ms (battambang) | 93.9 ms (preah) | 80.9 ms (kompong) |
+  | Sum of 39 | 1,582 ms | 2,408 ms | 1,813 ms |
+
+  - Wall-clock runs were unusable: the load average was 70 to 124, and the worst median moved from 64 to 132 ms between runs of the same code. The plan's 73 ms came from another query set and method.
+  - First-use load of the list (main thread): about 0.36 to 0.42 s unthrottled, 2.1 to 2.5 s at the 6x estimate. The data growth is not separable from noise; the new index fields add about 35 ms.
+- Headless Chrome over CDP, fresh profiles on 127.0.0.1, 375 x 812 at DPR 2, `document.hidden` false on every load. Villages absent before: Anlong Chambak (Siem Reap), Phum Prêk Smăch (Kampot), Kŏk Lak Nhai (Ratanakiri).
+  - Before: 0 of 15 lookups found one (five pickers by three villages). After: 15 of 15, 0 overflow, 0 picker controls under 44 px.
+  - Each picked in the Places sheet: coordinates equal the data's, a 16-day forecast named after the place, the pin inside the map, 0 overflow and 0 errors on `#weather` and `#map`. Two screenshots were looked at.
+  - Offline: five list files cached and the service worker in control; with the server stopped (`curl` HTTP 000), the location sheet and the Places sheet both found all three villages, 0 errors.
+  - 1 console error in the 15 picker loads: the known `getSource` race from `js/map.js` (Q7).
+- All 16 CI guards (including secrets, market-sql and offline-boot), place-fields, port-themes and cache-version against `origin/feat/scaffold-bangkok-slice` (0.650.0 to 0.651.0) pass; `jsc -m scripts/validate-jsc.mjs` exits 0. The manifest moved three hashes.
+- Sizes (before to after): `gazetteer.kh.js` 132.0 to 717.0 KB raw, 44.5 to 212.9 KB gzip; `PRECACHE` 221 files, 13,101 to 13,687 KB raw, 3,834 to 4,002 KB gzip; manifest 269 files, 21,594 to 22,179 KB raw, 6,958 to 7,126 KB gzip.
+- Not checked: CI on the PR (one check was pending when this was written), and an iPhone.
 
 ## Owner checks for M3b (carried; the first two are done)
 - [x] Migration 001 run, repaired by 001b; `001_rls.sql` 65 of 65 PASS. Security Advisor after 001: 0 errors.
@@ -26,32 +36,34 @@ The previous handoff (program session 0) is `git show f74d75a:docs/HANDOFF.md`. 
 - [ ] From the first real email: whether `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has.
 
 ## Not done / known issues
-- Everything open is in `docs/PROGRAM.md` section 4. New in this session:
+- Everything open is in `docs/PROGRAM.md` section 4. New in F1b:
+  - The list is parsed on the main thread on first use (about 2.1 to 2.5 s at the 6x estimate). Nothing was tuned there. T3 (landmarks) and T13 (Vietnam) would grow the list again; measure the load before them.
+  - The `getSource` race was seen once in 15 picker loads (Q7's count is now 1 of 4 (F1), 1 of 3 (Q1), 1 of 15 (F1b)).
+  - Anlong Chambak (Siem Reap) was paired with the Pursat anchor when picked. The pairing is by distance, not province, and the distances were not measured; F3's "nearest place" work should look at it.
+  - Khmer-script names: 4,296 of 12,128 Cambodian rows carry one (about 3,300 of the added villages); the rest have none in GeoNames.
+  - Screenshots and the drivers are not in the repo. They are in `~/Library/Caches/mk-f1b/` (`drive_kh.py` the picker, forecast, pin and offline driver, built on `~/Library/Caches/mk-f1/drive.py`; `measure3.py` the CPU-time keystroke harness; `measure4.py` the load-time harness; `diff.py` the old-against-new matcher comparison, which needs the old `place-search.js` copied to `js/_ps_ref.js` in the served worktree, and removed afterwards; `shots-kh/` the screenshots).
+- Carried from F2:
   - the automatic trail names a far-off place for a fix outside the region (Singapore recorded as "Songkhla, th"): `logTrail` accepts an approximate `whereAmI` name; for F3;
-  - the offline map outside the region (decision 26).
-- Found while testing, not fixed: the map credits plate opens expanded and covers part of the journey map (Q7, already in the register).
-- Tooling, this session only:
-  - The app launched this session in a worktree of the parent folder's repository (Nomadic Almanac), not Mekonging. The work was done in a new Mekonging worktree, `Mekong/.claude/worktrees/f2`. It is spent once the PR merges.
-  - The Edit and Write hook refused the Mekonging path, so edits ran as exact-match Python scripts from the scratchpad, and the Bash isolation check refused loops and long heredocs (a Python runner script runs the guards).
-  - A headless Chrome run cannot go offline through `Network.emulateNetworkConditions`: the service worker's own requests ignore it. Block the hosts instead (`--host-resolver-rules="MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"`, see `mk-f2/cdp.py`, `MK_CHROME_ARGS`).
+  - the offline map outside the region (decision 26);
+  - the map credits plate opens expanded and covers part of the journey map (Q7, already in the register).
+- Tooling:
+  - This session was launched in the parent folder's repository (Nomadic Almanac) and moved to Mekong. The work ran in `Mekong/.claude/worktrees/f1b`, which is spent once PR #137 merges.
+  - Machine load: another project's build ran during this session. Time code by CPU time (`Performance.getMetrics` `ThreadTime`), not wall-clock.
+  - A headless Chrome run cannot go offline through `Network.emulateNetworkConditions`: the service worker's own requests ignore it. Stop the server, or block the hosts (`--host-resolver-rules="MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"`). The offline driver's "server up" line is the service worker answering its own fetch; use `curl` to show the server is down.
   - A granted emulated position makes the app record an automatic pin on load: grant it after the page has loaded when the test must not have one.
 
 ## Open decisions (need the user)
-The numbers below keep their old values. Closed on 2026-10-25: 13, 14, 19, 22 and 24. Decision 23 is done (F2).
+The numbers below keep their old values. Closed on 2026-10-25: 13, 14, 19, 22 and 24. Closed on 2026-10-26: 23 (done in F2) and 27 (keep).
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese.
 8. Legal, for Omer Hanegbi or Omri Siri: `docs/EXCHANGE.md` §14, the terms and privacy policy, and the dispensary question. The terms and privacy policy gate M9; cash swap gates M10.
 10. Topbar icon spacing. Deferred by the owner until Q3 to Q5 are done; ask again after Q5.
-25. Remove the spent worktrees and branches listed in `docs/PROGRAM.md` 4.6: 7 worktrees, 15 merged or spent remote branches, 3 orphan screenshot branches, and the stale `mekong*` preview entries in the parent folder's `.claude/launch.json`. Recommended: yes (#135 is merged). The F2 worktree (`Mekong/.claude/worktrees/f2`) joins the list once its PR merges. The removal is one step per message, and each branch is checked against the tip first.
-26. A coarse world outline for the journey map offline. With no signal and nothing cached, the map is bare sea outside the four countries at every zoom (`docs/PROGRAM.md` 4.4). Recommended: measure a simplified Natural Earth land outline first (size in KB, gzip) and bring the number to the owner; it is a new data file.
-27. The share-journey route now includes stops the traveller added by hand, under the existing "stops" box (automatic pins never go). Recommended: keep it. Say if hand-added stops should stay private.
+25. Remove the spent worktrees and branches listed in `docs/PROGRAM.md` 4.6: 7 worktrees, 15 merged or spent remote branches, 3 orphan screenshot branches, and the stale `mekong*` preview entries in the parent folder's `.claude/launch.json`. The F2 and F1b worktrees (`Mekong/.claude/worktrees/f2` and `f1b`) and their branches join the list once their PRs merge. Recommended: yes (#135 is merged). The removal is one step per message, and each branch is checked against the tip first.
+26. A coarse world outline for the journey map offline (`docs/PROGRAM.md` 4.4). **Owner, 2026-10-26: measure first.** Not done. Measure a simplified Natural Earth land outline (size in KB and gzip, at two simplification levels) and bring the number; it would be a new data file. Downloading it needs the owner's yes, with the file name, source and size stated first.
 
 ## Next session prompts
-Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~ (built, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136)), **F1b**, F3, **S1** (the style foundation), F4, F5, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4** (coordinates checks), **R1 to R3** (the style roll-out), Bangkok B1 to B8, city depth C1 onward, then T3 to T15. Each releasing slice stacks on the merged tip of the one before. Q2, S0 (the style gate) and Q8 change no shipped file and can run alongside any of them. The F and L slices are in `docs/PLAN.md`; S, Q, T, G and R are in `docs/PROGRAM.md`.
+Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~ (merged, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136)), ~~F1b~~ (built, [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137)), **F3**, **S1** (the style foundation), F4, F5, L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4** (coordinates checks), **R1 to R3** (the style roll-out), Bangkok B1 to B8, city depth C1 onward, then T3 to T15. Each releasing slice stacks on the merged tip of the one before. Q2, S0 (the style gate), Q8 and the decision 26 measurement change no shipped file and can run alongside any of them. The F and L slices are in `docs/PLAN.md`; S, Q, T, G and R are in `docs/PROGRAM.md`.
 
-### F1b: every village in Cambodia (next)
-> Read CLAUDE.md, docs/HANDOFF.md and the F1b section of docs/PLAN.md. Run /slice for slice F1b: every village in Cambodia.
-> **Start.** `git fetch`; `gh pr list --state all`. F2 must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `data/f1b-cambodia-villages`. Measure sizes and the worst keystroke (6x CPU slowdown) on the base first.
-> **Done when.** The F1b "Done when" in docs/PLAN.md holds; Thailand, Vietnam and Laos's list files are byte for byte unchanged; the register in `docs/PROGRAM.md` is updated; the PR is open. Then run /handoff.
+**Next is F3.** PR #137 must be merged first.
 
 ### F3 to F5, then L1 to L4 (and L5 after M5)
 > Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <F3 to F5 or L1 to L5>, as written there.
@@ -177,3 +189,9 @@ Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~ (built, [PR #136]
 > - Build a private gallery artifact. It covers Home, Places, a place card without a photo, Explore, Talk, Weather, the journey map and the Market home at 375 px. Show the current and proposed versions in Mekong Retro light, Mekong Retro dark and Night Market (48 captures in headless Chrome over CDP, with `document.hidden` false). Draw the proposed versions from section 5.3 without changing shipped files.
 > - Ask the owner one `AskUserQuestion` form and record the answers in `DESIGN_SYSTEM.md` and `docs/PROGRAM.md`.
 > - Out of scope: any shipped file (S1 builds the tokens).
+
+### Decision 26: measure a coarse world outline for the offline journey map (documents only, alongside)
+> Read CLAUDE.md, docs/HANDOFF.md and `docs/PROGRAM.md` 4.4 (the offline journey map). This slice changes no shipped file.
+> - Ask the owner before downloading anything: state the file name, source and size. Natural Earth's land polygons (public domain, naturalearthdata.com) at 1:110m and 1:50m are the candidates.
+> - Simplify each to a coarse outline and report its size in KB raw and gzip, and what it draws at zoom 1 to 4 on the journey map at 375 px (headless Chrome over CDP, `document.hidden` false).
+> - Done when: the two numbers and one screenshot per level are in `docs/PROGRAM.md` 4.4, with a recommendation. Out of scope: shipping the file (it would be a new data file and a version bump, a slice of its own after the owner rules).

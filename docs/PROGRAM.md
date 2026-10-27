@@ -72,7 +72,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | Slice | What | Placement |
 |---|---|---|
 | F2 | Journey on a world map, every stop editable | **built** 2026-10-26, [PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136) |
-| F1b | Every Cambodian village in the place list (about 12,128 places, 213 KB gzip, measured in F1) | 2nd, owner 2026-10-25 |
+| F1b | Every Cambodian village in the place list (12,128 places, 212.9 KB gzip) | **built** 2026-10-26, [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137) |
 | F3 | Location from the first open | 3rd |
 | F4 | Post-trip recap with charts | after S1 |
 | F5 | Language check; Thai, Vietnamese, Khmer and Lao complete | after F4 |
@@ -119,7 +119,10 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | 19 | Install `pglast` | **closed: yes**, at the start of M4c |
 | 22 | The Trat anchor sits on Ko Mak, 47.4 km from Trat town | **closed:** settled inside G1 |
 | 23 | `js/market-routes.js` and `js/market-link.js` into `PRECACHE`; `check-offline-boot` into CI | **closed: done** in F2 ([PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136)) |
-| 24 | Widen Cambodia's list to every village | **closed: yes** (against the recommendation), slice F1b |
+| 24 | Widen Cambodia's list to every village | **closed: yes** (against the recommendation), slice F1b, built in [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137) |
+| 25 | Remove the spent worktrees and branches (4.6) | open; the F2 and F1b worktrees join once their PRs merge |
+| 26 | A coarse world outline for the journey map offline (4.4) | open; owner, 2026-10-26: measure a simplified Natural Earth outline (KB, gzip) first, nothing built yet |
+| 27 | The share-journey route carries stops added by hand | **closed: yes, keep** (owner, 2026-10-26) |
 | (none) | A new source for more place photos (620 places have none) | open; S1's artwork makes a photo-less card deliberate, so no new photo source is proposed |
 
 ### 4.4 Known defects
@@ -136,7 +139,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | Layout | The top ~3 px of the tab bar show content scrolled beneath the retro stripe | ~3 px (exchange slices) | Q4 |
 | Layout | Tall portrait photos are uncapped (Phanom Rung renders 548 px tall at 375 px) | 548 px (carried) | S1 (photo treatment), applied in R1 |
 | Layout | Malay "Laman utama" is truncated in the tab bar | string at `js/data/ui-strings.ms.js:10`; truncation carried, not re-rendered | L2 |
-| Map | The `#map` `getSource` race | 1 of 4 runs (F1), 1 of 3 light loads (Q1) | Q7 |
+| Map | The `#map` `getSource` race | 1 of 4 runs (F1), 1 of 3 light loads (Q1), 1 of 15 picker loads (F1b) | Q7 |
 | Map | With no signal and no cached imagery, the journey map is bare sea outside the four countries, at every zoom from 1 to 9. Rendered `land` features: 0 at Singapore from zoom 5 and 0 at London at every zoom; imagery tiles: 0 of 124 requested loaded across the 18 views (online, 75 of 75). A pin and its name still save, and the pin hint says so. The offline geometry (`js/data/basemap.js`, 26 KB) holds the four countries only; a coarse world outline would be a new data file | F2 probe, 2026-10-26: headless Chrome with every external host unresolvable (`~/Library/Caches/mk-f2/world.py`) | open: owner decision (measure the outline's size first) |
 | Map | The MapLibre credits plate opens expanded and covers 16.6% of the journey map and its first pin | 16.6% (Q1, 2026-10-19) | Q7 |
 | Accessibility | 66 of 77 routes carry body controls under 44 px (1,315 controls, 199 under 24 px); topbar icons 30 to 36 px wide | Q1, 2026-10-19; not re-measured since M4b-1 and F1 merged | Q2 re-measures; Q3 to Q5 fix |
