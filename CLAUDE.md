@@ -60,16 +60,16 @@ relevant section of the docs below, not the whole repo.
 
 ## Guards (run before every commit; CI runs the same list)
 ```bash
-for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot font-sizes icons; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
 python3 tools/style-tiles/port-themes.py --check
+python3 tools/style-tiles/derive-viz.py --check
 python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 /System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc -m scripts/validate-jsc.mjs | tail -1
 ```
-- `scripts/README.md` explains each guard and the failure that put it there. A new guard goes in the README AND
-  `.github/workflows/guards.yml`.
+- `scripts/README.md` explains each guard and the failure that put it there. A new guard goes in it AND `.github/workflows/guards.yml`.
 - Pass an `origin/` base to `check-cache-version.py` and sanity-check its changed-file list before trusting a PASS.
 
 ## Layout
@@ -88,8 +88,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
   line in `js/data/place-merges.js` in the same commit, or travellers' saved data is lost.
 - The journey screen builds its stops from trail points, journal entries and trip stops. A change to an entry's or trip stop's stop is
   a journey override (`js/trail.js`, `profile.trail.over`), never an edit to the entry; `js/screens/journey-edit.js` is the one stop form.
-- `js/theme.js` plus `DESIGN_SYSTEM.md` own colour and skins; the default is "Mekong Retro". `css/style.css` is the stylesheet.
-- The Market's rules are in `css/market.css`, loaded lazily by `js/screens/market-parts.js` (`check-contrast` reads it).
+- `js/theme.js` plus `DESIGN_SYSTEM.md` own colour and skins; the default is "Mekong Retro". `css/style.css` is the stylesheet. The Market's rules are in `css/market.css`, loaded lazily by `js/screens/market-parts.js` (`check-contrast` reads it).
+- `css/refined.css` (S1) holds the refined tokens and components (`--viz-*` generated). The refined `--fs-*` scale applies only inside `[data-refined]`; R1 to R3 add it per screen group. New chrome uses `icons/ui.svg` (`js/icons.js`), new sizes use `--fs-*`.
 - `Mekonging Xcode/` is a live iOS WKWebView wrapper (`sync-web.sh` copies the web app in). Never delete or edit it as
   a side effect; exclude it from greps.
 
