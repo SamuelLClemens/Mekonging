@@ -7,7 +7,7 @@ F2 (2026-10-26, `mk-v0.650.0`) updated sections 2 to 4: decision 23 is done, `ch
 two defects found on the way (the automatic trail's far-off name, and the offline map outside the region).
 S1 (2026-10-27, `mk-v0.653.0`) built section 5.3 as tokens and components (5.5 records what was built and measured), recorded
 decisions 25, 28 and 29, and added slices F6 and F7 to 4.1.
-F7a (2026-10-27, `mk-v0.654.0`, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140)) built the Emergency screen for a fix outside the four countries; the owner's answers to decision 28 are in 4.3 and the rest of F7 is F7b in 4.1.
+F7a (2026-10-27, `mk-v0.654.0`, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140)) built the Emergency screen for a fix outside the four countries and merged the same day; the owner's answers to decision 28 are in 4.3 and the rest of F7 is F7b in 4.1, which the owner placed right after F5.
 
 Method for the numbers: jsc over the place modules (`~/Library/Caches/mk-program/measure.mjs` and `cats.mjs`), the
 repo's own guards, `git` and `gh`, and `grep` with the `file:line` given. Rendered-screen values (layout, tap
@@ -40,7 +40,7 @@ Releasing slices stack, one at a time, each from the merged tip. The owner's que
 4. **S1**, the style foundation: tokens and machinery (section 5). **Built**, [PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139), `mk-v0.653.0`.
 5. **F7a**, Emergency outside the four countries (decision 28). The owner placed it before F4 (2026-10-27). **Built**, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140), `mk-v0.654.0`.
 6. **F4**, the post-trip recap with charts (uses S1's chart palette).
-7. **F5**, then **L1**, **L2**, **L3** (uses S1's chart palette), **L4**.
+7. **F5**, then **F7b**, the worldwide table of emergency numbers (the owner placed it right after F5, 2026-10-27; decision 26's outline measurement runs before it and changes no shipped file), then **L1**, **L2**, **L3** (uses S1's chart palette), **L4**.
 8. **Q3**, **Q4**, **Q5**, **Q6**, **Q7**, the sound base (section 5). Decision 10 is asked again after Q5.
 9. **T1**, fact freshness, then **T2**, border status (section 6).
 10. **M4b-2**, then **M4c** (installs `pglast`), then **M5**.
@@ -80,7 +80,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | F3 | Location from the first open | **built** 2026-10-27, [PR #138](https://github.com/SamuelLClemens/Mekonging/pull/138) |
 | F4 | Post-trip recap with charts | after S1 |
 | F5 | Language check; Thai, Vietnamese, Khmer and Lao complete | after F4 |
-| L1 to L4 | Talk face to face; 25 interface languages; local languages and the map; their phrasebooks | after F5 |
+| L1 to L4 | Talk face to face; 25 interface languages; local languages and the map; their phrasebooks | after F7b |
 | L5 | Talk by invite | after M5 |
 | M4b-2, M4c, M5 | Post forms and My listings; listing photos; messages, block and alerts | after T2 |
 | M6 to M10 | Matching; review queue and retention; Web Push; move on-device posts and launch; cash swap | later; M9 and M10 gated on legal |
@@ -95,7 +95,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | S0, S1, R1 to R3 | The style gate, foundation and roll-out (section 5) | S0 alongside; **S1 built** 2026-10-27, [PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139) (5.5); R after G4 |
 | F6 | **New (decision 29, owner 2026-10-27):** a place picked by hand holds over a live fix. The ruling is "hold the pick"; how long it holds (a time, until the traveller moves a distance, until they ask) is not ruled, and the slice's first step is to ask | unplaced: the owner places it. It sits beside F1 and F3, whose pickers and fix it changes |
 | F7a | **Built 2026-10-27**, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140), `mk-v0.654.0` (decision 28): Emergency and the hospital screen stop naming a region country for a fix outside it. `countryOfFix` returns null past `OUTSIDE_KM`; `js/screens/emergency-outside.js` shows the coordinates, the distance to the nearest city, 112 with an honest note and a hospital map search; a `far` card adds 112 for fixes more than 60 km from every city with no outline within 10 km | placed before F4 by the owner |
-| F7b | **New (decision 28, owner 2026-10-27):** the national emergency numbers for the rest of the world, from a sourced table (every entry cited, a gap left open rather than an unsourced number), and the world outline that finds the country of a fix outside the four. The outline is a download (Natural Earth is the candidate) and needs the owner's yes with file name, source and size first; decision 26's measurement covers the same file. Roughly 200 countries is more than one session: split by region if needed | unplaced: the owner places it. Recommended right after F5, with decision 26's measurement run beforehand |
+| F7b | **New (decision 28, owner 2026-10-27):** the national emergency numbers for the rest of the world, from a sourced table (every entry cited, a gap left open rather than an unsourced number), and the world outline that finds the country of a fix outside the four. The outline is a download (Natural Earth is the candidate) and needs the owner's yes with file name, source and size first; decision 26's measurement covers the same file. Roughly 200 countries is more than one session: split by region if needed | **placed** by the owner, 2026-10-27: right after F5. Decision 26's outline measurement runs before it (no shipped file; it sizes the same Natural Earth file) |
 | T1 to T15 | The feature backlog (section 6) | T1 and T2 after Q7; the rest after C8 |
 | Routing engine | Multi-country offline routing: wanted, unscoped | the design pass is T7 |
 
@@ -129,9 +129,9 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | 23 | `js/market-routes.js` and `js/market-link.js` into `PRECACHE`; `check-offline-boot` into CI | **closed: done** in F2 ([PR #136](https://github.com/SamuelLClemens/Mekonging/pull/136)) |
 | 24 | Widen Cambodia's list to every village | **closed: yes** (against the recommendation), slice F1b, built in [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137) |
 | 25 | Remove the spent worktrees and branches (4.6) | **closed: done** for worktrees and local branches, 2026-10-27 (f1b, f2, f3). The remote branches stay until the owner approves their removal (4.6) |
-| 26 | A coarse world outline for the journey map offline (4.4) | open; owner, 2026-10-26: measure a simplified Natural Earth outline (KB, gzip) first, nothing built yet |
+| 26 | A coarse world outline for the journey map offline (4.4) | open; owner, 2026-10-26: measure a simplified Natural Earth outline (KB, gzip) first, nothing built yet. Owner, 2026-10-27: run that measurement before F7b, which needs the same file. Not run yet; the download needs the owner's yes with file name, source and size |
 | 27 | The share-journey route carries stops added by hand | **closed: yes, keep** (owner, 2026-10-26) |
-| 28 | What Emergency shows for a fix outside the four countries (4.4): it named the nearest anchor's country, so Singapore showed Thailand's numbers | **closed: ruled** (owner, 2026-10-27, against the recommendation): "no matter where you are in the world it should give you the emergency info". Answers, 2026-10-27: show a **worldwide table of national numbers**, and say where the fix is **with the coordinates**. F7a ([PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140)) built the safe part with no new data: coordinates, 112 and the four-country chips. F7b is the table and the world outline |
+| 28 | What Emergency shows for a fix outside the four countries (4.4): it named the nearest anchor's country, so Singapore showed Thailand's numbers | **closed: ruled** (owner, 2026-10-27, against the recommendation): "no matter where you are in the world it should give you the emergency info". Answers, 2026-10-27: show a **worldwide table of national numbers**, and say where the fix is **with the coordinates**. F7a ([PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140)) built the safe part with no new data: coordinates, 112 and the four-country chips. F7b is the table and the world outline; the owner placed it right after F5 (2026-10-27) |
 | 29 | Should a place picked by hand hold over a live fix for a while? Today the fix always wins | **closed: ruled** (owner, 2026-10-27, against the recommendation): hold the pick. Slice F6 (4.1). Not ruled: for how long |
 | (none) | A new source for more place photos (620 places have none) | open; S1's artwork makes a photo-less card deliberate, so no new photo source is proposed |
 
