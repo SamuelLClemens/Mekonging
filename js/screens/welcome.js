@@ -3,7 +3,7 @@
 // Extracted from js/main.js (screen split, mk-v0.539.0), and of everything in that file this
 // is the clearest case: onboarding runs ONCE per traveller and was parsed on every launch
 // forever after. js/screens/home.js imports setupRecapCard from here rather than from main.js.
-import { save, store } from '../state.js';
+import { save, store, getLastFix } from '../state.js';
 import { h } from '../util.js';
 import { INTERESTS } from '../data/regions.js';
 import { uiLangMeta } from '../i18n.js';
@@ -12,6 +12,7 @@ import { foldable, netMode, setNetMode } from '../ui-widgets.js';
 import {
   applyTheme,
   dietPicker,
+  geoPermission,
   go,
   languageSheet,
   locationFixCard,
@@ -82,9 +83,12 @@ export function welcomeScreen() {
   // exactly how a traveller ends up reading "Hanoi" while standing in Sapa. Asked plainly here,
   // with a working manual fallback right beside it, and still fully skippable via Next.
   if (step === 0) {
-    wrap.append(locationFixCard());
+    // F3: asking is this step's main action: the card's button, which raises the browser's dialog on
+    // a tap and never on load. Next still works, and becomes the main action once location is on.
+    const locOn = !!getLastFix() || geoPermission() === 'granted';
+    wrap.append(locationFixCard({ lead: true, onChange: () => goStep(0) }));
     wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn', style: 'margin-left: auto', onclick: () => goStep(1) }, 'Next →'),
+      h('button', { class: 'btn' + (locOn ? '' : ' ghost'), style: 'margin-left: auto', onclick: () => goStep(1) }, 'Next →'),
     ]));
     // A first-timer can bail out of setup entirely and personalise later (Settings, "For you").
     // Nothing is lost by skipping and nothing is silently switched off by it — which was not

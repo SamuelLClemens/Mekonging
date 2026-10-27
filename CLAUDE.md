@@ -83,7 +83,7 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
   A regex or an edit written for one style silently misses the other; `scripts/fetch-local-names.py` handles both.
 - `js/nav-groups.js` is the single manifest for feature navigation; every feature has one label and one home.
 - The offline place list (`js/data/gazetteer.<cc>.js`, built by `scripts/build-gazetteer.py`, searched by `js/place-search.js`)
-  is never added to `WEATHER_SPOTS`. A picked list place rides beside its nearest anchor as `focusSpot().place`.
+  is never added to `WEATHER_SPOTS`. A picked list place, or a live fix more than 15 km from an anchor (`js/fix-place.js`), rides beside its nearest anchor as `focusSpot().place`.
 - `js/state.js` is the on-device store. Schema changes bump its version. Deleting or merging a place record also needs a
   line in `js/data/place-merges.js` in the same commit, or travellers' saved data is lost.
 - The journey screen builds its stops from trail points, journal entries and trip stops. A change to an entry's or trip stop's stop is
