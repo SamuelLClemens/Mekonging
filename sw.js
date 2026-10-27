@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.653.0';
+const CACHE_VERSION = 'mk-v0.654.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -129,6 +129,7 @@ const PRECACHE = [
   // down offline. They are also, of everything in this list, the files most likely to be
   // opened with no signal.
   'js/screens/medical.js',
+  'js/screens/emergency-outside.js',
   'js/data/emergency.js',
   'js/data/emergency-numbers.js',
   'js/data/hospitals.curated.js',
@@ -381,7 +382,7 @@ const MANIFEST = {
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'icons/ui.svg': '8b29a252',
-  'index.html': '4323df07',
+  'index.html': '3068addf',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'f2ff527f',
@@ -554,7 +555,7 @@ const MANIFEST = {
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
   'js/location-ask.js': '2be4200d',
-  'js/main.js': 'd8c26693',
+  'js/main.js': '6cb64737',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'baf60785',
   'js/market-api.js': '0f0d76c5',
@@ -586,6 +587,7 @@ const MANIFEST = {
   'js/screens/circle.js': '5f936c15',
   'js/screens/contributions.js': 'f86462b4',
   'js/screens/country-info.js': '1cca1ef0',
+  'js/screens/emergency-outside.js': '2253851a',
   'js/screens/etiquette.js': '7fc329c4',
   'js/screens/exchange.js': 'a1df3dfc',
   'js/screens/explore.js': '6d2e67cc',
@@ -603,7 +605,7 @@ const MANIFEST = {
   'js/screens/market-home.js': 'd0289385',
   'js/screens/market-listing.js': 'e46103f1',
   'js/screens/market-parts.js': '91f2c17b',
-  'js/screens/medical.js': '62c2ce75',
+  'js/screens/medical.js': '1a974e79',
   'js/screens/nearby.js': '6729197f',
   'js/screens/nextstop.js': '657c8d05',
   'js/screens/phrasebook.js': '89eb5faa',

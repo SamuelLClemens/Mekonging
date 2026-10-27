@@ -44,6 +44,7 @@ import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
 import { OUTSIDE_KM, ANCHOR_KM, fixPlaceFor, resolveFixPlace } from './fix-place.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
 import { EMERGENCY_NUMBERS } from './data/emergency-numbers.js';
+import { fixSureness, farCard, outsideScreen } from './screens/emergency-outside.js';
 import { loadHospitals, isHospitalsLoaded, sosCare } from './data/hospitals.js';
 import { REGION_PATHS, REGION_PROJ } from './data/geo.js';
 import { loadIslands, islandsLoaded, sameLand } from './data/islands.js';
@@ -820,7 +821,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.653.0';
+export const APP_VERSION = 'mk-v0.654.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -6317,8 +6318,9 @@ export function countryOfFix(fix) {
     const here = hit || outlineCountry(fix.lat, fix.lng);
     if (here) return here;
   }
+  // F7a: no curated city within OUTSIDE_KM is outside the four countries (Singapore used to read Thailand).
   const near = nearestSpotGlobal(fix);
-  return near ? near.spot.country : null;
+  return near && near.km <= OUTSIDE_KM ? near.spot.country : null;
 }
 
 // ---- WHERE AM I (place naming, distinct from weather-hub snapping) -----------
@@ -6516,6 +6518,9 @@ function sosScreen(cc) {
   // country the GPS fix is in (countryOfFix). Falls back to the browsed country with no fix.
   const fix = getLastFix();
   const fixCc = fix ? countryOfFix(fix) : null;
+  // F7a: a fix outside the four countries gets its own screen, never a region country's numbers.
+  const sure = !cc && fix ? fixSureness(fix) : null;
+  if (sure && sure.kind === 'outside') return outsideScreen('sos', fix, sure.near);
   if (cc) setActiveCountry(cc);
   else if (fixCc) setActiveCountry(fixCc);
 
@@ -6529,6 +6534,7 @@ function sosScreen(cc) {
     const other = countriesNearFix(fix).filter((x) => x !== c.id).map((x) => getCountry(x).name);
     const border = other.length ? ` — within ${BAND_KM} km of ${other.join(' and ')}` : '';
     wrap.append(h('p', { class: 'sos-loc' }, `📍 Showing ${c.name},${where || ' from your location'}${border}. Wrong country? Pick yours:`));
+    if (sure && sure.kind === 'far') wrap.append(farCard(sure.near, c.name));
   }
   wrap.append(countryChips((id) => go(`#sos-${id}`)));
 

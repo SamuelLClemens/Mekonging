@@ -32,6 +32,7 @@ import {
   MED_SOURCES,
 } from '../data/medical.js';
 import { HOSP_TAG } from '../data/emergency.js';
+import { fixSureness, farCard, outsideScreen } from './emergency-outside.js';
 import { EMERGENCY_NUMBERS } from '../data/emergency-numbers.js';
 import { loadIslands, islandsLoaded, islandAt, sameLand } from '../data/islands.js';
 import { islandCareFor, ISLAND_CARE_SOURCES } from '../data/island-care.js';
@@ -172,6 +173,10 @@ function resolveWhere(cc) {
 }
 
 export function hospitalScreen(cc) {
+  // F7a: a fix outside the four countries gets the outside screen, never a region country's hospitals.
+  const here = cc ? null : getLastFix();
+  const sure = here ? fixSureness(here) : null;
+  if (sure && sure.kind === 'outside') return outsideScreen('hospital', here, sure.near);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Get to a hospital', '#sos'));
   const { fix, wai, c, cc: active } = resolveWhere(cc);
@@ -196,6 +201,7 @@ export function hospitalScreen(cc) {
     ? `📍 ${localName}${provName && provName !== localName ? `, ${provName}` : ''} — ${c.flag} ${c.name}`
     : `${c.flag} ${c.name} — turn on location for distances, or pick your country:`;
   wrap.append(h('p', { class: 'sos-loc' }, whereLine));
+  if (sure && sure.kind === 'far') wrap.append(farCard(sure.near, c.name));
   wrap.append(countryChips((id) => go(`#hospital-${id}`), active));
 
   // ---- 1. Call ------------------------------------------------------------
