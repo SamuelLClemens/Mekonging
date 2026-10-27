@@ -7,6 +7,7 @@ F2 (2026-10-26, `mk-v0.650.0`) updated sections 2 to 4: decision 23 is done, `ch
 two defects found on the way (the automatic trail's far-off name, and the offline map outside the region).
 S1 (2026-10-27, `mk-v0.653.0`) built section 5.3 as tokens and components (5.5 records what was built and measured), recorded
 decisions 25, 28 and 29, and added slices F6 and F7 to 4.1.
+F7a (2026-10-27, `mk-v0.654.0`, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140)) built the Emergency screen for a fix outside the four countries; the owner's answers to decision 28 are in 4.3 and the rest of F7 is F7b in 4.1.
 
 Method for the numbers: jsc over the place modules (`~/Library/Caches/mk-program/measure.mjs` and `cats.mjs`), the
 repo's own guards, `git` and `gh`, and `grep` with the `file:line` given. Rendered-screen values (layout, tap
@@ -37,17 +38,18 @@ Releasing slices stack, one at a time, each from the merged tip. The owner's que
 2. **F1b**, every village in Cambodia (decision 24). **Built**, [PR #137](https://github.com/SamuelLClemens/Mekonging/pull/137), `mk-v0.651.0`.
 3. **F3**, location from the first open. **Built**, [PR #138](https://github.com/SamuelLClemens/Mekonging/pull/138), `mk-v0.652.0`.
 4. **S1**, the style foundation: tokens and machinery (section 5). **Built**, [PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139), `mk-v0.653.0`.
-5. **F4**, the post-trip recap with charts (uses S1's chart palette).
-6. **F5**, then **L1**, **L2**, **L3** (uses S1's chart palette), **L4**.
-7. **Q3**, **Q4**, **Q5**, **Q6**, **Q7**, the sound base (section 5). Decision 10 is asked again after Q5.
-8. **T1**, fact freshness, then **T2**, border status (section 6).
-9. **M4b-2**, then **M4c** (installs `pglast`), then **M5**.
-10. **L5**, Talk by invite.
-11. **D5 tidy** (with decision 13), then **G1** to **G4**, the coordinates checks.
-12. **R1**, **R2**, **R3**, the style roll-out.
-13. **B1** to **B8**, then **C1** to **C8**, then Phuket and Krabi and a gap sweep.
-14. **T3** to **T15** in rank order, unless the owner moves one up.
-15. Later: **D6**, and the Market's **M6** to **M10** (M9 waits on legal for the terms and privacy policy; M10 on legal for cash swap).
+5. **F7a**, Emergency outside the four countries (decision 28). The owner placed it before F4 (2026-10-27). **Built**, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140), `mk-v0.654.0`.
+6. **F4**, the post-trip recap with charts (uses S1's chart palette).
+7. **F5**, then **L1**, **L2**, **L3** (uses S1's chart palette), **L4**.
+8. **Q3**, **Q4**, **Q5**, **Q6**, **Q7**, the sound base (section 5). Decision 10 is asked again after Q5.
+9. **T1**, fact freshness, then **T2**, border status (section 6).
+10. **M4b-2**, then **M4c** (installs `pglast`), then **M5**.
+11. **L5**, Talk by invite.
+12. **D5 tidy** (with decision 13), then **G1** to **G4**, the coordinates checks.
+13. **R1**, **R2**, **R3**, the style roll-out.
+14. **B1** to **B8**, then **C1** to **C8**, then Phuket and Krabi and a gap sweep.
+15. **T3** to **T15** in rank order, unless the owner moves one up.
+16. Later: **D6**, and the Market's **M6** to **M10** (M9 waits on legal for the terms and privacy policy; M10 on legal for cash swap).
 
 Alongside any slice (no shipped file changes, no version bump): **Q2** (the audit driver), **S0** (the style gate
 gallery and its form), **Q8** (the wider audit). T4 and T7 also change no shipped file; by the owner's answer they wait
@@ -92,7 +94,8 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | Q8 | Widen the audit (populated states, four countries, detail screens) | alongside |
 | S0, S1, R1 to R3 | The style gate, foundation and roll-out (section 5) | S0 alongside; **S1 built** 2026-10-27, [PR #139](https://github.com/SamuelLClemens/Mekonging/pull/139) (5.5); R after G4 |
 | F6 | **New (decision 29, owner 2026-10-27):** a place picked by hand holds over a live fix. The ruling is "hold the pick"; how long it holds (a time, until the traveller moves a distance, until they ask) is not ruled, and the slice's first step is to ask | unplaced: the owner places it. It sits beside F1 and F3, whose pickers and fix it changes |
-| F7 | **New (decision 28, owner 2026-10-27):** Emergency gives its information wherever the traveller is in the world (`countryOfFix` and the other `nearestSpotGlobal` callers in 4.4). What it shows outside the four countries (the browsed country's numbers, or the international ones) is not ruled | unplaced: the owner places it. It is a safety item, so recommended before F4 |
+| F7a | **Built 2026-10-27**, [PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140), `mk-v0.654.0` (decision 28): Emergency and the hospital screen stop naming a region country for a fix outside it. `countryOfFix` returns null past `OUTSIDE_KM`; `js/screens/emergency-outside.js` shows the coordinates, the distance to the nearest city, 112 with an honest note and a hospital map search; a `far` card adds 112 for fixes more than 60 km from every city with no outline within 10 km | placed before F4 by the owner |
+| F7b | **New (decision 28, owner 2026-10-27):** the national emergency numbers for the rest of the world, from a sourced table (every entry cited, a gap left open rather than an unsourced number), and the world outline that finds the country of a fix outside the four. The outline is a download (Natural Earth is the candidate) and needs the owner's yes with file name, source and size first; decision 26's measurement covers the same file. Roughly 200 countries is more than one session: split by region if needed | unplaced: the owner places it. Recommended right after F5, with decision 26's measurement run beforehand |
 | T1 to T15 | The feature backlog (section 6) | T1 and T2 after Q7; the rest after C8 |
 | Routing engine | Multi-country offline routing: wanted, unscoped | the design pass is T7 |
 
@@ -128,7 +131,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | 25 | Remove the spent worktrees and branches (4.6) | **closed: done** for worktrees and local branches, 2026-10-27 (f1b, f2, f3). The remote branches stay until the owner approves their removal (4.6) |
 | 26 | A coarse world outline for the journey map offline (4.4) | open; owner, 2026-10-26: measure a simplified Natural Earth outline (KB, gzip) first, nothing built yet |
 | 27 | The share-journey route carries stops added by hand | **closed: yes, keep** (owner, 2026-10-26) |
-| 28 | What Emergency shows for a fix outside the four countries (4.4): today it names the nearest anchor's country, so Singapore shows Thailand's numbers | **closed: ruled** (owner, 2026-10-27, against the recommendation): "no matter where you are in the world it should give you the emergency info". Slice F7 (4.1). Not ruled: which numbers outside the four countries, and whether it still says where the fix is |
+| 28 | What Emergency shows for a fix outside the four countries (4.4): it named the nearest anchor's country, so Singapore showed Thailand's numbers | **closed: ruled** (owner, 2026-10-27, against the recommendation): "no matter where you are in the world it should give you the emergency info". Answers, 2026-10-27: show a **worldwide table of national numbers**, and say where the fix is **with the coordinates**. F7a ([PR #140](https://github.com/SamuelLClemens/Mekonging/pull/140)) built the safe part with no new data: coordinates, 112 and the four-country chips. F7b is the table and the world outline |
 | 29 | Should a place picked by hand hold over a live fix for a while? Today the fix always wins | **closed: ruled** (owner, 2026-10-27, against the recommendation): hold the pick. Slice F6 (4.1). Not ruled: for how long |
 | (none) | A new source for more place photos (620 places have none) | open; S1's artwork makes a photo-less card deliberate, so no new photo source is proposed |
 
@@ -142,7 +145,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | Location | Today, Arrival, Transport and Explore's "Places in X" read the anchor, not the picked or fix place: at the Anlong Chambak fix they say "Near Pursat" and "Places in Pursat". Their content is keyed to curated cities, so this is by design; F3 changed the labels that say where the traveller is | F3 driver, 2026-10-27 | none unless the owner wants a place-level "Today" |
 | Location | A picked place, and now a fix's place (`prefs.fixPlace`), is saved only through the debounced store save | F1 probe (`Browser.close` lost it) | Q7 (store flush) |
 | Location | Two anchors sit on islands: Trat at 11.82, 102.47 is Ko Mak (decision 22), and **new:** Ba Ria-Vung Tau at 8.69, 106.61 is Côn Sơn island (the city is near 10.35, 107.08). A fix on either island reads the anchor's name (1.6 km and 0.4 km), so F3's list place never takes over | F3 driver, 2026-10-27 | G1 (Trat), G3 (Ba Ria-Vung Tau) |
-| Location | **New, safety:** a fix outside the region still reaches Emergency as a region country. `countryOfFix` (`js/main.js:6320`) falls back to the nearest anchor's country, so Singapore shows Thailand's numbers ("Showing Thailand ... from your location"). F3 guarded only `focusSpot`, `contextNow`, `refreshLocation`, the watch and Nearby. Unguarded direct `nearestSpotGlobal` callers: `js/main.js` 2817, 3709, 6320 and 6880, `js/screens/country-info.js:280`, `js/screens/journal.js:349`, `js/screens/places.js:999` | grep, 2026-10-27; Singapore read from the code, not rendered | decision 28 is ruled (4.3): Emergency gives its information wherever the traveller is; slice F7 |
+| Location | **Partly fixed (F7a, `mk-v0.654.0`).** A fix more than 250 km from every curated city now gets the outside screen: Singapore (743 km), Kuala Lumpur (457) and Kunming (321) no longer show Thailand's or Vietnam's numbers. Still open: a fix in a neighbouring country within 60 km of a curated city (about 30 km into Myanmar from Mae Sot) reads as the region country, and Yangon (237 km), Mawlamyine (189) and Penang (165) read `far`: the named country and 112 together. No distance separates them from remote region sites: of the 36,131 list places, 681 have no outline within 10 km and 124 of those are more than 60 km from a city. The world outline in F7b settles it. `getLastFix` never expires, so a stale fix keeps the outside screen until the next fix. Direct `nearestSpotGlobal` callers that do not feed Emergency are untouched: `js/main.js` 2817 and 3709 (trip stage, `anchorCountry`), 6880 (worship), `js/screens/country-info.js:280`, `js/screens/journal.js:349`, `js/screens/places.js:999` | rendered in headless Chrome at 375 px, 15 fixes, 2026-10-27 | F7b; the callers only if a screen proves wrong outside the region |
 | Location | `prefs.geoAsked` is now read by nothing: `finish()` and every Home button set it, so it never meant "asked". `prefs.geoPrompted` is the working flag | grep, 2026-10-27 | D5 tidy (remove it) |
 | Location | First launch, fresh profile: the imports of the four place lists sat unrequested for 9 s in 1 of 8 runs while the service worker installed. `js/fix-place.js` now times out each attempt (12 s) and retries 3 times; 5 later runs resolved in 1.5 to 2.7 s, and with the lists blocked for 6.7 s the place landed at 10.7 s. The stall itself was not seen again | F3 probes, 2026-10-27 | none; watch |
 | Location | Out-of-region distance is a cap, not a border: Penang (165 km from Satun) and Yangon (238 km from Mae Sariang) still read their nearest anchor | measured from `js/weather.js` anchors | T14 or never |
