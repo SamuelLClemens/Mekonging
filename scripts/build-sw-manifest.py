@@ -36,7 +36,10 @@ END = '// ---- END GENERATED MANIFEST ----'
 # guide's photos and calls live in MEDIA_CACHE, which is not release-scoped and is reconciled
 # by its own per-tier count (see sw.js mediaStatus), so hashing 567 files here would add
 # nothing and cost a slow walk on every check.
-EXTS = ('.js', '.css', '.html', '.webmanifest', '.json', '.geojson', '.svg', '.png', '.woff2')
+# `.gz` is the four OCR language files (lib/tesseract/lang/*.traineddata.gz, 7 MB). They are NOT in PRECACHE (nobody downloads 7 MB for a
+# screen they may never open); the fetch handler stores each one the first time it is used. Without a manifest entry reconcile() treats
+# a cached copy as "no longer shipped" and deletes it at every release, so the second OCR after an update downloaded 1 to 3.7 MB again (F5).
+EXTS = ('.js', '.css', '.html', '.webmanifest', '.json', '.geojson', '.svg', '.png', '.woff2', '.gz')
 SKIP_DIRS = {'.git', '.claude', 'scripts', 'tools', 'img', 'audio', 'node_modules', 'Mekonging Xcode'}
 
 
