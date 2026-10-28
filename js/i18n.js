@@ -22,7 +22,7 @@
 // needs in order to be usable must be self-hosted rather than pulled from a CDN.
 
 import { store, save } from './state.js';
-import { UI_STRING_LANGS } from './data/ui-strings.js';
+import { UI_STRING_LANGS, UI_STRING_MACHINE } from './data/ui-strings.js';
 
 // ---- the language registry --------------------------------------------------
 // `code`   BCP-47-ish tag used as our own key, in `<html lang>`, and (unless `trans`
@@ -113,6 +113,11 @@ export function transCode(code) {
 
 // Languages that can repaint the interface (a bundled dictionary exists).
 export function uiLangs() { return LANGS.filter((l) => l.ui); }
+
+// True when the language has machine-made interface text still waiting for a native review
+// (UI_STRING_MACHINE in js/data/ui-strings.js, backed by scripts/ui-strings-review.json).
+// The language picker says so, because a traveller choosing it should know the wording is a guide.
+export function isMachineTranslated(code) { return UI_STRING_MACHINE.includes(code); }
 
 // ---- the active interface language ------------------------------------------
 const FALLBACK = 'en';
@@ -321,7 +326,8 @@ function swapText(node, translated) {
 // Deliberately anchored and single-run: only a LEADING pictographic run followed by
 // whitespace. A string that merely contains an emoji is left alone, because the words either
 // side of it are not necessarily a phrase the dictionary knows.
-const LEAD_EMOJI = /^([\p{Extended_Pictographic}‍️⃣\p{Regional_Indicator}＋+]+)(\s+)(.+)$/u;
+// \p{So} (and the four plain arrows) also covers the marks that are not emoji but lead a label the same way: ✓ ↺ ★ ↗.
+const LEAD_EMOJI = /^([\p{Extended_Pictographic}\p{So}←-↓‍️⃣\p{Regional_Indicator}＋+]+)(\s+)(.+)$/u;
 
 // Look a string up directly, then — failing that — as "<emoji> <label>".
 function lookup(d, s) {

@@ -32,7 +32,7 @@ import {
 import {
   LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree, retranslate,
   detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady,
-  primeSafetyPathBatch,
+  primeSafetyPathBatch, isMachineTranslated,
 } from './i18n.js';
 import { DEFAULT_SKIN, SKIN_MODE, resolveSkin, modeFor } from './theme.js';
 import { homeScreen } from './screens/home.js';
@@ -824,7 +824,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.655.0';
+export const APP_VERSION = 'mk-v0.656.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1172,9 +1172,11 @@ export function languageSheet() {
   // the `optgroup` split only appears once that stops being true, so a language landing in
   // that group is still visibly labelled rather than blending in as if it worked the same
   // offline.
+  // A language with machine-made entries still waiting for a native review says so (F5): the
+  // option carries the plain English words, and the line under the box repeats it in that language.
   const langOption = (l) => h('option', {
     value: l.code, lang: l.code, selected: l.code === cur ? '' : null,
-  }, `${l.flag} ${l.native}${l.native === l.name ? '' : ` · ${l.name}`}`);
+  }, `${l.flag} ${l.native}${l.native === l.name ? '' : ` · ${l.name}`}${isMachineTranslated(l.code) ? ' · machine-translated, under review' : ''}`);
   const sel = h('select', {
     'aria-label': 'Choose your language', 'data-no-i18n': '',
     onchange: (e) => pick(e.target.value),
@@ -1187,6 +1189,10 @@ export function languageSheet() {
   } else {
     bundled.forEach((l) => sel.append(langOption(l)));
   }
+
+  const machineNote = isMachineTranslated(cur)
+    ? h('p', { class: 'tiny muted lang-machine', style: 'margin: var(--sp-2) 0 0' }, 'Machine-translated, under review. A native speaker has not checked every word yet.')
+    : null;
 
   // The old copy read "Also machine-translate the rest", which implied the app was already
   // translated and this was a bonus. It is the other way round: the dictionary covers the
@@ -1209,6 +1215,7 @@ export function languageSheet() {
     h('h3', { style: 'margin: 0 0 var(--sp-0h)' }, 'Choose your language'),
     h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-3)' }, 'Language · Sprache · Idioma · 语言 · ภาษา · ngôn ngữ'),
     sel,
+    machineNote,
     mtRow,
     h('div', { class: 'confirm-actions' }, [
       h('button', { class: 'btn ghost', onclick: () => close && close() }, 'Close'),
@@ -6507,14 +6514,13 @@ function sosScreen(cc) {
   // NEVER foldable. Every other section on this screen collapses like the rest of the app,
   // but the emergency numbers must be on screen the instant this screen opens, with no
   // possibility that a traveller collapsed them weeks ago and has to remember that now.
-  const nums = h('div', { class: 'card sos-card', 'data-nofold': '' }, [h('h2', {}, `${c.flag} ${c.name} — call for help`)]);
+  const nums = h('div', { class: 'card sos-card', 'data-nofold': '' }, [h('h2', {}, [`${c.flag} ${c.name}`, ' — call for help'])]);
   const em = EMERGENCY_NUMBERS[c.id] || [];
   // `data-no-mt` exempts these from the optional machine-translation pass (js/i18n.js). The
-  // label and the DIGITS share one text node ("Tourist Police: 1155"), so handing that string
-  // to a translation service risks it rewriting, regrouping or dropping the number itself —
-  // and this is the one screen in the app where a mangled string could get somebody hurt. The
-  // bundled dictionary still translates the labels, because those are checked by hand.
-  if (em.length) em.forEach((e) => nums.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
+  // label and the DIGITS used to share one text node ("Tourist Police: 1155"), which the dictionary could never match, so the
+  // labels stayed English in every language (F5). They are two nodes now: the label is looked up by hand-checked key, and the
+  // node holding the digits has no letters, so neither the dictionary nor a translation service ever touches the number.
+  if (em.length) em.forEach((e) => nums.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, [e.label, `: ${e.number}`])));
   else nums.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
 
   // (2) Where to go. The full answer — province-level fallback, evacuation chains, the

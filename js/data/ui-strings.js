@@ -10,13 +10,22 @@
 //     icon or chevron. The Back button's label is the string '‹ Back', not 'Back', so that
 //     is the key. When in doubt, grep for the literal rather than guessing at it.
 //
-//  2. AN OMITTED ENTRY IS A FEATURE, NOT A GAP. A missing key falls back to English, which
-//     every one of these screens was written and reviewed in. A WRONG entry does not fall
-//     back to anything — it silently misinforms a traveller who has no way to check it. So
-//     when extending a language, add what you can confirm and leave out what you cannot;
-//     never pad a block to make it look complete.
+//  2. A GAP MAY BE FILLED BY MACHINE TRANSLATION, BUT IS NEVER PASSED OFF AS CHECKED. (Owner ruling,
+//     2026-10-24; this replaces the earlier rule that "an omitted entry is a feature".) Every key
+//     exists in all 29 files. A value of `null` means "not translated yet, show English": js/i18n.js
+//     treats it exactly like a missing key, so the optional online pass can still fill it. The
+//     session that fills a gap may write the translation itself (no new service, key or cost), on
+//     two conditions. Each machine-made entry is recorded in scripts/ui-strings-review.json
+//     (language, key, machine-made, date) for a later native review, and a language that has any
+//     is listed in UI_STRING_MACHINE below, which is what the language picker reads to say
+//     "machine-translated, under review". The risk has not changed: a WRONG entry falls back to
+//     nothing, it silently misinforms a traveller who cannot check it. So the safety screens
+//     (Emergency, first aid, medical) are filled first, a sample of every batch is translated
+//     back into English before it ships, and a string that cannot be translated back to the
+//     same meaning stays `null`.
 //
-// PARITY IS CHECKED, NOT ASSUMED. Every language here carries the full key set. Drift is the
+// PARITY IS CHECKED, NOT ASSUMED. Every language here carries the full key set (a `null` counts as
+// carrying it, and check-ui-strings counts the nulls per language). Drift is the
 // quiet failure mode of this design — add a key to English and to fifteen blocks but not the
 // sixteenth and nothing breaks, it just falls back, so one English word appears mid-sentence
 // on a Korean screen and no error is raised anywhere. Run `python3 scripts/check-ui-strings.py`
@@ -69,4 +78,14 @@ export const UI_STRING_LANGS = [
   'sv',
   'bn',
   'tl',
+];
+
+// Languages with machine-made entries still waiting for a native review (see rule 2 above). The language
+// picker marks each one "machine-translated, under review". scripts/ui-strings-review.json is the register
+// behind it, and scripts/check-ui-strings.py fails when the two disagree.
+export const UI_STRING_MACHINE = [
+  'th',
+  'vi',
+  'km',
+  'lo',
 ];

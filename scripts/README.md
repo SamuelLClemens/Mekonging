@@ -34,7 +34,7 @@ list above, so a new guard goes in both places.
 | `check-net-gates` | an `online()` gate that can render nothing | shipped three times in three files: Home lost its weather section, rates froze 8% out, and Talk lost live translation entirely |
 | `check-lazy-data` | a route reading a lazy data module it does not gate | the read succeeds against an empty default, so a visa screen with no visa rules still looks like a visa screen |
 | `check-preloads` | `<link rel=modulepreload>` drifting from the real eager graph | cold-start cost, and the list is hand-kept |
-| `check-ui-strings` | the 29 language tables disagreeing on keys | a missing key falls back to English silently |
+| `check-ui-strings` | the 29 language tables disagreeing on keys; `scripts/ui-strings-review.json` disagreeing with them; counts the `null` values (a gap shown as English) | a missing key falls back to English silently; F5 made `null` the honest form of a gap and added the register. `--assert-complete th,vi,km,lo` fails while any of those still has a null |
 | `check-month-arrays` | a month claimed by an array but not by the record's own prose | the two are written by different hands and drift |
 | `check-place-fields` | inconsistent figures, broken afterDark contract | |
 | `check-place-dupes` | duplicate ids, new name collisions | a merged place silently deletes travellers' saved data |

@@ -3544,6 +3544,24 @@ html[data-theme="dark"] { color-scheme: dark; }
 }
 :where(html[data-theme="dark"]) ::placeholder { color: var(--ink-soft); opacity: 1; }
 
+/* ===== F5: line boxes for the scripts that stack marks, app-wide =====
+   Thai, Lao and Khmer put vowels and tone marks above and below the letter, and Vietnamese sets a tone mark on a
+   vowel that already has its own. A line box of 1.1 to 1.22 em that also hides its overflow (the tab bar's
+   ellipsis labels, the clamped title in the top bar) cuts those marks off. tools/lang-check measured it on the
+   rendered screens: the tab label "สถานที่" (Places) lost 2.3 px of ink above its box and read "สถานที", the
+   top-bar title "ฉุกเฉิน" lost 1.4 px below, and in Khmer 355 of 426 tab labels and 25 titles lost ink.
+   S1's tokens (--lh-script, --lh-vi, css/refined.css) already do this inside [data-refined]; this is the same
+   rule for the shared chrome and every screen that is not refined yet. html:is(:lang(..)) outranks the
+   single-class rules it replaces, and a native-script span inside another language keeps the rule too. */
+html:is(:lang(th), :lang(lo), :lang(km)) :is(
+  .tabbar button > span:last-child, .topbar h1, .btn, .chip, .hub-lbl, .status-lbl, .phase-lbl, .cat-title,
+  .home-section, h1, h2, h3, .card h2, .card h3, .t, .explore-name, .cal-wk, .tile, .zone-why, .sight-name, .book-title,
+  .btn span, .chip span, .tile span, .status-txt) { line-height: var(--lh-script, 1.7); }
+html:lang(vi) :is(
+  .tabbar button > span:last-child, .topbar h1, .btn, .chip, .hub-lbl, .status-lbl, .phase-lbl, .cat-title,
+  .home-section, h1, h2, h3, .card h2, .card h3, .t, .explore-name, .cal-wk, .tile, .zone-why, .sight-name, .book-title,
+  .btn span, .chip span, .tile span, .status-txt) { line-height: var(--lh-vi, 1.6); }
+
 /* ==== BEGIN GENERATED THEMES (tools/style-tiles/port-themes.py; do not edit by hand) ==== */
 /* The four themes of the retro redesign (VISUAL_DIRECTION_PROMPT.md section 3): Mekong Retro, River, Four
    Flags and Temples & Markets. Every value comes from tools/style-tiles/round2.json. Token blocks first

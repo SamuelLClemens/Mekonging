@@ -21,6 +21,13 @@ Checks performed:
      duplicate is a translation that looks present and is not.
   4. No empty values, and no value left identical to its English key in a non-Latin script
      (a strong sign of a copy-paste that was never translated).
+  5. A value may be `null`: "not translated yet, show English" (F5, owner ruling 2026-10-24). A null still
+     counts as a key for parity, and the nulls are counted per language so a gap is a number, not a surprise.
+     `--assert-complete th,vi,km,lo` fails if any of those languages still has one.
+  6. The machine-translation register (scripts/ui-strings-review.json) agrees with the dictionaries: every
+     entry names a key the language holds with a real value, and a language with entries is listed in
+     UI_STRING_MACHINE (js/data/ui-strings.js), which is what the language picker reads to say
+     "machine-translated, under review".
 """
 import glob
 import json
@@ -52,10 +59,20 @@ def blocks(src):
 
 
 def pairs(body):
-    return re.findall(r"'((?:[^'\\]|\\.)*)':\s*'((?:[^'\\]|\\.)*)'", body)
+    """(key, value) for every entry; a `null` value comes back as None."""
+    out = []
+    for k, v, n in re.findall(r"'((?:[^'\\]|\\.)*)':\s*(?:'((?:[^'\\]|\\.)*)'|(null)\b)", body):
+        out.append((k, None if n else v))
+    return out
+
+
+REGISTER = 'scripts/ui-strings-review.json'
 
 
 def main():
+    complete = []
+    if '--assert-complete' in sys.argv:
+        complete = [c for c in sys.argv[sys.argv.index('--assert-complete') + 1].split(',') if c]
     problems = []
     i18n = open(I18N, encoding='utf-8').read()
     manifest = open(MANIFEST, encoding='utf-8').read()
@@ -63,7 +80,8 @@ def main():
     registry = dict(re.findall(r"code: '([^']+)'[^}]*?ui: (true|false)", i18n))
     ui_true = {c for c, v in registry.items() if v == 'true'} - {'en'}
 
-    listed = re.findall(r"^  '([A-Za-z-]+)',$", manifest, re.M)
+    lm = re.search(r'UI_STRING_LANGS = \[(.*?)\];', manifest, re.S)
+    listed = re.findall(r"'([A-Za-z-]+)'", lm.group(1)) if lm else []
     on_disk = {}
     for path in sorted(glob.glob(STRINGS_GLOB)):
         code = os.path.basename(path)[len('ui-strings.'):-len('.js')]
@@ -106,7 +124,10 @@ def main():
         missing = canon - set(dicts[code])
         extra = set(dicts[code]) - canon
         status = 'OK  ' if not missing and not extra else 'FAIL'
-        print(f'{status} {code:6s} {len(dicts[code]):3d} keys')
+        nulls = sum(1 for v in dicts[code].values() if v is None)
+        print(f'{status} {code:6s} {len(dicts[code]):4d} keys' + (f', {nulls} null (shown in English)' if nulls else ''))
+        if nulls and code in complete:
+            problems.append(f'{code}: {nulls} key(s) still null, and --assert-complete names this language')
         if missing:
             problems.append(f'{code}: missing {len(missing)} key(s): {sorted(missing)[:8]}'
                             + (' …' if len(missing) > 8 else ''))
@@ -117,6 +138,8 @@ def main():
     for code in sorted(dicts):
         allowed = ALLOWED_IDENTICAL.get(code, set())
         for k, v in dicts[code].items():
+            if v is None:
+                continue
             if not v.strip():
                 problems.append(f'{code}: empty value for {k!r}')
             elif v == k and k not in allowed and code not in ('en',):
@@ -125,6 +148,34 @@ def main():
                 if code in ('th', 'vi', 'km', 'lo', 'zh-CN', 'zh-TW', 'ko', 'ja', 'hi', 'ru',
                             'he', 'ar', 'fa', 'ur', 'uk', 'bn'):
                     problems.append(f'{code}: {k!r} is identical to the English — untranslated?')
+
+    # 6. the machine-translation register
+    m = re.search(r'UI_STRING_MACHINE = \[(.*?)\];', manifest, re.S)
+    machine = set(re.findall(r"'([A-Za-z-]+)'", m.group(1))) if m else set()
+    if os.path.exists(REGISTER):
+        reg = json.load(open(REGISTER, encoding='utf-8'))
+        seen = {}
+        for e in reg.get('entries', []):
+            lang, key = e.get('lang'), e.get('key')
+            if lang not in dicts:
+                problems.append(f'review register: unknown language {lang!r}')
+            elif key not in dicts[lang]:
+                problems.append(f'review register: {lang} names a key the dictionary does not hold: {key!r}')
+            elif dicts[lang][key] is None:
+                problems.append(f'review register: {lang} {key!r} is null in the dictionary but registered as machine-made')
+            if not e.get('machine') or not e.get('date'):
+                problems.append(f'review register: {lang} {key!r} lacks machine/date')
+            if (lang, key) in seen:
+                problems.append(f'review register: duplicate entry {lang} {key!r}')
+            seen[(lang, key)] = 1
+        reg_langs = {e.get('lang') for e in reg.get('entries', [])}
+        for code in sorted(reg_langs - machine):
+            problems.append(f'{code}: has machine-made entries in the register but is not in UI_STRING_MACHINE')
+        for code in sorted(machine - reg_langs):
+            problems.append(f'{code}: listed in UI_STRING_MACHINE but has no entry in the register')
+        print(f'review register: {len(reg.get("entries", []))} machine-made entries in {len(reg_langs)} language(s)')
+    elif machine:
+        problems.append('UI_STRING_MACHINE is not empty but scripts/ui-strings-review.json is missing')
 
     print()
     if problems:
