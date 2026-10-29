@@ -41,7 +41,8 @@ function defaultView(prefs) {
 
 function topicNode(topic, view) {
   const forYou = (topic.views || []).includes(view);
-  const summary = `${topic.ic} ${topic.t}${forYou ? ' · for you' : ''}`;
+  // Two text nodes, so the title (data, translated from js/data/safety-text.<code>.js) and the badge (a dictionary key) each match exactly.
+  const summary = forYou ? [`${topic.ic} ${topic.t}`, ' · for you'] : `${topic.ic} ${topic.t}`;
   const body = () => {
     const inner = h('div', {});
     if (topic.lead) inner.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, topic.lead));

@@ -268,6 +268,42 @@ export function ensureUiStrings(code) {
   return PENDING[c];
 }
 
+// ---- safety text (F5b) ----------------------------------------------------------------
+// The Emergency scenario guides and the first-aid steps are DATA (js/data/emergency.js, firstaid.js), about 7,000
+// words, so they cannot sit in the interface dictionaries every traveller loads before first paint. They live in
+// one lazy file per host language, js/data/safety-text.<code>.js (the same exact-English-key shape), which the
+// router fetches only when a safety screen opens in that language (js/main.js render(), ensureSafetyText). The
+// entries are merged into the active dictionary, so the DOM pass and t() find them with no change to a screen.
+// A file that cannot be fetched leaves English, the same fallback as a missing dictionary key.
+const SAFETY_LANGS = new Set(['th', 'vi', 'km', 'lo']);
+const SAFETY_DONE = new Set();
+const SAFETY_PENDING = Object.create(null);
+
+// True when the safety text for this language is loaded, attempted, or does not exist.
+export function safetyTextReady(code) {
+  const c = code || uiLang();
+  return c === FALLBACK || !SAFETY_LANGS.has(c) || SAFETY_DONE.has(c);
+}
+
+// Load one language's safety text into its dictionary. ALWAYS resolves, never rejects. An entry the interface
+// dictionary already holds keeps its value.
+export function ensureSafetyText(code) {
+  const c = code || uiLang();
+  if (safetyTextReady(c)) return Promise.resolve();
+  if (SAFETY_PENDING[c]) return SAFETY_PENDING[c];
+  SAFETY_PENDING[c] = ensureUiStrings(c)
+    .then(() => import(`./data/safety-text.${c}.js`))
+    .then((m) => {
+      const add = m && m.SAFETY_STRINGS;
+      if (!add) return;
+      const d = DICTS[c] || (DICTS[c] = {});
+      for (const k of Object.keys(add)) if (!d[k]) d[k] = add[k];
+    })
+    .catch(() => {})
+    .then(() => { SAFETY_DONE.add(c); delete SAFETY_PENDING[c]; });
+  return SAFETY_PENDING[c];
+}
+
 // Translate one English UI string. Returns the English unchanged when the active language has
 // no entry for it — a missing translation must degrade to readable English, never to a blank
 // or a raw key.

@@ -31,7 +31,7 @@ import {
 // module-evaluation time — see js/data/regions.js's lazy-load fact 2 for the same reasoning).
 import {
   LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree, retranslate,
-  detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady,
+  detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady, ensureSafetyText, safetyTextReady,
   primeSafetyPathBatch, isMachineTranslated,
 } from './i18n.js';
 import { DEFAULT_SKIN, SKIN_MODE, resolveSkin, modeFor } from './theme.js';
@@ -824,7 +824,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.656.0';
+export const APP_VERSION = 'mk-v0.657.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7223,6 +7223,14 @@ export function render() {
   const absent = needScreens.filter((n) => !screenMod(n)).concat(needData.filter((n) => !isDataLoaded(n)));
   if (absent.length) {
     mount(screenUnavailableScreen(absent), true);
+    return;
+  }
+
+  // Safety text (F5b): the Emergency guides and first-aid steps are data, kept in one lazy file per host language
+  // (js/data/safety-text.<code>.js). Hold these routes for it, as for a dictionary; it never rejects, so a file
+  // that cannot be fetched renders the English guides.
+  if ((head === 'sos' || head === 'firstaid' || head === 'hospital') && !safetyTextReady()) {
+    ensureSafetyText().then(render);
     return;
   }
 
