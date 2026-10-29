@@ -5,7 +5,7 @@ WHY THIS EXISTS. A wrong emergency number is worse than a missing one: the trave
 Owner decision 28 (2026-10-27) asks for the numbers wherever a fix is in the world, and CLAUDE.md's sourcing rule says to
 leave a gap open rather than publish a number nobody can check. This guard holds the table to that rule.
 
-WHAT IT CHECKS (it loads the data with jsc, so it reads what the app reads):
+WHAT IT CHECKS (it loads the data with Node, or with macOS's jsc where there is no Node, so it reads what the app reads):
   1. Every key is an id in js/data/world-outline.js and has a name in js/data/world-names.js.
   2. No id is in two regions, and none of the four countries' ids is here (their numbers are js/data/emergency-numbers.js;
      this table keys Vietnam as `vn`, and `vi` is the US Virgin Islands, so a mix-up would show Vietnam's numbers there).
@@ -19,7 +19,9 @@ coordinates for them. The pass line is last.
 """
 import json
 import os
+import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -34,19 +36,34 @@ AGGREGATORS = ('wikipedia.org', 'wikivoyage.org', 'wikitravel', 'tripadvisor', '
                'quora.com', 'blogspot', 'medium.com', 'wordpress.com', 'yellowpages', 'numbeo', 'countrycode.org')
 
 
+def runner():
+    """The JavaScript engine to load the data with: Node where there is one (CI), else macOS's jsc (the owner's machine)."""
+    node = shutil.which('node')
+    if node:
+        return [node], True
+    if os.path.exists(JSC):
+        return [JSC, '-m'], False
+    print('FAIL: neither node nor jsc is available, so the table cannot be read')
+    sys.exit(1)
+
+
 def dump():
-    imports = "import { WORLD_OUTLINE } from '%s/js/data/world-outline.js';\nimport { WORLD_NAMES } from '%s/js/data/world-names.js';\n" % (ROOT, ROOT)
+    cmd, is_node = runner()
+    # Node wants file URLs for absolute paths; jsc takes the path as it is.
+    spec = (lambda rel: pathlib.Path(ROOT, rel).as_uri()) if is_node else (lambda rel: '%s/%s' % (ROOT, rel))
+    imports = "import { WORLD_OUTLINE } from '%s';\nimport { WORLD_NAMES } from '%s';\n" % (spec('js/data/world-outline.js'), spec('js/data/world-names.js'))
     for r in REGIONS:
-        imports += "import { EMERGENCY_WORLD as T_%s } from '%s/js/data/emergency-world.%s.js';\n" % (r, ROOT, r)
-    body = ("print(JSON.stringify({ids: WORLD_OUTLINE.features.map((f) => f.properties.id), names: WORLD_NAMES, tables: {%s}}));\n"
+        imports += "import { EMERGENCY_WORLD as T_%s } from '%s';\n" % (r, spec('js/data/emergency-world.%s.js' % r))
+    body = ("const out = (s) => (typeof print === 'function' ? print(s) : console.log(s));\n"
+            "out(JSON.stringify({ids: WORLD_OUTLINE.features.map((f) => f.properties.id), names: WORLD_NAMES, tables: {%s}}));\n"
             % ', '.join('%s: T_%s' % (r, r) for r in REGIONS))
     with tempfile.TemporaryDirectory() as d:
         p = os.path.join(d, 'dump.mjs')
         open(p, 'w').write(imports + body)
-        out = subprocess.run([JSC, '-m', p], capture_output=True, text=True)
+        out = subprocess.run(cmd + [p], capture_output=True, text=True)
     if out.returncode != 0:
         print(out.stdout + out.stderr)
-        print('FAIL: jsc could not load the table files')
+        print('FAIL: %s could not load the table files' % os.path.basename(cmd[0]))
         sys.exit(1)
     return json.loads(out.stdout)
 
