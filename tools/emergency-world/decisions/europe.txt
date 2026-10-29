@@ -1,0 +1,46 @@
+# Europe, reviewed 2026-10-29 against the raw text of both pages. Gaps on purpose: ax fo gg im je va (neither page exists).
+by P:102:cu A:103:cu F:101:cu
+de P:110:cu A:112:cu F:112:cu
+dk G:112:cu
+ee G:112:cu
+fi G:112:cu
+gb G:999:c
+is G:112:cu
+lu P:113:cu A:112:cu F:112:cu
+mc G:112:cu
+md G:112:cu
+mt G:112:cu
+nl G:112:cu
+no P:112:cu A:113:cu F:110:cu
+pl G:112:cu
+pt G:112:cu
+ro G:112:cu
+rs P:192:cu A:194:cu F:193:cu
+se G:112:cu
+si G:112:cu
+# manual decisions
+ad G:112:c P:110:cu A:116:cu F:118:cu
+al G:112:c P:129:c A:127:cu F:128:cu
+at G:112:cu P:133:c A:144:c F:122:c
+ba G:112:c P:122:cu A:124:cu F:123:cu
+be G:112:cu P:101:c
+bg G:112:cu
+ch G:112:cu P:117:cu A:144:cu F:118:cu
+cz G:112:cu
+es G:112:cu
+fr G:112:cu P:17:cu A:15:u F:18:u
+gr G:112:cu P:100:c U:1571:c
+hr G:112:cu
+hu G:112:cu P:107:c A:104:c F:105:c
+ie G:112:cu G:999:cu
+it G:112:cu A:118:u F:115:u
+li G:112:c P:117:cu A:144:cu F:118:cu
+lt G:112:cu
+lv G:112:cu P:110:u A:113:u
+me G:112:cu P:122:c A:124:c F:123:c
+mk P:192:cu A:194:cu F:193:c
+ru G:112:cu P:102:c A:103:c F:101:c
+sk G:112:c P:158:cu A:155:cu F:150:cu
+sm P:112:cu P:113:cu A:118:cu F:115:cu
+ua G:112:c P:102:cu A:103:cu F:101:cu
+xk G:112:cu P:192:u A:194:u F:193:u

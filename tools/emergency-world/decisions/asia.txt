@@ -1,0 +1,50 @@
+# Asia, reviewed 2026-10-29 against the raw text of both pages. Not here: th, vn, kh, la (js/data/emergency-numbers.js).
+# Left out on purpose: kp (no central number; both pages silent), kas (no page), lk ambulance and fire (the pages give different numbers:
+# Canada 110, the UK 1990 and 111), in/ps notes in the review file.
+ae P:999:cu A:998:cu F:997:cu
+af P:119:cu A:102:c F:112:c
+am P:102:c A:103:c F:101:c
+az P:102:cu A:103:cu F:101:cu
+bd G:999:cu
+bh G:999:cu
+bn P:993:cu A:991:cu F:995:cu S:998:cu
+bt P:113:cu A:112:cu F:110:cu
+cn P:110:cu A:120:cu F:119:cu T:122:cu
+cy G:112:cu P:199:c
+cyn P:155:c
+ge G:112:cu
+hk G:999:cu
+id P:110:cu A:118:u F:112:u
+il P:100:cu A:101:cu F:102:cu
+in P:100:c A:102:c F:101:c
+iq P:911:u A:122:u F:115:u
+ir P:110:cu A:115:cu F:125:cu
+jo G:911:cu
+jp P:110:cu A:119:cu F:119:cu
+kg G:112:c P:102:c A:103:cu F:101:c
+kr P:112:c A:119:cu F:119:c
+kw G:112:cu
+kz G:112:cu P:102:cu A:103:cu F:101:cu
+lb P:112:cu A:140:cu F:175:cu
+lk P:119:cu P:118:cu
+mm P:199:cu A:192:cu F:191:cu
+mn P:102:cu A:103:cu F:101:cu
+mo G:999:u
+my P:999:cu A:999:cu F:994:u
+np P:100:cu A:102:cu F:101:cu U:1144:cu
+om G:9999:cu
+pk P:15:c A:115:c A:1122:c F:16:c
+ph G:911:cu
+ps P:100:cu A:101:cu F:102:cu
+qa G:999:cu
+sa G:911:u P:999:c A:997:c F:998:c
+sg P:999:cu A:995:cu F:995:cu
+sy P:112:c A:110:c F:113:c
+tj G:112:c P:102:u A:103:u F:101:u
+tl P:112:cu A:110:cu F:115:cu
+tm P:002:cu A:003:cu F:001:cu
+tr G:112:cu
+tw P:110:cu A:119:cu F:119:cu K:118:u
+uz P:102:c A:103:cu F:101:c
+ye P:199:cu A:191:u F:191:u
+mv P:119:cu A:102:cu F:118:cu
