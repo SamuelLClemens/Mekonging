@@ -113,7 +113,7 @@ export const SAFETY_STRINGS = {
   'Local mental health services are limited in Cambodia and Laos in particular; getting to a major city, or home, is often the realistic plan.': 'บริการสุขภาพจิตในท้องถิ่นมีจำกัด โดยเฉพาะในกัมพูชาและลาว การไปยังเมืองใหญ่หรือกลับบ้านมักเป็นแผนที่เป็นไปได้จริง',
   'Do not treat "they have been drinking" as an explanation that makes it less urgent.': 'อย่าถือว่า "เขาดื่มมา" เป็นคำอธิบายที่ทำให้เรื่องนี้เร่งด่วนน้อยลง',
   'If a traveller dies': 'หากนักเดินทางเสียชีวิต',
-  'The hardest page here, written down so nobody has to work it out while grieving.': 'หน้าที่ยากที่สุดในที่นี้ เขียนไว้เพื่อไม่ให้ใครต้องคิดหาวิธีเองในขณะที่กำลังโศกเศร้า',
+  'The hardest page here, written down so nobody has to work it out while grieving.': 'ส่วนที่ยากที่สุดในหน้านี้ เขียนไว้เพื่อไม่ให้ใครต้องคิดหาวิธีเองในขณะที่กำลังโศกเศร้า',
   'Contact your embassy or consulate first. Repatriation, local registration of the death and the paperwork all run through them, and they will explain the order of it.': 'ติดต่อสถานทูตหรือสถานกงสุลของคุณก่อน การส่งร่างกลับประเทศ การจดทะเบียนการเสียชีวิตในท้องถิ่น และเอกสารทั้งหมดต้องดำเนินการผ่านสถานทูต และสถานทูตจะอธิบายลำดับขั้นตอน',
   'Contact the travel insurer. Repatriation of remains is expensive and is the single most valuable thing a policy covers.': 'ติดต่อบริษัทประกันการเดินทาง การส่งร่างกลับประเทศมีค่าใช้จ่ายสูงและเป็นสิ่งที่มีคุณค่าที่สุดที่กรมธรรม์คุ้มครอง',
   'A local death certificate is issued by the authorities where the death occurred; the embassy can advise on getting it recognised at home.': 'ใบมรณบัตรท้องถิ่นออกโดยหน่วยงานในพื้นที่ที่เสียชีวิต สถานทูตสามารถให้คำแนะนำเรื่องการทำให้เอกสารนั้นได้รับการยอมรับในประเทศบ้านเกิด',

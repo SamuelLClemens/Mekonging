@@ -8,8 +8,9 @@
 BATCH.tsv has one string per line: the English text exactly as the screen renders it (the key), then the four host
 languages, tab separated and in this order: th, vi, km, lo. An empty cell means "not translated yet" (`null`). A line
 that starts with `#` is a comment. With --keys, the first two cells are instead the key's number in that list and its
-first characters (a check that the number is right). Every other language gets `null` for every new key, so `check-ui-strings` keeps
-key parity and counts the nulls (they show English until a later slice fills them).
+first characters (a check that the number is right). The four host languages are the only files written (owner ruling 2026-10-29, open decision 30: `check-ui-strings`
+treats a key a non-host language omits as a null, so the 25 other files stay as they are until L2 fills them); `--all-files` restores the old
+rule of a null in every file.
 
 What it writes
   js/data/ui-strings.<code>.js  a marked block "F5 harvest" before the closing brace of each of the 29 files. A rerun
@@ -96,6 +97,7 @@ def main():
     ap.add_argument('--group', default='auto', help="the review group of every string, or `auto` to take each key's group from --keys")
     ap.add_argument('--date', default=time.strftime('%Y-%m-%d'))
     ap.add_argument('--dry', action='store_true')
+    ap.add_argument('--all-files', action='store_true', help='also write a null for every new key into the other 25 files (the owner\'s original rule; relaxed 2026-10-29, decision 30)')
     ap.add_argument('--keys', default='', help='the harvest key list (JSON); the batch then addresses keys by number')
     a = ap.parse_args()
     if a.show:
@@ -116,11 +118,12 @@ def main():
     if os.path.exists(REGISTER):
         reg = json.load(open(REGISTER, encoding='utf-8'))
     have = {(e['lang'], e['key']) for e in reg['entries']}
-    added = {c: 0 for c in langs()}
-    wrote = {c: set() for c in langs()}   # keys this run put a value into, per language: only those are register entries
+    targets = langs() if a.all_files else [c for c in langs() if c in HOST]   # F5b: a language outside the harvest gains no key until L2 fills it
+    added = {c: 0 for c in targets}
+    wrote = {c: set() for c in targets}   # keys this run put a value into, per language: only those are register entries
     skipped = 0
     new_entries = []
-    for code in langs():
+    for code in targets:
         path = os.path.join(DATA, 'ui-strings.%s.js' % code)
         src = open(path, encoding='utf-8').read()
         b0, b1 = src.find(BEGIN), src.find(END)

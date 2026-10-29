@@ -338,7 +338,7 @@ export const SAFETY_STRINGS = {
   'No alcohol, and no urine.': 'កុំប្រើអាល់កុល ហើយកុំប្រើទឹកនោម។',
   'Stingray, stonefish or lionfish spine injury': 'របួសដោយបន្លាត្រីស្ទីងរេ ត្រីស្តូនហ្វីស ឬត្រីលីយ៉ុនហ្វីស',
   'Immerse the wound in water as hot as can be comfortably tolerated without scalding (around 45°C) for roughly 20–90 minutes, or until the pain is controlled.': 'ត្រាំមុខរបួសក្នុងទឹកក្តៅតាមកម្រិតដែលអាចទ្រាំបានដោយមិនឱ្យរលាក (ប្រហែល 45°C) រយៈពេលប្រហែល 20–90 នាទី ឬរហូតដល់ការឈឺចាប់ស្រាលស្រួល។',
-  'Leave an embedded spine or barb in place — it may be plugging the wound — unless a medical professional tells you to remove it.': 'ទុកបន្លា ឬកន្ទុយក្រចកដែលជាប់ក្នុងមុខរបួសនៅនឹងកន្លែង — វាអាចកំពុងចុកមុខរបួស — លើកលែងតែអ្នកជំនាញវេជ្ជសាស្ត្របានប្រាប់ឱ្យយកចេញ។',
+  'Leave an embedded spine or barb in place — it may be plugging the wound — unless a medical professional tells you to remove it.': 'ទុកបន្លាដែលជាប់ក្នុងមុខរបួសនៅនឹងកន្លែង — វាអាចកំពុងចុកមុខរបួស — លើកលែងតែអ្នកជំនាញវេជ្ជសាស្ត្របានប្រាប់ឱ្យយកចេញ។',
   'Get medical care afterwards: infection risk, a possible retained fragment, antivenom (stonefish), and tetanus risk are all real.': 'ទទួលការថែទាំវេជ្ជសាស្ត្រក្រោយមក៖ ហានិភ័យឆ្លងមេរោគ បំណែកដែលអាចនៅសល់ ថ្នាំប្រឆាំងពិស (ត្រីថ្ម) និងហានិភ័យតេតាណូស សុទ្ធតែជាការពិត។',
   'A sea urchin puncture is different — do NOT use the hot-water method. Wash it with soap and water instead, and seek care if a spine has gone into a joint.': 'របួសដោយប្រជ្រុយសមុទ្រគឺខុសគ្នា — កុំប្រើវិធីត្រាំទឹកក្តៅ។ ជំនួសមកវិញ លាងដោយសាប៊ូ និងទឹក ហើយស្វែងរកការថែទាំប្រសិនបើបន្លាចូលក្នុងសន្លាក់។',
   'Blue-ringed octopus or cone snail': 'ត្រីមឹកដៃវង់ខៀវ (blue-ringed octopus) ឬខ្យងកោណ (cone snail)',

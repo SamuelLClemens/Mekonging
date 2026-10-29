@@ -227,13 +227,24 @@ def load_run(outdir):
     return runs
 
 
+# Strings that must read the same in every language (F5b): web addresses, an example e-mail, a brand or organisation name, the name of a file
+# format, a language written in its own name. They are not interface text to translate, so they are not counted in `ui`.
+KEEP = {
+    'OpenStreetMap ↗', 'Google Lens ↗', 'iNaturalist ↗', 'GeoNames', 'you@example.com', 'https://your-endpoint/translate', '< 0.1 MB',
+    'CSV (.csv)', 'Excel (.xlsx)', 'Friends-International', 'MAG (Mines Advisory Group)', 'Thrive Networks (East Meets West)', 'ban',
+    # the interface languages' own names, as the Talk screen lists them
+    'English', 'Español', 'Français', 'Deutsch', 'Italiano', 'Nederlands', 'Polski', 'Português', 'Svenska', 'Türkçe', 'Čeština', 'Filipino',
+    'Bahasa Indonesia', 'Bahasa Melayu',
+}
+
+
 def untranslated(rec, base_set, data, dictvals):
     """(ui, tpl, data) strings on this route that read exactly as they do in English."""
     out = {'ui': [], 'tpl': [], 'data': []}
     for t in rec['texts']:
         if t['b'] or t['s'] not in base_set or not LATIN.search(t['s']):
             continue
-        if t['s'] in dictvals:                     # a word the language shares with English (Filipino "Home")
+        if t['s'] in dictvals or t['s'] in KEEP:   # a word the language shares with English (Filipino "Home"), or one that must not change
             continue
         out[classify(t['s'], data)].append(t['s'])
     return out['ui'], out['tpl'], out['data']
