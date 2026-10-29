@@ -16,7 +16,10 @@ Checks performed:
   1. Every language marked `ui: true` in the registry actually has a dictionary, and every
      dictionary belongs to a language marked `ui: true`. A language claiming a dictionary it
      lacks would offer the user a choice that does nothing.
-  2. Key parity against the canonical set (English's own keys, taken from the largest block).
+  2. Key parity. The canonical set is the union of the keys of the languages in UI_STRING_MACHINE (the host languages th, vi, km
+     and lo, which F5 and F5b fill): every one of them must hold every key. A language outside that list may omit a key
+     (owner ruling 2026-10-29, open decision 30: the 25 null-only languages keep the 405 keys they carry and gain none until
+     L2 fills them); an omitted key counts as a null (shown in English), and a key no host language holds is an error.
   3. No duplicate keys inside a block — a JS object literal silently keeps only the last, so a
      duplicate is a translation that looks present and is not.
   4. No empty values, and no value left identical to its English key in a non-Latin script
@@ -28,6 +31,10 @@ Checks performed:
      entry names a key the language holds with a real value, and a language with entries is listed in
      UI_STRING_MACHINE (js/data/ui-strings.js), which is what the language picker reads to say
      "machine-translated, under review".
+  7. The safety text (js/data/safety-text.<code>.js, F5b: the Emergency guides and first-aid steps, which are data): the four host
+     files hold the same keys, no empty value, no value identical to its key, every key still occurs in js/data/emergency.js
+     or js/data/firstaid.js (a key edited in the data would otherwise show English with no signal), and the register's
+     `source: safety-text` entries and the files agree both ways.
 """
 import glob
 import json
@@ -67,6 +74,47 @@ def pairs(body):
 
 
 REGISTER = 'scripts/ui-strings-review.json'
+SAFETY_GLOB = 'js/data/safety-text.*.js'
+SAFETY_SOURCES = ('js/data/emergency.js', 'js/data/firstaid.js')
+
+
+def _plain(s):
+    """Source text as a string literal's value reads: escaped quotes unescaped, whitespace collapsed."""
+    return re.sub(r'\s+', ' ', re.sub(r"\\(['\"])", r'\1', s))
+
+
+def safety_text(problems):
+    """{lang: {key: value}} for js/data/safety-text.<code>.js (item 7 in the docstring); appends what is wrong to `problems`."""
+    out = {}
+    for path in sorted(glob.glob(SAFETY_GLOB)):
+        code = os.path.basename(path)[len('safety-text.'):-len('.js')]
+        body = open(path, encoding='utf-8').read()
+        if 'export const SAFETY_STRINGS = {' not in body:
+            problems.append(f'{path}: no SAFETY_STRINGS export')
+            continue
+        kv = pairs(body[body.index('export const SAFETY_STRINGS = {'):])
+        keys = [k for k, _ in kv]
+        for k in sorted({k for k in keys if keys.count(k) > 1}):
+            problems.append(f'safety text {code}: duplicate key {k[:60]!r}')
+        out[code] = dict(kv)
+    if not out:
+        return out
+    source = ' '.join(_plain(open(p, encoding='utf-8').read()) for p in SAFETY_SOURCES if os.path.exists(p))
+    canon = set().union(*(set(v) for v in out.values()))
+    for code, kv in sorted(out.items()):
+        gap = canon - set(kv)
+        if gap:
+            problems.append(f'safety text {code}: missing {len(gap)} key(s) another host language holds, e.g. {sorted(gap)[0][:60]!r}')
+        for k, v in kv.items():
+            if v is None or not v.strip():
+                problems.append(f'safety text {code}: empty value for {k[:60]!r}')
+            elif v == k:
+                problems.append(f'safety text {code}: {k[:60]!r} is identical to the English')
+    for k in sorted(canon):
+        if _plain(k) not in source:
+            problems.append(f'safety text: {k[:60]!r} no longer occurs in js/data/emergency.js or firstaid.js (the data changed: update the key)')
+    print(f'safety text: {len(out)} language(s), {len(canon)} keys each')
+    return out
 
 
 def main():
@@ -76,6 +124,9 @@ def main():
     problems = []
     i18n = open(I18N, encoding='utf-8').read()
     manifest = open(MANIFEST, encoding='utf-8').read()
+
+    m = re.search(r'UI_STRING_MACHINE = \[(.*?)\];', manifest, re.S)
+    machine = set(re.findall(r"'([A-Za-z-]+)'", m.group(1))) if m else set()
 
     registry = dict(re.findall(r"code: '([^']+)'[^}]*?ui: (true|false)", i18n))
     ui_true = {c for c, v in registry.items() if v == 'true'} - {'en'}
@@ -116,23 +167,30 @@ def main():
         print('\n'.join(problems))
         return 1
 
-    # 2. key parity against the largest block, which is the de-facto canonical set
-    canon_code = max(dicts, key=lambda c: len(dicts[c]))
-    canon = set(dicts[canon_code])
-    print(f'canonical set: {canon_code} with {len(canon)} keys\n')
+    # 2. key parity. The canonical set is what the host languages (UI_STRING_MACHINE) hold between them; they must agree exactly.
+    #    Any other language may omit a key (decision 30): an omitted key counts as a null.
+    harvest = sorted(c for c in dicts if c in machine) or sorted(dicts)
+    canon = set().union(*(set(dicts[c]) for c in harvest))
+    print(f'canonical set: {len(canon)} keys, the union of {", ".join(harvest)}\n')
     for code in sorted(dicts):
         missing = canon - set(dicts[code])
         extra = set(dicts[code]) - canon
-        status = 'OK  ' if not missing and not extra else 'FAIL'
+        tolerated = code not in harvest
+        status = 'OK  ' if (not missing or tolerated) and not extra else 'FAIL'
         nulls = sum(1 for v in dicts[code].values() if v is None)
-        print(f'{status} {code:6s} {len(dicts[code]):4d} keys' + (f', {nulls} null (shown in English)' if nulls else ''))
-        if nulls and code in complete:
-            problems.append(f'{code}: {nulls} key(s) still null, and --assert-complete names this language')
-        if missing:
+        line = f'{status} {code:6s} {len(dicts[code]):4d} keys'
+        if nulls:
+            line += f', {nulls} null (shown in English)'
+        if missing and tolerated:
+            line += f', {len(missing)} absent (shown in English)'
+        print(line)
+        if (nulls or (missing and tolerated)) and code in complete:
+            problems.append(f'{code}: {nulls + (len(missing) if tolerated else 0)} key(s) still null or absent, and --assert-complete names this language')
+        if missing and not tolerated:
             problems.append(f'{code}: missing {len(missing)} key(s): {sorted(missing)[:8]}'
                             + (' …' if len(missing) > 8 else ''))
         if extra:
-            problems.append(f'{code}: has {len(extra)} key(s) no other language has: {sorted(extra)[:8]}')
+            problems.append(f'{code}: has {len(extra)} key(s) no host language has: {sorted(extra)[:8]}')
 
     # 3/4. empty or untranslated-looking values
     for code in sorted(dicts):
@@ -150,30 +208,39 @@ def main():
                     problems.append(f'{code}: {k!r} is identical to the English — untranslated?')
 
     # 6. the machine-translation register
-    m = re.search(r'UI_STRING_MACHINE = \[(.*?)\];', manifest, re.S)
-    machine = set(re.findall(r"'([A-Za-z-]+)'", m.group(1))) if m else set()
+    safety = safety_text(problems)
     if os.path.exists(REGISTER):
         reg = json.load(open(REGISTER, encoding='utf-8'))
         seen = {}
+        n_safety = 0
         for e in reg.get('entries', []):
             lang, key = e.get('lang'), e.get('key')
+            src = e.get('source') or 'ui-strings'
             if lang not in dicts:
                 problems.append(f'review register: unknown language {lang!r}')
+            elif src == 'safety-text':
+                n_safety += 1
+                if key not in safety.get(lang, {}):
+                    problems.append(f'review register: {lang} names a safety-text key the file does not hold: {key[:60]!r}')
             elif key not in dicts[lang]:
                 problems.append(f'review register: {lang} names a key the dictionary does not hold: {key!r}')
             elif dicts[lang][key] is None:
                 problems.append(f'review register: {lang} {key!r} is null in the dictionary but registered as machine-made')
             if not e.get('machine') or not e.get('date'):
                 problems.append(f'review register: {lang} {key!r} lacks machine/date')
-            if (lang, key) in seen:
+            if (lang, key, src) in seen:
                 problems.append(f'review register: duplicate entry {lang} {key!r}')
-            seen[(lang, key)] = 1
+            seen[(lang, key, src)] = 1
+        for lang, kv in safety.items():
+            for key in kv:
+                if (lang, key, 'safety-text') not in seen:
+                    problems.append(f'review register: {lang} safety text {key[:60]!r} has no register entry')
         reg_langs = {e.get('lang') for e in reg.get('entries', [])}
         for code in sorted(reg_langs - machine):
             problems.append(f'{code}: has machine-made entries in the register but is not in UI_STRING_MACHINE')
         for code in sorted(machine - reg_langs):
             problems.append(f'{code}: listed in UI_STRING_MACHINE but has no entry in the register')
-        print(f'review register: {len(reg.get("entries", []))} machine-made entries in {len(reg_langs)} language(s)')
+        print(f'review register: {len(reg.get("entries", []))} machine-made entries in {len(reg_langs)} language(s), {n_safety} of them safety text')
     elif machine:
         problems.append('UI_STRING_MACHINE is not empty but scripts/ui-strings-review.json is missing')
 
@@ -183,7 +250,7 @@ def main():
         for p in problems:
             print('  - ' + p)
         return 1
-    print(f'PASS — {len(dicts)} languages, {len(canon)} keys each, registry agrees.')
+    print(f'PASS — {len(dicts)} languages, {len(canon)} keys in the host languages, registry agrees.')
     return 0
 
 

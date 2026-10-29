@@ -268,6 +268,42 @@ export function ensureUiStrings(code) {
   return PENDING[c];
 }
 
+// ---- safety text (F5b) ----------------------------------------------------------------
+// The Emergency scenario guides and the first-aid steps are DATA (js/data/emergency.js, firstaid.js), about 7,000
+// words, so they cannot sit in the interface dictionaries every traveller loads before first paint. They live in
+// one lazy file per host language, js/data/safety-text.<code>.js (the same exact-English-key shape), which the
+// router fetches only when a safety screen opens in that language (js/main.js render(), ensureSafetyText). The
+// entries are merged into the active dictionary, so the DOM pass and t() find them with no change to a screen.
+// A file that cannot be fetched leaves English, the same fallback as a missing dictionary key.
+const SAFETY_LANGS = new Set(['th', 'vi', 'km', 'lo']);
+const SAFETY_DONE = new Set();
+const SAFETY_PENDING = Object.create(null);
+
+// True when the safety text for this language is loaded, attempted, or does not exist.
+export function safetyTextReady(code) {
+  const c = code || uiLang();
+  return c === FALLBACK || !SAFETY_LANGS.has(c) || SAFETY_DONE.has(c);
+}
+
+// Load one language's safety text into its dictionary. ALWAYS resolves, never rejects. An entry the interface
+// dictionary already holds keeps its value.
+export function ensureSafetyText(code) {
+  const c = code || uiLang();
+  if (safetyTextReady(c)) return Promise.resolve();
+  if (SAFETY_PENDING[c]) return SAFETY_PENDING[c];
+  SAFETY_PENDING[c] = ensureUiStrings(c)
+    .then(() => import(`./data/safety-text.${c}.js`))
+    .then((m) => {
+      const add = m && m.SAFETY_STRINGS;
+      if (!add) return;
+      const d = DICTS[c] || (DICTS[c] = {});
+      for (const k of Object.keys(add)) if (!d[k]) d[k] = add[k];
+    })
+    .catch(() => {})
+    .then(() => { SAFETY_DONE.add(c); delete SAFETY_PENDING[c]; });
+  return SAFETY_PENDING[c];
+}
+
 // Translate one English UI string. Returns the English unchanged when the active language has
 // no entry for it — a missing translation must degrade to readable English, never to a blank
 // or a raw key.
@@ -326,8 +362,9 @@ function swapText(node, translated) {
 // Deliberately anchored and single-run: only a LEADING pictographic run followed by
 // whitespace. A string that merely contains an emoji is left alone, because the words either
 // side of it are not necessarily a phrase the dictionary knows.
-// \p{So} (and the four plain arrows) also covers the marks that are not emoji but lead a label the same way: ✓ ↺ ★ ↗.
-const LEAD_EMOJI = /^([\p{Extended_Pictographic}\p{So}←-↓‍️⃣\p{Regional_Indicator}＋+]+)(\s+)(.+)$/u;
+// \p{So} (and the four plain arrows) also covers the marks that are not emoji but lead a label the same way: ✓ ↺ ★ ↗; \p{Sm} the maths
+// symbols that do the same (≤ 1 week, ⤢ Full screen).
+const LEAD_EMOJI = /^([\p{Extended_Pictographic}\p{So}\p{Sm}←-↓‍️⃣\p{Regional_Indicator}＋+]+)(\s+)(.+)$/u;
 
 // Look a string up directly, then — failing that — as "<emoji> <label>".
 function lookup(d, s) {
@@ -637,4 +674,35 @@ export async function autoTranslateTree(root) {
 export function retranslate(root) {
   try { translateTree(root); } catch { /* a translation miss must never block a render */ }
   try { autoTranslateTree(root).catch(() => {}); } catch { /* best-effort */ }
+}
+
+// retranslate() is the fix one card at a time, and each screen has to remember to call it. F5b found a whole class that did not: the
+// Market boards (fifteen places repaint themselves after a search), the vault form, the photo-pack sizes in Settings, the map's own
+// controls. A traveller in Thai, Vietnamese, Khmer or Lao saw English there with nothing to say why (93 strings the dictionaries
+// already held, on 14 routes). So this watches the screen root once and runs the dictionary pass on whatever is added later. It runs
+// in the observer's own callback, a microtask after the change, so nothing paints in English first and a check that waits for the DOM
+// to go quiet never sees the English. Not the online pass: that one is capped per render, and a burst must not spend the cap many
+// times over. mount() adds the whole screen as a direct child of the root and translates it itself, so those additions are skipped.
+let LATE_OBS = null;
+
+export function watchLateText(root) {
+  if (LATE_OBS || !root || typeof MutationObserver === 'undefined') return;
+  LATE_OBS = new MutationObserver((muts) => {
+    if (uiLang() === FALLBACK) return;
+    const added = new Set();
+    for (const m of muts) {
+      if (m.target === root) continue;
+      for (const n of m.addedNodes) {
+        if (n.nodeType === 1) { if (n.tagName !== 'IMG' && n.tagName !== 'CANVAS') added.add(n); }
+        else if (n.nodeType === 3 && m.target.nodeType === 1) added.add(m.target);
+      }
+    }
+    const list = [...added];
+    const many = list.length > 60;   // a list repainted whole: one pass over the root is cheaper than testing each pair
+    for (const n of many ? [root] : list) {
+      if (!n.isConnected || (!many && list.some((o) => o !== n && o.contains(n)))) continue;
+      try { translateTree(n); } catch { /* a translation miss must never block a render */ }
+    }
+  });
+  LATE_OBS.observe(root, { childList: true, subtree: true });
 }

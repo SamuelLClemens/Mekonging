@@ -41,7 +41,8 @@ function defaultView(prefs) {
 
 function topicNode(topic, view) {
   const forYou = (topic.views || []).includes(view);
-  const summary = `${topic.ic} ${topic.t}${forYou ? ' · for you' : ''}`;
+  // Two text nodes, so the title (data, translated from js/data/safety-text.<code>.js) and the badge (a dictionary key) each match exactly.
+  const summary = forYou ? [`${topic.ic} ${topic.t}`, ' · for you'] : `${topic.ic} ${topic.t}`;
   const body = () => {
     const inner = h('div', {});
     if (topic.lead) inner.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, topic.lead));
@@ -92,16 +93,17 @@ export function firstaidScreen(arg) {
   if (VIEW_IDS.has(arg)) { view = arg; prefs.firstAidFor = arg; save(); }
   else view = (VIEW_IDS.has(prefs.firstAidFor) && prefs.firstAidFor) || defaultView(prefs);
 
-  wrap.append(h('p', { class: 'sos-loc' }, `${c.flag} ${c.name} — everything here works with no signal.`));
+  // Separate text nodes (F5b), so the country name and the sentence each match a dictionary key; the whole line never could.
+  wrap.append(h('p', { class: 'sos-loc' }, [`${c.flag} ${c.name}`, ' — everything here works with no signal.']));
   wrap.append(countryChips((id) => { setActiveCountry(id); go('#firstaid'); }, active));
 
   // ---- Call for help, and where you are, right at the top ------------------------------
   const call = h('div', { class: 'card sos-card', 'data-nofold': '' }, [h('div', { class: 'row-between' }, [
-    h('h2', {}, `📞 Call — ${c.name}`),
+    h('h2', {}, ['📞 Call — ', c.name]),
     infoTip('The national emergency number, free from any phone and usually working with no SIM. If you cannot describe where you are, read the coordinates below to the dispatcher.'),
   ])]);
   const em = EMERGENCY_NUMBERS[c.id] || [];
-  if (em.length) em.forEach((e) => call.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
+  if (em.length) em.forEach((e) => call.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, [e.label, `: ${e.number}`])));
   else call.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
   if (fix && fix.lat != null) {
     const coordStr = `${fix.lat.toFixed(5)}, ${fix.lng.toFixed(5)}`;

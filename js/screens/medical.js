@@ -199,7 +199,7 @@ export function hospitalScreen(cc) {
   const provName = wai && wai.country === active ? wai.province : null;
   const whereLine = localName
     ? `📍 ${localName}${provName && provName !== localName ? `, ${provName}` : ''} — ${c.flag} ${c.name}`
-    : `${c.flag} ${c.name} — turn on location for distances, or pick your country:`;
+    : [`${c.flag} ${c.name}`, ' — turn on location for distances, or pick your country:'];   // two text nodes (F5b): the sentence is a dictionary key
   wrap.append(h('p', { class: 'sos-loc' }, whereLine));
   if (sure && sure.kind === 'far') wrap.append(farCard(sure.near, c.name));
   wrap.append(countryChips((id) => go(`#hospital-${id}`), active));
@@ -209,11 +209,11 @@ export function hospitalScreen(cc) {
   // the digits share one text node, and a translation service that regroups or drops a
   // digit here could get somebody killed. The bundled dictionary still covers the labels.
   const call = h('div', { class: 'card sos-card' }, [h('div', { class: 'row-between' }, [
-    h('h2', {}, `1. Call — ${c.name}`),
+    h('h2', {}, ['1. Call — ', c.name]),
     infoTip('Emergency numbers are free from any phone, need no credit, and on most networks work with no SIM card. If nobody answers in English, keep the line open and hand the phone to anyone nearby.'),
   ])]);
   const em = EMERGENCY_NUMBERS[active] || [];
-  if (em.length) em.forEach((e) => call.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
+  if (em.length) em.forEach((e) => call.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, [e.label, `: ${e.number}`])));
   else call.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
   wrap.append(call);
 

@@ -57,6 +57,18 @@ It uses macOS's fonts, not iOS's, so it shows WebKit's layout and line breaking,
 4. Rerun the check on the routes touched: the string must leave the `ui` column. A string that does not leave has a key that differs from what the screen renders
    (a symbol the app does not strip, or text built from pieces); fix the code or the key, not the check.
 
+## The safety text (F5b)
+The Emergency situation guides, the embassy lists, the hospital tags and the first-aid topics are data (`js/data/emergency.js`, `firstaid.js`), about
+7,000 words, so they cannot sit in the dictionaries. `safety-text.py` makes their keys (`keys`, in review order: Emergency, then first aid), writes a
+batch of `n<TAB>prefix<TAB>th<TAB>vi<TAB>km<TAB>lo` rows into one lazy module per host language, `js/data/safety-text.<code>.js` (`apply`), and the
+register (`source: safety-text`). `js/i18n.js` `ensureSafetyText()` loads the file when `#sos`, `#firstaid` or `#hospital` opens in that language
+and merges it into the active dictionary. Add a string to either data file and the check in `scripts/check-ui-strings.py` fails until the four
+modules hold it (it also fails on a key the data no longer has). `backtranslate.py` samples both kinds (`BT_SINCE=<date>` limits it to new entries).
+
+## Strings that must not change
+`KEEP` in `lang-check.py` lists strings every language shows as they are (web addresses, an example e-mail, brand and organisation names, file formats,
+a language written in its own name). They are not counted in `ui`.
+
 ## What the check cannot say
 - It reads English strings, not wrong translations: `ui` = 0 does not mean the wording is right, only that something replaced the English.
 - Composed strings (`tpl`) and data text need a different mechanism; see `docs/PROGRAM.md` 4.4 "Language".

@@ -5,7 +5,7 @@
     backtranslate.py pairs  LANG              print the English next to the back-translation written in WORKDIR/bt-LANG.back.txt
     backtranslate.py record LANG              store the verdicts in WORKDIR/bt-LANG.verdict.txt into scripts/ui-strings-review.json
 
-The sample is N random keys of the register for LANG, at most 160 characters long, with at least 60% from the safety groups
+The sample is N random keys of the register for LANG (set BT_SINCE=YYYY-MM-DD for only the entries added since then; safety text counts as a safety group), at most 160 characters long, with at least 60% from the safety groups
 (emergency, firstaid, medical, safety). The English is withheld from the person translating back, so the back-translation is
 blind; `pairs` then shows both so the meaning can be compared. Verdict lines: `n<TAB>close|differs[<TAB>note]` for the exceptions; every other sampled string is `same`.
 """
@@ -14,6 +14,7 @@ import os
 import random
 import re
 import sys
+import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WORK = os.path.expanduser(os.environ.get('LC_WORK', '~/Library/Caches/mk-lang-check/harvest'))
@@ -27,8 +28,15 @@ def unesc(s):
 
 
 def values(lang):
+    """{(source, key): value} for the interface dictionary and (F5b) the safety-text module."""
+    out = {}
     src = open(os.path.join(ROOT, 'js', 'data', 'ui-strings.%s.js' % lang), encoding='utf-8').read()
-    return {unesc(k): unesc(v) for k, v, n in PAIR.findall(src) if not n}
+    out.update({('ui-strings', unesc(k)): unesc(v) for k, v, n in PAIR.findall(src) if not n})
+    p = os.path.join(ROOT, 'js', 'data', 'safety-text.%s.js' % lang)
+    if os.path.exists(p):
+        src = open(p, encoding='utf-8').read()
+        out.update({('safety-text', unesc(k)): unesc(v) for k, v in re.findall(r"^\s*'((?:[^'\\]|\\.)*)':\s*'((?:[^'\\]|\\.)*)',?\s*$", src, re.M)})
+    return out
 
 
 def load():
@@ -42,16 +50,17 @@ def main():
         n = int(sys.argv[3]) if len(sys.argv) > 3 else 50
         seed = int(sys.argv[4]) if len(sys.argv) > 4 else 7
         vals = values(lang)
-        pool = [e for e in reg['entries'] if e['lang'] == lang and len(e['key']) <= 160 and e['key'] in vals]
+        since = os.environ.get('BT_SINCE', '')   # F5b: only the entries added since this date (F5's 200 samples are already in the register)
+        pool = [e for e in reg['entries'] if e['lang'] == lang and len(e['key']) <= 160 and (e.get('source') or 'ui-strings', e['key']) in vals and e.get('date', '') >= since]
         safe = [e for e in pool if e.get('group') in SAFE]
         rest = [e for e in pool if e.get('group') not in SAFE]
         rnd = random.Random(seed)
         pick = rnd.sample(safe, min(len(safe), int(n * 0.6))) + rnd.sample(rest, min(len(rest), n - int(n * 0.6)))
         rnd.shuffle(pick)
-        json.dump([{'key': e['key'], 'group': e.get('group')} for e in pick], open(os.path.join(WORK, 'bt-%s.keys.json' % lang), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+        json.dump([{'key': e['key'], 'group': e.get('group'), 'source': e.get('source') or 'ui-strings'} for e in pick], open(os.path.join(WORK, 'bt-%s.keys.json' % lang), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
         with open(os.path.join(WORK, 'bt-%s.txt' % lang), 'w', encoding='utf-8') as fh:
             for i, e in enumerate(pick):
-                fh.write('%d\t%s\n' % (i, vals[e['key']]))
+                fh.write('%d\t%s\n' % (i, vals[(e.get('source') or 'ui-strings', e['key'])]))
         print('%s: %d strings (%d safety) -> bt-%s.txt' % (lang, len(pick), sum(1 for e in pick if e.get('group') in SAFE), lang))
     elif cmd == 'pairs':
         keys = json.load(open(os.path.join(WORK, 'bt-%s.keys.json' % lang), encoding='utf-8'))
@@ -66,7 +75,7 @@ def main():
             if ln.strip():
                 i, back = ln.split('\t', 1)
                 backs[int(i)] = back
-        date = os.environ.get('BT_DATE', '2026-10-28')
+        date = os.environ.get('BT_DATE', time.strftime('%Y-%m-%d'))
         verdicts = {}
         for ln in open(os.path.join(WORK, 'bt-%s.verdict.txt' % lang), encoding='utf-8').read().split('\n'):
             if ln.strip():
@@ -75,8 +84,9 @@ def main():
         new = []
         for i in sorted(backs):
             v, note = verdicts.get(i, ('same', ''))
-            new.append({'lang': lang, 'key': keys[i]['key'], 'back': backs[i], 'verdict': v, 'note': note, 'date': date})
-        reg['backTranslation'] = [e for e in reg.get('backTranslation', []) if e['lang'] != lang] + new
+            new.append({'lang': lang, 'key': keys[i]['key'], 'back': backs[i], 'verdict': v, 'note': note, 'date': date, **({'source': keys[i]['source']} if keys[i].get('source') == 'safety-text' else {})})
+        # a record adds to the register; it replaces only this language's samples of the same date (a rerun), never an earlier slice's
+        reg['backTranslation'] = [e for e in reg.get('backTranslation', []) if not (e['lang'] == lang and e.get('date') == date)] + new
         with open(REG, 'w', encoding='utf-8') as fh:
             fh.write('{\n "note": %s,\n "entries": [\n' % json.dumps(reg['note'], ensure_ascii=False))
             fh.write(',\n'.join('  ' + json.dumps(e, ensure_ascii=False) for e in reg['entries']))
