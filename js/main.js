@@ -45,6 +45,7 @@ import { OUTSIDE_KM, ANCHOR_KM, fixPlaceFor, resolveFixPlace } from './fix-place
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
 import { EMERGENCY_NUMBERS } from './data/emergency-numbers.js';
 import { fixSureness, farCard, outsideScreen } from './screens/emergency-outside.js';
+import { ensureWorld, worldSettled, worldCountryOf, worldDecides, appCountryOf } from './emergency-world.js';
 import { loadHospitals, isHospitalsLoaded, sosCare } from './data/hospitals.js';
 import { REGION_PATHS, REGION_PROJ } from './data/geo.js';
 import { loadIslands, islandsLoaded, sameLand } from './data/islands.js';
@@ -824,7 +825,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.657.0';
+export const APP_VERSION = 'mk-v0.658.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -6283,8 +6284,13 @@ export function countryOfFix(fix) {
     const here = hit || outlineCountry(fix.lat, fix.lng);
     if (here) return here;
   }
-  // F7a: no curated city within OUTSIDE_KM is outside the four countries (Singapore used to read Thailand).
+  // F7b: no region outline within BAND_KM. Once Emergency has loaded the world outline it names the country, and one
+  // of the four wins over the nearest city's (a Cambodian island nearer a Thai anchor). It is null on every other screen.
   const near = nearestSpotGlobal(fix);
+  const world = worldCountryOf(fix);
+  const worldCc = worldDecides(world, near && near.km) ? appCountryOf(world.id) : null;
+  if (worldCc) return worldCc;
+  // F7a: no curated city within OUTSIDE_KM is outside the four countries (Singapore used to read Thailand).
   return near && near.km <= OUTSIDE_KM ? near.spot.country : null;
 }
 
@@ -6485,7 +6491,7 @@ function sosScreen(cc) {
   const fixCc = fix ? countryOfFix(fix) : null;
   // F7a: a fix outside the four countries gets its own screen, never a region country's numbers.
   const sure = !cc && fix ? fixSureness(fix) : null;
-  if (sure && sure.kind === 'outside') return outsideScreen('sos', fix, sure.near);
+  if (sure && sure.kind === 'outside') return outsideScreen('sos', fix, sure.near, sure.world);
   if (cc) setActiveCountry(cc);
   else if (fixCc) setActiveCountry(fixCc);
 
@@ -7234,6 +7240,18 @@ export function render() {
   if ((head === 'sos' || head === 'firstaid' || head === 'hospital') && !safetyTextReady()) {
     ensureSafetyText().then(render);
     return;
+  }
+
+  // World outline and table (F7b): a fix more than BAND_KM from the four countries' outlines needs js/emergency-world.js's
+  // lazy files to say which country it is in and what to dial. Only a fix-driven #sos or #hospital waits (a chip pick
+  // names its country); a fix inside the region never loads the 470 KB outline. It never rejects, so a file that cannot
+  // be fetched renders the F7a screen: 112 and the coordinates.
+  if ((head === 'sos' || head === 'hospital') && !worldSettled() && !ALL_CC.includes(arg.split('-')[0])) {
+    const fx = getLastFix();
+    if (fx && fx.lat != null && !countriesNearFix(fx).length) {
+      ensureWorld().then(render);
+      return;
+    }
   }
 
   try {

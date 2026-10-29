@@ -176,7 +176,7 @@ export function hospitalScreen(cc) {
   // F7a: a fix outside the four countries gets the outside screen, never a region country's hospitals.
   const here = cc ? null : getLastFix();
   const sure = here ? fixSureness(here) : null;
-  if (sure && sure.kind === 'outside') return outsideScreen('hospital', here, sure.near);
+  if (sure && sure.kind === 'outside') return outsideScreen('hospital', here, sure.near, sure.world);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Get to a hospital', '#sos'));
   const { fix, wai, c, cc: active } = resolveWhere(cc);

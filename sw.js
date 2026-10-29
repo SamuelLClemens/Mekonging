@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.657.0';
+const CACHE_VERSION = 'mk-v0.658.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -135,6 +135,7 @@ const PRECACHE = [
   // opened with no signal.
   'js/screens/medical.js',
   'js/screens/emergency-outside.js',
+  'js/emergency-world.js',
   'js/data/emergency.js',
   'js/data/emergency-numbers.js',
   'js/data/hospitals.curated.js',
@@ -224,6 +225,15 @@ const PRECACHE = [
   'js/data/safety-text.vi.js',
   'js/data/safety-text.km.js',
   'js/data/safety-text.lo.js',
+  // The worldwide Emergency data (F7b): lazy, read only for a fix more than 10 km from the four countries
+  // (js/emergency-world.js ensureWorld). Precached anyway: a traveller needs it with no signal, abroad.
+  'js/data/world-outline.js',
+  'js/data/world-names.js',
+  'js/data/emergency-world.asia.js',
+  'js/data/emergency-world.europe.js',
+  'js/data/emergency-world.africa.js',
+  'js/data/emergency-world.americas.js',
+  'js/data/emergency-world.oceania.js',
   'js/data/ui-strings.zh-CN.js',
   'js/data/ui-strings.zh-TW.js',
   'js/data/ui-strings.ms.js',
@@ -393,7 +403,7 @@ const MANIFEST = {
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'icons/ui.svg': '8b29a252',
-  'index.html': '5d86ccd3',
+  'index.html': 'f61276a5',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'f2ff527f',
@@ -417,6 +427,11 @@ const MANIFEST = {
   'js/data/diet.js': '832527d8',
   'js/data/drivetimes.js': 'b543e68d',
   'js/data/emergency-numbers.js': '8de06321',
+  'js/data/emergency-world.africa.js': '0b228558',
+  'js/data/emergency-world.americas.js': '96e73269',
+  'js/data/emergency-world.asia.js': '14f27ab9',
+  'js/data/emergency-world.europe.js': '9542363a',
+  'js/data/emergency-world.oceania.js': '1d15519a',
   'js/data/emergency.js': '5bec3690',
   'js/data/essentials.js': '090595cc',
   'js/data/etiquette.js': '57015c39',
@@ -559,7 +574,10 @@ const MANIFEST = {
   'js/data/visa.js': 'fb2914ac',
   'js/data/walk-index.js': '20f36085',
   'js/data/walk.bangkok.js': '675378c1',
+  'js/data/world-names.js': 'bc00dfd7',
+  'js/data/world-outline.js': '1a26dc45',
   'js/data/zones.js': '89ab528b',
+  'js/emergency-world.js': '789a9306',
   'js/exporter.js': 'e301db80',
   'js/fix-place.js': 'd7ca920d',
   'js/gamify.js': '235c330e',
@@ -571,7 +589,7 @@ const MANIFEST = {
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
   'js/location-ask.js': '2be4200d',
-  'js/main.js': 'a4e7ad3e',
+  'js/main.js': '70f2dc59',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'baf60785',
   'js/market-api.js': '0f0d76c5',
@@ -606,7 +624,7 @@ const MANIFEST = {
   'js/screens/circle.js': '5f936c15',
   'js/screens/contributions.js': 'f86462b4',
   'js/screens/country-info.js': '1cca1ef0',
-  'js/screens/emergency-outside.js': '2253851a',
+  'js/screens/emergency-outside.js': '16fbad48',
   'js/screens/etiquette.js': '7fc329c4',
   'js/screens/exchange.js': 'a1df3dfc',
   'js/screens/explore.js': '6d2e67cc',
@@ -624,7 +642,7 @@ const MANIFEST = {
   'js/screens/market-home.js': 'd0289385',
   'js/screens/market-listing.js': 'e46103f1',
   'js/screens/market-parts.js': '91f2c17b',
-  'js/screens/medical.js': 'a02b9690',
+  'js/screens/medical.js': '10ae9b6a',
   'js/screens/nearby.js': '6729197f',
   'js/screens/nextstop.js': '657c8d05',
   'js/screens/phrasebook.js': '89eb5faa',

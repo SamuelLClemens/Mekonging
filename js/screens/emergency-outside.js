@@ -13,25 +13,36 @@
 // (189 km) and Penang (165 km) are inside OUTSIDE_KM and read "far", not "outside": no distance
 // separates them from remote region sites, and the nearest city still names a country there.
 //
-// Not here: the national numbers for the rest of the world and the world outline that would find the
-// country (F7b). Until then, outside the region the screen gives the international number and the
-// traveller's coordinates, never a region country's numbers as if they applied.
+// F7b (2026-10-29): the world outline finds the country (js/emergency-world.js, loaded for #sos and #hospital by
+// render() when a fix is more than 10 km from the four countries' outlines) and a cited table gives its numbers,
+// each a tap-to-call button like the four countries'. A country the outline names but the table has no checked
+// source for gets 112 and the coordinates, never a guess. Where the outline decides, it replaces the distance hedge:
+// 30 km into Myanmar from Mae Sot is Myanmar however near a curated city is. Not settled by it: within 10 km of
+// a region border the four countries' own outline and ADM1 polygons still decide (countryOfFix), because the world
+// outline is generalised by about 5 km and a border town is narrower than that.
 import { h } from '../util.js';
 import { OUTSIDE_KM } from '../fix-place.js';
 import { go, mount, topbar, countryChips, countriesNearFix, nearestSpotGlobal } from '../main.js';
+import { worldCountryOf, worldDecides, appCountryOf, emergencyFor, sourceHost, telHref, COAST_KM } from '../emergency-world.js';
 
 // Past this from every curated city, with no region outline within 10 km, the named country may be wrong.
 export const FAR_KM = 60;
 
-// 'sure': a shipped outline is within 10 km, or a curated city is within FAR_KM.
-// 'far': neither, but a city is within OUTSIDE_KM: the nearest city's country is named and may be wrong.
-// 'outside': no city within OUTSIDE_KM, so countryOfFix() is null (Singapore, Kuala Lumpur, Kunming).
+// 'sure': a shipped outline is within 10 km, the world outline settles the fix in one of the four countries, or a
+//   curated city is within FAR_KM.
+// 'far': none of those, but a city is within OUTSIDE_KM: the nearest city's country is named and may be wrong.
+// 'outside': the world outline settles the fix in another country (worldDecides: inside its polygon, or off it with no
+//   city of the four countries within 100 km), or no city is within OUTSIDE_KM and the outline names none.
+// `world` is the outline's answer ({ id, name, km, exact }) when it settled the fix, else null (not loaded, no land
+// within REACH_KM, or a city of the four countries is too near to let an off-outline answer overrule it).
 export function fixSureness(fix) {
-  if (!fix || fix.lat == null || fix.lng == null) return { kind: 'sure', near: null };
-  if (countriesNearFix(fix).length) return { kind: 'sure', near: null };
+  if (!fix || fix.lat == null || fix.lng == null) return { kind: 'sure', near: null, world: null };
+  if (countriesNearFix(fix).length) return { kind: 'sure', near: null, world: null };
   const near = nearestSpotGlobal(fix);
-  if (!near || near.km > OUTSIDE_KM) return { kind: 'outside', near };
-  return { kind: near.km > FAR_KM ? 'far' : 'sure', near };
+  const world = worldCountryOf(fix);
+  if (worldDecides(world, near && near.km)) return { kind: appCountryOf(world.id) ? 'sure' : 'outside', near, world };
+  if (!near || near.km > OUTSIDE_KM) return { kind: 'outside', near, world: null };
+  return { kind: near.km > FAR_KM ? 'far' : 'sure', near, world: null };
 }
 
 // 1.3521° N, 103.8198° E (four decimals, about 11 m).
@@ -42,11 +53,18 @@ function coordsLabel(fix) {
 
 // `data-no-mt` on the number and the coordinates: the optional machine-translation pass (js/i18n.js)
 // must never regroup digits on the one screen where a mangled string could get somebody hurt.
-function callCard() {
+// With the country's table entry the card is the same shape as the four countries': one tap-to-call button per number
+// (`a.btn.block.sos-num`, label and digits in two nodes), then 112 as the fallback and the entry's source.
+function callCard(world, entry) {
+  const nums = entry ? entry.numbers : [];
+  // A country whose own table lists 112 (most of Europe) needs no second 112 button under it.
+  const lists112 = nums.some((e) => String(e.number).replace(/\s/g, '') === '112');
   return h('div', { class: 'card sos-card', 'data-nofold': '' }, [
-    h('h2', {}, '📞 Call for help'),
-    h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: 'tel:112' }, 'International emergency number: 112'),
-    h('p', { class: 'muted tiny', style: 'margin: var(--sp-1h) 0 0' }, '112 is answered on most mobile networks worldwide, not all. If it does not connect, ask anyone nearby for the local number.'),
+    h('h2', {}, entry ? `📞 ${world.name} — call for help` : '📞 Call for help'),
+    ...nums.map((e) => h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: telHref(e.number) }, [e.label, `: ${e.number}`])),
+    lists112 ? null : h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: 'tel:112' }, 'International emergency number: 112'),
+    lists112 ? null : h('p', { class: 'muted tiny', style: 'margin: var(--sp-1h) 0 0' }, '112 is answered on most mobile networks worldwide, not all. If it does not connect, ask anyone nearby for the local number.'),
+    entry ? h('p', { class: 'muted tiny', 'data-no-mt': '', style: 'margin: var(--sp-1h) 0 0' }, ['Source: ', h('a', { href: entry.src, target: '_blank', rel: 'noopener' }, `${sourceHost(entry.src)} ↗`)]) : null,
   ]);
 }
 
@@ -60,17 +78,26 @@ export function farCard(near, countryName) {
 }
 
 // One screen for both routes: the sos and hospital screens differ here only in title and chip target.
-export function outsideScreen(route, fix, near) {
+export function outsideScreen(route, fix, near, world) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(route === 'hospital' ? 'Get to a hospital' : 'Emergency', route === 'hospital' ? '#sos' : '#home'));
   const km = near ? Math.round(near.km) : null;
+  const entry = world ? emergencyFor(world.id) : null;
+  const offshore = world && world.km > COAST_KM;
+  // The country when the outline names one; otherwise the F7a text (open water, or the outline never loaded).
+  const head = world
+    ? [h('h2', {}, `📍 ${offshore ? 'Near ' : ''}${world.name}`),
+       offshore ? h('p', { style: 'margin: var(--sp-1h) 0' }, `About ${world.km} km off its coast.`) : null,
+       h('p', { class: 'muted tiny', style: 'margin: var(--sp-1h) 0' }, 'Outside Thailand, Vietnam, Cambodia and Laos.')]
+    : [h('h2', {}, '📍 Outside Thailand, Vietnam, Cambodia and Laos'),
+       km != null ? h('p', { style: 'margin: var(--sp-1h) 0' }, `You appear to be about ${km.toLocaleString('en')} km from ${near.spot.city}.`) : null];
+  const gap = world && !entry ? `This app has no checked emergency number for ${world.name} yet.` : 'This app has no emergency numbers for where you are yet: pick one of the four countries below to see its numbers.';
   wrap.append(h('div', { class: 'card sos-card', 'data-nofold': '', 'data-outside': '' }, [
-    h('h2', {}, '📍 Outside Thailand, Vietnam, Cambodia and Laos'),
-    km != null ? h('p', { style: 'margin: var(--sp-1h) 0' }, `You appear to be about ${km.toLocaleString('en')} km from ${near.spot.city}.`) : null,
+    ...head,
     h('p', { 'data-no-mt': '', style: 'margin: var(--sp-1h) 0' }, [h('strong', {}, 'Your coordinates: '), coordsLabel(fix)]),
-    h('p', { class: 'muted tiny', style: 'margin: 0' }, 'Read these to a dispatcher. This app has no emergency numbers for where you are yet: pick one of the four countries below to see its numbers.'),
+    h('p', { class: 'muted tiny', style: 'margin: 0' }, entry ? 'Read these to a dispatcher.' : `Read these to a dispatcher. ${gap}`),
   ]));
-  wrap.append(callCard());
+  wrap.append(callCard(world, entry));
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, 'Get to a hospital'),
     h('a', { class: 'btn block', href: `https://www.google.com/maps/search/hospital/@${fix.lat},${fix.lng},13z`, target: '_blank', rel: 'noopener' }, '🔎 Search hospitals around me (needs internet) ↗'),
