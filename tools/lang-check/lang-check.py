@@ -244,7 +244,7 @@ def untranslated(rec, base_set, data, dictvals):
     for t in rec['texts']:
         if t['b'] or t['s'] not in base_set or not LATIN.search(t['s']):
             continue
-        if t['s'] in dictvals or t['s'] in KEEP:   # a word the language shares with English (Filipino "Home"), or one that must not change
+        if {t['s'], app_key(t['s'])} & (dictvals | KEEP):   # a word the language shares with English (Filipino "Home"), or one that must not change (with or without its leading emoji)
             continue
         out[classify(t['s'], data)].append(t['s'])
     return out['ui'], out['tpl'], out['data']

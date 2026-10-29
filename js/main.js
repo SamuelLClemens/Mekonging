@@ -30,7 +30,7 @@ import {
 // import, safe because every one of them is only read inside a function body, never at
 // module-evaluation time — see js/data/regions.js's lazy-load fact 2 for the same reasoning).
 import {
-  LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree, retranslate,
+  LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree, retranslate, watchLateText,
   detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady, ensureSafetyText, safetyTextReady,
   primeSafetyPathBatch, isMachineTranslated,
 } from './i18n.js';
@@ -1617,6 +1617,8 @@ export function mount(node, showTabbar) {
   // in what the bundled dictionary missed, so it is fired off without awaiting and the screen
   // paints immediately in English-plus-whatever-was-cached.
   try { autoTranslateTree(app).catch(() => {}); } catch { /* best-effort */ }
+  // Whatever the screen paints after this point (a second paint after an async load) gets the dictionary pass too.
+  try { watchLateText(app); } catch { /* a translation miss must never block a render */ }
   window.scrollTo(0, 0);
   // Single-page accessibility: a full page load moves focus to the top and lets a screen
   // reader announce the new page. An SPA must do that itself, or keyboard and screen-reader

@@ -333,7 +333,7 @@ export const STRINGS = {
     'My stuff': 'ของฉัน', 'People': 'ผู้คน', 'Plan & travel': 'วางแผนและเดินทาง',
     'Plan your next stop': 'วางแผนจุดหมายต่อไป', 'Pools': 'สระว่ายน้ำ',
     'Preferences, backups, help': 'การตั้งค่า การสำรองข้อมูล วิธีใช้',
-    'Rates, budget, what things cost': 'อัตราแลกเปลี่ยน งบประมาณ ราคาของสิ่งต่าง ๆ', 'See & do': 'ชมและทำ',
+    'Rates, budget, what things cost': 'อัตราแลกเปลี่ยน งบ และราคา', 'See & do': 'ชมและทำ',
     'Send feedback': 'ส่งความคิดเห็น', 'Settings & help': 'ตั้งค่าและวิธีใช้',
     'Share my journey': 'แชร์การเดินทางของฉัน', 'Shared with you': 'แชร์กับคุณ', 'Things to do': 'สิ่งที่น่าทำ',
     'Transport': 'การขนส่ง', 'Transport schedules': 'ตารางการเดินทาง', 'Travel calendar': 'ปฏิทินการเดินทาง',
@@ -876,6 +876,11 @@ export const STRINGS = {
     'Phuket Central Mosque (Masjid Mukaram)': 'มัสยิดกลางภูเก็ต (มัสยิดมุการอม)',
     'Sri Maha Mariamman Temple (Wat Khaek), Silom': 'วัดศรีมหาอุมาเทวี (วัดแขก) สีลม', 'Wat Chalong': 'วัดฉลอง',
     'Wat Pho (Temple of the Reclining Buddha)': 'วัดโพธิ์ (วัดพระนอน)',
-    'Wat Phra That Doi Suthep': 'วัดพระธาตุดอยสุเทพ',
+    'Wat Phra That Doi Suthep': 'วัดพระธาตุดอยสุเทพ', 'Call —': 'โทร —', '1. Call —': '1. โทร —',
+    '— everything here works with no signal.': '— ทุกอย่างที่นี่ใช้งานได้โดยไม่มีสัญญาณ',
+    '— turn on location for distances, or pick your country:': '— เปิดตำแหน่งเพื่อดูระยะทาง หรือเลือกประเทศของคุณ:',
+    'Crop tightly to just the sign — a shot that also frames the street around it reads far worse. This needs the internet for both steps, and the extracted text is always yours to fix before translating; nothing here is a wall of small print, just a starting point.': 'ครอบตัดให้เหลือเฉพาะป้าย — ภาพที่มีถนนโดยรอบด้วยจะอ่านได้แย่กว่ามาก ทั้งสองขั้นตอนต้องใช้อินเทอร์เน็ต และข้อความที่ดึงออกมานั้นคุณแก้ไขได้เสมอก่อนแปล ที่นี่ไม่มีข้อความตัวเล็กยาวเหยียด เป็นเพียงจุดเริ่มต้น',
+    'Text recognition and translation both run through third-party services and need a connection. Only the text you see above is ever sent — the photo itself never leaves this device.': 'การรู้จำข้อความและการแปลทำงานผ่านบริการของบุคคลที่สามและต้องมีการเชื่อมต่อ ระบบส่งเฉพาะข้อความที่คุณเห็นด้านบนเท่านั้น — ตัวรูปภาพไม่เคยออกจากอุปกรณ์เครื่องนี้',
+    'Loading satellite imagery…': 'กำลังโหลดภาพถ่ายดาวเทียม…', 'temple': 'วัด', 'worship': 'ศาสนสถาน',
     // ---- end F5 harvest ----
 };

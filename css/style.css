@@ -3561,6 +3561,10 @@ html:lang(vi) :is(
   .tabbar button > span:last-child, .topbar h1, .btn, .chip, .hub-lbl, .status-lbl, .phase-lbl, .cat-title,
   .home-section, h1, h2, h3, .card h2, .card h3, .t, .explore-name, .cal-wk, .tile, .zone-why, .sight-name, .book-title,
   .btn span, .chip span, .tile span, .status-txt) { line-height: var(--lh-vi, 1.6); }
+/* F5b: Khmer needs 1.4 or more. Two components set 1.35 for the Latin text they were drawn for: the pills on a place card and the swap
+   calculator's lines. Nothing was cut off (a pill is one line, the paragraph hides nothing), but the translated text now reaches both
+   (tools/lang-check: 40 pills and one paragraph under 1.4 in km before, none after). */
+html:lang(km) :is(.attr-tag, .swap-calc) { line-height: 1.45; }
 
 /* ==== BEGIN GENERATED THEMES (tools/style-tiles/port-themes.py; do not edit by hand) ==== */
 /* The four themes of the retro redesign (VISUAL_DIRECTION_PROMPT.md section 3): Mekong Retro, River, Four

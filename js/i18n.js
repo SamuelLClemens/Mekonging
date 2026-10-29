@@ -362,8 +362,9 @@ function swapText(node, translated) {
 // Deliberately anchored and single-run: only a LEADING pictographic run followed by
 // whitespace. A string that merely contains an emoji is left alone, because the words either
 // side of it are not necessarily a phrase the dictionary knows.
-// \p{So} (and the four plain arrows) also covers the marks that are not emoji but lead a label the same way: ✓ ↺ ★ ↗.
-const LEAD_EMOJI = /^([\p{Extended_Pictographic}\p{So}←-↓‍️⃣\p{Regional_Indicator}＋+]+)(\s+)(.+)$/u;
+// \p{So} (and the four plain arrows) also covers the marks that are not emoji but lead a label the same way: ✓ ↺ ★ ↗; \p{Sm} the maths
+// symbols that do the same (≤ 1 week, ⤢ Full screen).
+const LEAD_EMOJI = /^([\p{Extended_Pictographic}\p{So}\p{Sm}←-↓‍️⃣\p{Regional_Indicator}＋+]+)(\s+)(.+)$/u;
 
 // Look a string up directly, then — failing that — as "<emoji> <label>".
 function lookup(d, s) {
@@ -673,4 +674,35 @@ export async function autoTranslateTree(root) {
 export function retranslate(root) {
   try { translateTree(root); } catch { /* a translation miss must never block a render */ }
   try { autoTranslateTree(root).catch(() => {}); } catch { /* best-effort */ }
+}
+
+// retranslate() is the fix one card at a time, and each screen has to remember to call it. F5b found a whole class that did not: the
+// Market boards (fifteen places repaint themselves after a search), the vault form, the photo-pack sizes in Settings, the map's own
+// controls. A traveller in Thai, Vietnamese, Khmer or Lao saw English there with nothing to say why (93 strings the dictionaries
+// already held, on 14 routes). So this watches the screen root once and runs the dictionary pass on whatever is added later. It runs
+// in the observer's own callback, a microtask after the change, so nothing paints in English first and a check that waits for the DOM
+// to go quiet never sees the English. Not the online pass: that one is capped per render, and a burst must not spend the cap many
+// times over. mount() adds the whole screen as a direct child of the root and translates it itself, so those additions are skipped.
+let LATE_OBS = null;
+
+export function watchLateText(root) {
+  if (LATE_OBS || !root || typeof MutationObserver === 'undefined') return;
+  LATE_OBS = new MutationObserver((muts) => {
+    if (uiLang() === FALLBACK) return;
+    const added = new Set();
+    for (const m of muts) {
+      if (m.target === root) continue;
+      for (const n of m.addedNodes) {
+        if (n.nodeType === 1) { if (n.tagName !== 'IMG' && n.tagName !== 'CANVAS') added.add(n); }
+        else if (n.nodeType === 3 && m.target.nodeType === 1) added.add(m.target);
+      }
+    }
+    const list = [...added];
+    const many = list.length > 60;   // a list repainted whole: one pass over the root is cheaper than testing each pair
+    for (const n of many ? [root] : list) {
+      if (!n.isConnected || (!many && list.some((o) => o !== n && o.contains(n)))) continue;
+      try { translateTree(n); } catch { /* a translation miss must never block a render */ }
+    }
+  });
+  LATE_OBS.observe(root, { childList: true, subtree: true });
 }

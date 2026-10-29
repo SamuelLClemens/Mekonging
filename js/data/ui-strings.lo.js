@@ -876,5 +876,11 @@ export const STRINGS = {
     'Phuket Central Mosque (Masjid Mukaram)': 'ມັດສະຍິດກາງພູເກັດ (Masjid Mukaram)',
     'Sri Maha Mariamman Temple (Wat Khaek), Silom': 'ວັດສີມະຫາມາຣິຍັມມັນ (ວັດແຂກ) ສີລົມ', 'Wat Chalong': 'ວັດຈະລອງ',
     'Wat Pho (Temple of the Reclining Buddha)': 'ວັດໂພ (ວັດພຣະນອນ)', 'Wat Phra That Doi Suthep': 'ວັດພຣະທາດດອຍສຸເທບ',
+    'Call —': 'ໂທ —', '1. Call —': '1. ໂທ —',
+    '— everything here works with no signal.': '— ທຸກຢ່າງຢູ່ນີ້ໃຊ້ໄດ້ໂດຍບໍ່ມີສັນຍານ.',
+    '— turn on location for distances, or pick your country:': '— ເປີດຕຳແໜ່ງເພື່ອເບິ່ງໄລຍະທາງ ຫຼື ເລືອກປະເທດຂອງທ່ານ:',
+    'Crop tightly to just the sign — a shot that also frames the street around it reads far worse. This needs the internet for both steps, and the extracted text is always yours to fix before translating; nothing here is a wall of small print, just a starting point.': 'ຕັດໃຫ້ຕິດແຕ່ປ້າຍ — ຮູບທີ່ມີຖະໜົນອ້ອມຂ້າງນຳຈະອ່ານໄດ້ຍາກກວ່າຫຼາຍ. ທັງສອງຂັ້ນຕອນຕ້ອງໃຊ້ອິນເຕີເນັດ ແລະ ຂໍ້ຄວາມທີ່ດຶງອອກມານັ້ນເຈົ້າແກ້ໄຂໄດ້ສະເໝີກ່ອນແປ. ບ່ອນນີ້ບໍ່ມີຕົວອັກສອນນ້ອຍໆຍາວເຫຍີດ ເປັນພຽງຈຸດເລີ່ມຕົ້ນ.',
+    'Text recognition and translation both run through third-party services and need a connection. Only the text you see above is ever sent — the photo itself never leaves this device.': 'ການຮັບຮູ້ຂໍ້ຄວາມ ແລະ ການແປ ທັງສອງຢ່າງເຮັດວຽກຜ່ານບໍລິການຂອງບຸກຄົນທີສາມ ແລະ ຕ້ອງມີການເຊື່ອມຕໍ່. ມີແຕ່ຂໍ້ຄວາມທີ່ເຈົ້າເຫັນຂ້າງເທິງເທົ່ານັ້ນທີ່ຖືກສົ່ງ — ຕົວຮູບບໍ່ເຄີຍອອກຈາກອຸປະກອນເຄື່ອງນີ້.',
+    'Loading satellite imagery…': 'ກຳລັງໂຫຼດພາບດາວທຽມ…', 'temple': 'ວັດ', 'worship': 'ສາສະໜະສະຖານ',
     // ---- end F5 harvest ----
 };
