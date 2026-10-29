@@ -1,0 +1,25 @@
+# Oceania, reviewed 2026-10-29 against the raw text of both pages. Gaps on purpose: nf pn (no page).
+# Conflicts left out: ki P F, sb A, pg P in Port Moresby only.
+as G:911:c
+au G:000:cu
+ck P:999:c A:998:c F:996:c
+gu G:911:c
+mp G:911:c
+nr P:110:cu A:111:cu F:112:cu
+nu G:999:c
+nz G:111:cu
+pf P:17:cu A:15:cu F:18:cu
+pw G:911:cu
+to G:911:cu
+tv G:911:cu
+ws G:911:cu
+# manual decisions
+fj G:911:cu P:917:c F:910:u
+fm G:911:cu
+ki A:994:cu G:999:u
+mh P:625_8666:cu A:625_4142:u
+nc P:17:cu A:15:cu F:18:cu
+pg A:111:cu F:110:cu P:112:u
+sb P:999:cu F:988:cu S:977:c
+vu P:111:cu P:22222:cu A:115:cu F:113:cu
+wf G:112:u P:17:u A:15:u F:18:u

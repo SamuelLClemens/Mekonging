@@ -60,7 +60,7 @@ relevant section of the docs below, not the whole repo.
 
 ## Guards (run before every commit; CI runs the same list)
 ```bash
-for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot font-sizes icons; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot font-sizes icons emergency-world; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
@@ -82,6 +82,7 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - Place records mix JS keys (`name:`) and JSON-style quoted keys (`"name":`; all 97 of those are in the `.ext.js` files).
   A regex or an edit written for one style silently misses the other; `scripts/fetch-local-names.py` handles both.
 - `js/nav-groups.js` is the single manifest for feature navigation; every feature has one label and one home.
+- Emergency outside the four countries: `js/emergency-world.js`, `js/data/emergency-world.<region>.js` (rebuild: `tools/emergency-world/`); outline `vi` = US Virgin Is., Vietnam = `vn`.
 - The offline place list (`js/data/gazetteer.<cc>.js`, built by `scripts/build-gazetteer.py`, searched by `js/place-search.js`)
   is never added to `WEATHER_SPOTS`. A picked list place, or a live fix more than 15 km from an anchor (`js/fix-place.js`), rides beside its nearest anchor as `focusSpot().place`.
 - `js/state.js` is the on-device store. Schema changes bump its version. Deleting or merging a place record also needs a
@@ -140,8 +141,7 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 ## Docs map (most are history; read only what the task names)
 - `scripts/README.md`: the guards. `DESIGN_SYSTEM.md` and `VISUAL_DIRECTION_PROMPT.md`: theme, all four phases merged.
 - `AUDIT_REPORT.md` section 7: the 11 audit slices (all merged). `WORK_ORDER.md`: the 15-item owner list in slices.
-- `BEST_TOOL_PROMPT.md`: the program prompt for session 0. Its output, `docs/PROGRAM.md`, holds the open-item register, the style brief and the feature backlog (T1 to T15); every slice updates it.
-- `MASTER_BUILD_PROMPT.md`, `OVERHAUL.md`, `UX_OVERHAUL_PROMPT.md`, `MEKONGING_REFACTOR_*`: earlier planning, now history.
+- `BEST_TOOL_PROMPT.md`: the program prompt for session 0. Its output, `docs/PROGRAM.md`, holds the open-item register, the style brief and the feature backlog (T1 to T15); every slice updates it. `MASTER_BUILD_PROMPT.md`, `OVERHAUL.md`, `UX_OVERHAUL_PROMPT.md`, `MEKONGING_REFACTOR_*`: earlier planning, now history.
 
 ## Open items
 - A full multi-country offline routing engine is wanted by the owner but unscoped (a Valhalla-WASM spike was 10 MB with

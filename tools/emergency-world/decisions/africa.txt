@@ -1,0 +1,54 @@
+# Africa, reviewed 2026-10-29 against the raw text of both pages.
+# Gaps on purpose: cd km sh sol ss (no usable page or the pages deny a central number), ao partial (P and F conflict), sl ly (a general number the other page contradicts).
+# Conflicts left out, to resolve from a third government source if wanted: eg A F (Canada 113, 110; UK 123, 180), cm A F, er A, gw A F, mr P F, zm A, ao P F.
+bw P:999:cu A:997:cu F:998:cu
+cf P:117:c A:114:c F:118:c
+cg P:117:c F:118:c
+cv P:132:cu A:130:cu F:131:cu
+gm P:117:c A:116:c F:118:c
+gn P:122:c F:1717:c
+ma P:190:cu A:150:cu F:150:cu
+mg G:117:cu
+ml P:17:cu A:15:cu F:18:cu
+na P:10111:cu A:10177:c F:998:c
+ne P:17:cu A:15:cu F:18:cu
+sd P:999:cu A:333:c F:777:c
+sn P:17:cu A:15:cu F:18:cu
+tz G:112:cu
+ug G:999:cu
+# manual decisions
+ao A:116:c A:112:u
+bf P:17:cu F:18:cu A:18:u
+bi A:112:cu P:113:c
+bj P:117:cu F:118:cu A:118:u
+ci P:170:cu P:110:cu P:111:cu A:185:cu F:180:cu
+cm P:117:cu A:112:u
+dj P:17:u F:18:cu
+dz P:17:cu U:1548:cu A:1021:u F:14:cu
+eg P:122:u U:126:u
+eh G:150:u
+er P:113:cu F:116:cu
+et A:907:u
+ga P:177:c A:1300:c
+gh G:112:cu G:999:u A:193:c
+gq P:113:c F:115:c A:3101:u
+gw P:117:cu
+ke G:999:cu G:112:c
+lr P:911:c
+ls G:112:u
+mr A:101:u
+mu P:999:cu P:112:cu A:114:cu F:115:cu
+mw P:997:cu P:990:cu A:998:cu F:999:cu
+mz G:112:cu A:848888:u A:823388:u F:198:u
+ng G:112:cu G:199:c
+rw G:112:cu A:912:c F:111:u
+sc G:999:cu A:151:c
+so P:888:cu A:999:cu A:446:cu F:555:cu
+st P:113:cu F:112:cu A:222_22_22:u
+sz P:999:cu A:977:u F:933:u
+td P:2020:cu A:1212:u F:1212:u
+tg P:117:cu F:118:cu A:8200:u
+tn P:197:cu P:193:cu A:190:cu F:198:cu
+za G:112:u P:10111:c A:10177:cu F:10111:c
+zm P:991:cu F:993:cu
+zw G:999:c

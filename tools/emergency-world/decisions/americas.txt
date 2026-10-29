@@ -1,0 +1,54 @@
+# Americas, reviewed 2026-10-29 against the raw text of both pages.
+# Conflicts left out: bo A (La Paz only on one page), pe A, ht G (114 against the UK's per-service numbers), jm 911 is kept as a general number.
+ai G:911:cu
+bb P:211:cu A:511:cu F:311:cu
+bl G:112:c
+bm G:911:cu
+bz G:911:cu
+cu P:106:cu A:104:cu F:105:cu
+dm G:999:cu
+fk G:999:cu
+gd G:911:cu
+gl G:112:c
+kn P:911:cu A:911:cu F:333:cu
+ky G:911:cu
+lc P:999:c A:911:cu F:911:cu
+mf G:112:c
+ni P:118:c A:128:c F:115:c
+pm G:112:cu
+pr G:911:c
+us G:911:cu
+uy P:911:cu A:105:c F:104:c
+ve G:911:cu
+vi G:911:c
+# manual decisions
+ag G:999:cu G:911:cu
+ar G:911:cu P:101:c A:107:cu F:100:c
+aw P:100:cu A:911:cu F:911:cu K:913:cu
+bo P:110:cu F:119:cu
+br G:911:cu P:190:cu A:192:cu F:193:cu
+bs G:911:cu G:919:cu
+ca G:911:u
+cl P:133:cu A:131:cu F:132:cu
+co G:123:cu F:119:u
+cr G:911:cu
+cw P:911:cu A:912:cu F:911:cu K:913:cu
+do G:911:cu
+ec A:911:u
+gt P:110:c P:120:c A:122:cu A:123:cu F:122:c F:123:c
+gy P:911:cu A:913:cu F:912:cu
+hn G:911:cu
+ht P:122:u A:116:u F:115:u
+jm G:911:c P:119:cu A:110:u F:110:u
+ms G:911:cu G:999:cu
+mx G:911:cu
+pa G:911:cu P:104:cu A:103:u F:103:cu
+pe P:105:cu F:116:cu
+py G:911:cu A:141:u F:132:u
+sr P:115:cu A:113:cu F:110:cu
+sv G:911:cu
+sx A:912:c F:919:c
+tc G:911:cu G:999:c
+tt P:999:cu A:811:cu F:990:cu
+vc G:911:cu G:999:cu
+vg G:999:c G:911:cu
