@@ -56,7 +56,7 @@ function routeLinks(lat, lng, label, phone) {
   // share a text node with the label, so `data-no-mt` keeps a translation pass from touching
   // them, same as the national emergency numbers above.
   const call = phone
-    ? h('a', { class: 'chip', 'data-no-mt': '', href: `tel:${String(phone).replace(/[^+\d]/g, '')}` }, `📞 Call ${phone}`)
+    ? h('a', { class: 'chip', 'data-no-mt': '', href: `tel:${String(phone).replace(/[^+\d]/g, '')}` }, ['📞 Call ', phone])   // two text nodes (F5c): "Call" is a key, a number is not
     : null;
   return h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, [
     call,

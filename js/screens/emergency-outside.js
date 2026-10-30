@@ -22,6 +22,7 @@
 // outline is generalised by about 5 km and a border town is narrower than that.
 import { h } from '../util.js';
 import { OUTSIDE_KM } from '../fix-place.js';
+import { uiLang } from '../i18n.js';
 import { go, mount, topbar, countryChips, countriesNearFix, nearestSpotGlobal } from '../main.js';
 import { worldCountryOf, worldDecides, appCountryOf, emergencyFor, sourceHost, telHref, COAST_KM } from '../emergency-world.js';
 
@@ -45,6 +46,20 @@ export function fixSureness(fix) {
   return { kind: near.km > FAR_KM ? 'far' : 'sure', near, world: null };
 }
 
+// The country's name in the traveller's language (F5c). The outline names countries in English only; for Thai, Vietnamese, Khmer and
+// Lao the platform's own CLDR names (Intl.DisplayNames, no dictionary, no network) read as the rest of the screen does. Any other
+// language keeps the English name so a sentence is not half one language and half another, and so does a code the platform lacks.
+const HOST_LANGS = new Set(['th', 'vi', 'km', 'lo']);
+function countryName(world) {
+  const lang = uiLang();
+  if (!HOST_LANGS.has(lang) || !world.id) return world.name;
+  try {
+    const id = world.id.toUpperCase();
+    const name = new Intl.DisplayNames([lang], { type: 'region' }).of(id);
+    return name && name !== id ? name : world.name;
+  } catch { return world.name; }
+}
+
 // 1.3521° N, 103.8198° E (four decimals, about 11 m).
 function coordsLabel(fix) {
   const dir = (v, pos, neg) => `${Math.abs(v).toFixed(4)}° ${v >= 0 ? pos : neg}`;
@@ -60,7 +75,7 @@ function callCard(world, entry) {
   // A country whose own table lists 112 (most of Europe) needs no second 112 button under it.
   const lists112 = nums.some((e) => String(e.number).replace(/\s/g, '') === '112');
   return h('div', { class: 'card sos-card', 'data-nofold': '' }, [
-    h('h2', {}, entry ? `📞 ${world.name} — call for help` : '📞 Call for help'),
+    h('h2', {}, entry ? `📞 ${countryName(world)} — call for help` : '📞 Call for help'),
     ...nums.map((e) => h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: telHref(e.number) }, [e.label, `: ${e.number}`])),
     lists112 ? null : h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: 'tel:112' }, 'International emergency number: 112'),
     lists112 ? null : h('p', { class: 'muted tiny', style: 'margin: var(--sp-1h) 0 0' }, '112 is answered on most mobile networks worldwide, not all. If it does not connect, ask anyone nearby for the local number.'),
@@ -86,16 +101,16 @@ export function outsideScreen(route, fix, near, world) {
   const offshore = world && world.km > COAST_KM;
   // The country when the outline names one; otherwise the F7a text (open water, or the outline never loaded).
   const head = world
-    ? [h('h2', {}, `📍 ${offshore ? 'Near ' : ''}${world.name}`),
+    ? [h('h2', {}, `📍 ${offshore ? 'Near ' : ''}${countryName(world)}`),
        offshore ? h('p', { style: 'margin: var(--sp-1h) 0' }, `About ${world.km} km off its coast.`) : null,
        h('p', { class: 'muted tiny', style: 'margin: var(--sp-1h) 0' }, 'Outside Thailand, Vietnam, Cambodia and Laos.')]
     : [h('h2', {}, '📍 Outside Thailand, Vietnam, Cambodia and Laos'),
        km != null ? h('p', { style: 'margin: var(--sp-1h) 0' }, `You appear to be about ${km.toLocaleString('en')} km from ${near.spot.city}.`) : null];
-  const gap = world && !entry ? `This app has no checked emergency number for ${world.name} yet.` : 'This app has no emergency numbers for where you are yet: pick one of the four countries below to see its numbers.';
+  const gap = world && !entry ? `This app has no checked emergency number for ${countryName(world)} yet.` : 'This app has no emergency numbers for where you are yet: pick one of the four countries below to see its numbers.';
   wrap.append(h('div', { class: 'card sos-card', 'data-nofold': '', 'data-outside': '' }, [
     ...head,
     h('p', { 'data-no-mt': '', style: 'margin: var(--sp-1h) 0' }, [h('strong', {}, 'Your coordinates: '), coordsLabel(fix)]),
-    h('p', { class: 'muted tiny', style: 'margin: 0' }, entry ? 'Read these to a dispatcher.' : `Read these to a dispatcher. ${gap}`),
+    h('p', { class: 'muted tiny', style: 'margin: 0' }, entry ? 'Read these to a dispatcher.' : ['Read these to a dispatcher. ', gap]),   // two text nodes: each sentence is a key
   ]));
   wrap.append(callCard(world, entry));
   wrap.append(h('div', { class: 'card' }, [

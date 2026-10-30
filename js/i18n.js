@@ -298,6 +298,7 @@ export function ensureSafetyText(code) {
       if (!add) return;
       const d = DICTS[c] || (DICTS[c] = {});
       for (const k of Object.keys(add)) if (!d[k]) d[k] = add[k];
+      PATTERNS.delete(d);   // the merge may have added pattern keys (F5c)
     })
     .catch(() => {})
     .then(() => { SAFETY_DONE.add(c); delete SAFETY_PENDING[c]; });
@@ -310,7 +311,7 @@ export function ensureSafetyText(code) {
 export function t(en) {
   const d = dict();
   if (!d) return en;
-  return d[en] || en;
+  return d[en] || matchPattern(d, en, 'code') || en;
 }
 
 // ---- the DOM pass -----------------------------------------------------------
@@ -366,14 +367,118 @@ function swapText(node, translated) {
 // symbols that do the same (≤ 1 week, ⤢ Full screen).
 const LEAD_EMOJI = /^([\p{Extended_Pictographic}\p{So}\p{Sm}←-↓‍️⃣\p{Regional_Indicator}＋+]+)(\s+)(.+)$/u;
 
-// Look a string up directly, then — failing that — as "<emoji> <label>".
-function lookup(d, s) {
+// ---- composed strings (F5c) -------------------------------------------------------------
+// A screen builds some text from parts: "6 nights", "About 22 km off its coast.", "Sources (3)". The words never match a key
+// because the number or the name changes. A dictionary key may therefore hold numbered slots, `{0}`, `{1}`: it is a pattern.
+//
+//   'Sources ({0})': 'แหล่งที่มา ({0})'
+//
+// A string that is not an exact key is tried against the patterns. What a slot caught is put back into the value; the value may
+// order the slots as the language needs. A number, a time or a name the dictionary does not hold comes back untouched, and a slot
+// that is itself a key ("Thailand", "🇹🇭 Thai") is translated, so one key serves every country. The four host languages have no
+// plural, so English "1 night" and "6 nights" are two keys, not a plural form.
+//
+// A pattern must not rewrite prose it was not written for (a place note that starts "Near the temple", a journal entry that starts
+// "Copy of my visa"), so it has two reaches. A pattern applies to any text and attribute when it opens with a symbol or with two or
+// more fixed words ("Visa: {0}", "📍 Near {0}", "Sources ({0})"), or when its fixed text is long and distinctive (20 characters, three
+// words) wherever it sits. Every other pattern ("Copy {0}", "Hide {0}", "{0} left") applies to `aria-label` only, which the app
+// composes and a traveller never types. check-ui-strings refuses a pattern that begins and ends with a slot, and one that any string
+// in js/data/ would match.
+const SLOT = /\{(\d)\}/g;
+const PATTERNS = new WeakMap(); // dictionary -> { head, tail, mid, n }, built once per dictionary
+
+const reEscape = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const wordCount = (x) => (x.match(/\p{L}{2,}/gu) || []).length;
+
+function buildPatterns(d) {
+  const ix = { head: new Map(), tail: new Map(), mid: [], n: 0 };
+  for (const k of Object.keys(d)) {
+    const v = d[k];
+    if (typeof v !== 'string' || !v || k.indexOf('{') < 0) continue;
+    const bits = k.split(/\{(\d)\}/);   // literal, slot, literal, slot, ... literal
+    if (bits.length < 3) continue;
+    const lits = bits.filter((_, i) => i % 2 === 0);
+    const slots = bits.filter((_, i) => i % 2 === 1).map(Number);
+    const first = lits[0], last = lits[lits.length - 1];
+    const open = first.trim(), fixed = lits.join('');
+    const anywhere = (open.length > 0 && (/[^\p{L}\p{N}\s]/u.test(open) || (wordCount(open) >= 1 && wordCount(fixed) >= 2)))
+      || (fixed.trim().length >= 20 && wordCount(fixed) >= 3);   // a long, distinctive tail, however the string opens
+    const p = { re: new RegExp('^' + lits.map(reEscape).join('([\\s\\S]*?)') + '$'), slots, value: v, weight: lits.join('').length, anywhere };
+    // Found by the first character of a string that opens with fixed text, else by the last character of one that ends with it; a
+    // pattern with a slot at both ends is found by its longest fixed text, and only if it is long enough to be distinctive.
+    if (open || last.trim().length >= 2) {
+      const bucket = open ? ix.head : ix.tail;
+      const at = open ? first.codePointAt(0) : last.slice(-1);
+      if (!bucket.has(at)) bucket.set(at, []);
+      bucket.get(at).push(p);
+    } else if (anywhere) {
+      p.needle = lits.reduce((a, b) => (b.length > a.length ? b : a), '');
+      ix.mid.push(p);
+    } else continue;
+    ix.n += 1;
+  }
+  return ix;
+}
+
+// A slot's text as the language writes it: a key of its own ("Thailand"), or "<emoji> <key>", else as it came.
+function slotText(d, v) {
+  if (d[v]) return d[v];
+  const m = LEAD_EMOJI.exec(v);
+  const inner = m && d[m[3]];
+  return inner ? m[1] + m[2] + inner : v;
+}
+
+// The translation of `s` by a pattern, or null. `attr` is the attribute the text came from (none for a text node; 'code' for t()).
+// The pattern with the most fixed text wins when two fit.
+function matchPattern(d, s, attr) {
+  let ix = PATTERNS.get(d);
+  if (!ix) PATTERNS.set(d, ix = buildPatterns(d));
+  if (!ix.n) return null;
+  let best = null, caught = null;
+  for (const list of [ix.head.get(s.codePointAt(0)), ix.tail.get(s.slice(-1)), ix.mid]) {
+    if (!list) continue;
+    for (const p of list) {
+      if (best && p.weight <= best.weight) continue;
+      if (!p.anywhere && attr !== 'aria-label' && attr !== 'code') continue;
+      if (p.needle && s.indexOf(p.needle) < 0) continue;
+      const m = p.re.exec(s);
+      if (m) { best = p; caught = m; }
+    }
+  }
+  if (!best) return null;
+  const by = [];
+  best.slots.forEach((n, i) => { by[n] = slotText(d, caught[i + 1]); });
+  return best.value.replace(SLOT, (_, n) => (by[n] === undefined ? '' : by[n]));
+}
+
+// Look a string up directly, then as "<emoji> <label>" by key, then as a pattern (the whole string, then the label). An exact key always
+// beats a pattern: "📍 Near Bangkok" is a pattern, but a heading that is itself a key is never read as one.
+function lookupWhole(d, s, attr) {
   const direct = d[s];
   if (direct) return direct;
   const m = LEAD_EMOJI.exec(s);
-  if (!m) return null;
-  const inner = d[m[3]];
+  const exact = m && d[m[3]];
+  if (exact) return m[1] + m[2] + exact;
+  const whole = matchPattern(d, s, attr);
+  if (whole) return whole;
+  const inner = m && matchPattern(d, m[3], attr);
   return inner ? m[1] + m[2] + inner : null;
+}
+
+// A line the app joins from parts with " · " ("Bangkok · ~23 min walk", "Dec 1–4 · 3 nights · Old-city temples") is looked up whole first,
+// and failing that part by part: a part that is a key or a pattern is translated, the rest (a place, a date, a sentence of data) stays.
+// Nothing is returned unless a part changed.
+function lookup(d, s, attr) {
+  const whole = lookupWhole(d, s, attr);
+  if (whole || s.indexOf(' · ') < 0) return whole;
+  let changed = false;
+  const parts = s.split(' · ').map((p) => {
+    const t = lookupWhole(d, p.trim(), attr);
+    if (!t) return p;
+    changed = true;
+    return t;
+  });
+  return changed ? parts.join(' · ') : null;
 }
 
 // Translate every known string inside `root`. Cheap enough to run on every render: a single
@@ -408,7 +513,7 @@ export function translateTree(root) {
     for (const a of ATTRS) {
       const v = el.getAttribute(a);
       if (!v) continue;
-      const hit = lookup(d, v.trim());
+      const hit = lookup(d, v.trim(), a);
       if (hit) el.setAttribute(a, hit);
     }
   }

@@ -35,6 +35,11 @@ Checks performed:
      files hold the same keys, no empty value, no value identical to its key, every key still occurs in js/data/emergency.js
      or js/data/firstaid.js (a key edited in the data would otherwise show English with no signal), and the register's
      `source: safety-text` entries and the files agree both ways.
+  8. Composed strings (F5c): a key with numbered slots (`Sources ({0})`, `{0} nights · {1} stops`) is a pattern that js/i18n.js
+     matches after an exact key fails. The value must hold the same slots as the key; no slot twice; a pattern that begins and ends with
+     a slot needs 20 characters and three words of fixed text (it is found by them); each word of the key must still occur in the code;
+     and no string in js/data/ may be one a text-wide pattern would rewrite (a pattern whose opening is a symbol or two fixed words
+     applies to any text, every other one to aria-label only; the rule is in js/i18n.js and `pattern_of` here).
 """
 import glob
 import json
@@ -56,6 +61,7 @@ STRINGS_GLOB = 'js/data/ui-strings.*.js'
 ALLOWED_IDENTICAL = {
     'tl': {'Home', 'Online', 'Offline', 'Emergency', 'Accessibility', 'Thailand', 'Vietnam',
            'Cambodia', 'Laos', 'Tourist Police', 'Budget'},
+    'vi': {'Khmer'},   # the language's own name for the Khmer language and people (F5c)
 }
 
 
@@ -69,7 +75,7 @@ def pairs(body):
     """(key, value) for every entry; a `null` value comes back as None."""
     out = []
     for k, v, n in re.findall(r"'((?:[^'\\]|\\.)*)':\s*(?:'((?:[^'\\]|\\.)*)'|(null)\b)", body):
-        out.append((k, None if n else v))
+        out.append((re.sub(r"\\([\\'])", r'\1', k), None if n else v))   # a key reads as the string the DOM holds: \' is '
     return out
 
 
@@ -115,6 +121,135 @@ def safety_text(problems):
             problems.append(f'safety text: {k[:60]!r} no longer occurs in js/data/emergency.js or firstaid.js (the data changed: update the key)')
     print(f'safety text: {len(out)} language(s), {len(canon)} keys each')
     return out
+
+
+# ---- composed strings (item 8): pattern keys -----------------------------------------------------------------------------
+# A key with numbered slots (`Sources ({0})`) is a pattern (js/i18n.js matchPattern). The rules below mirror that file: a change to
+# one is a change to the other.
+SLOT = re.compile(r'\{(\d)\}')
+DATA_LIT = re.compile(r"""//[^\n]*|/\*.*?\*/|'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\$]|\\.|\$(?!\{))*)`""", re.S)   # a comment is skipped, not read as a string
+
+
+def _words(s):
+    return len(re.findall(r'[^\W\d_]{2,}', s))
+
+
+def pattern_of(key):
+    """None for a plain key, else {slots, lits, rx, reach, head, tail, needle}. reach: 'anywhere' (any text and attribute), 'aria' (aria-label
+    only) or 'refused' (nothing anchors it, so i18n.js would never apply it)."""
+    bits = re.split(r'\{(\d)\}', key)
+    if len(bits) < 3:
+        return None
+    lits, slots = bits[0::2], [int(x) for x in bits[1::2]]
+    first, last = lits[0], lits[-1]
+    opening, fixed = first.strip(), ''.join(lits)
+    anywhere = bool(opening and (re.search(r'[^\w\s]', opening) or (_words(opening) >= 1 and _words(fixed) >= 2))) or (len(fixed.strip()) >= 20 and _words(fixed) >= 3)
+    if opening or len(last.strip()) >= 2:
+        reach = 'anywhere' if anywhere else 'aria'
+    else:
+        reach = 'anywhere' if anywhere else 'refused'
+    return {'slots': slots, 'lits': lits, 'reach': reach, 'rx': re.compile('^' + '(.*?)'.join(re.escape(x) for x in lits) + '$', re.S),
+            'head': first[:1] if opening else None, 'tail': last[-1:] if not opening and len(last.strip()) >= 2 else None,
+            'needle': max(lits, key=len) if not opening and len(last.strip()) < 2 else None}
+
+
+def _code_words():
+    words = set()
+    for dp, _, files in os.walk('js'):
+        if os.sep + 'data' in dp or dp.endswith(os.sep + 'data'):
+            continue
+        for f in files:
+            if f.endswith('.js'):
+                words.update(w.lower() for w in re.findall(r'[^\W\d_]{4,}', open(os.path.join(dp, f), encoding='utf-8', errors='replace').read()))
+    return words
+
+
+def _data_strings():
+    out = []
+    for path in sorted(glob.glob('js/data/**/*.js', recursive=True)):
+        base = os.path.basename(path)
+        if base.startswith(('ui-strings.', 'safety-text.', 'world-outline')):
+            continue
+        for m in DATA_LIT.finditer(open(path, encoding='utf-8', errors='replace').read()):
+            g = next((x for x in m.groups() if x is not None), None)
+            if g is not None and len(g) >= 6 and '${' not in g:
+                out.append((path, re.sub(r'\s+', ' ', re.sub(r'\\(.)', r'\1', g)).strip()))
+    return out
+
+
+def _code_literals():
+    out = []
+    for dp, _, files in os.walk('js'):
+        if dp == os.path.join('js', 'data') or dp.startswith(os.path.join('js', 'data') + os.sep):
+            continue
+        for f in sorted(files):
+            if f.endswith('.js') and 'fixture' not in f:
+                path = os.path.join(dp, f)
+                for m in DATA_LIT.finditer(open(path, encoding='utf-8', errors='replace').read()):
+                    g = m.group(1) if m.group(1) is not None else m.group(2)
+                    if g is not None and len(g) >= 6:
+                        out.append((path, re.sub(r'\s+', ' ', re.sub(r'\\(.)', r'\1', g)).strip()))
+    return out
+
+
+def composed_strings(dicts, harvest, problems):
+    """Item 8: pattern keys. Slots agree between key and value, the key can be found, its words still occur in the code, and no string in js/data/
+    is one that a pattern for any text would rewrite."""
+    keys = sorted({k for c in harvest for k in dicts[c] if SLOT.search(k)})
+    if not keys:
+        return
+    pats = {}
+    for k in keys:
+        p = pattern_of(k)
+        if p is None:
+            continue
+        pats[k] = p
+        if k != k.strip():
+            problems.append(f'pattern {k[:50]!r}: begins or ends with a space')
+        if len(set(p['slots'])) != len(p['slots']):
+            problems.append(f'pattern {k[:50]!r}: a slot is used twice')
+        if p['reach'] == 'refused':
+            problems.append(f'pattern {k[:50]!r}: begins and ends with a slot and has too little fixed text to be found (js/i18n.js ignores it)')
+        for c in harvest:
+            v = dicts[c].get(k)
+            if v is not None and sorted(SLOT.findall(v)) != sorted(SLOT.findall(k)):
+                problems.append(f'pattern {k[:50]!r} in {c}: the value has slots {sorted(SLOT.findall(v))}, the key {sorted(SLOT.findall(k))}')
+    code = _code_words()
+    for k in pats:
+        words = [w.lower() for w in re.findall(r'[^\W\d_]{4,}', ' '.join(pats[k]['lits']))]
+        gone = [w for w in words if w not in code]
+        if words and len(gone) / len(words) > 0.2:
+            problems.append(f'pattern {k[:50]!r}: {gone[:3]} no longer occur in the code (the screen changed: update the key)')
+    wide = {k: p for k, p in pats.items() if p['reach'] == 'anywhere'}
+    heads, tails, mids = {}, {}, []
+    for k, p in wide.items():
+        if p['head']:
+            heads.setdefault(p['head'], []).append((k, p))
+        elif p['tail']:
+            tails.setdefault(p['tail'], []).append((k, p))
+        else:
+            mids.append((k, p))
+    hits = {}
+    for path, s in _data_strings():
+        for k, p in heads.get(s[:1], []) + tails.get(s[-1:], []) + [(k, p) for k, p in mids if p['needle'] in s]:
+            if p['rx'].match(s):
+                hits.setdefault(k, []).append((path, s))
+    for k, found in sorted(hits.items()):
+        problems.append(f'pattern {k[:50]!r} would rewrite {len(found)} string(s) in js/data/, e.g. {found[0][1][:60]!r} in {found[0][0]}: make it aria-only (fewer fixed words) or split the screen\'s text nodes')
+    # A fixed string in the code that is not a key of its own but fits a text-wide pattern would be half translated ("📞 Call the national
+    # emergency number" under "📞 Call {0}"): it needs a key of its own, which an exact key beats.
+    have = set().union(*(set(dicts[c]) for c in harvest))
+    strip = lambda s: re.sub(r'^[^\w\s]+\s+', '', s)
+    stray = {}
+    for path, s in _code_literals():
+        if s in have or strip(s) in have:
+            continue
+        for k, p in wide.items():
+            if (p['rx'].match(s) or p['rx'].match(strip(s))) and not (p['head'] is None and p['tail'] is None and p['needle'] not in s):
+                stray.setdefault(k, []).append((path, s))
+    for k, found in sorted(stray.items()):
+        problems.append(f'pattern {k[:50]!r} would half translate {len(found)} fixed string(s) in the code that have no key, e.g. {found[0][1][:60]!r} in {found[0][0]}: give each its own key')
+    print(f'composed strings: {len(pats)} pattern keys ({len(wide)} apply to any text, {len(pats) - len(wide)} to aria-label only); {len(hits)} collide with js/data/')
 
 
 def main():
@@ -206,6 +341,9 @@ def main():
                 if code in ('th', 'vi', 'km', 'lo', 'zh-CN', 'zh-TW', 'ko', 'ja', 'hi', 'ru',
                             'he', 'ar', 'fa', 'ur', 'uk', 'bn'):
                     problems.append(f'{code}: {k!r} is identical to the English — untranslated?')
+
+    # 8. composed strings: keys with {0}, {1} slots (F5c)
+    composed_strings(dicts, harvest, problems)
 
     # 6. the machine-translation register
     safety = safety_text(problems)

@@ -117,8 +117,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - Honest labels: the ATM layer says "free" only for Vietnam/VPBank and "lowest fee" elsewhere. The first-aid guide prints
   no phone numbers; hotlines are described in prose.
 - A topbar title gets about 102 px at 375 px wide; never prefix it with a flag or emoji.
-- Translations: th, vi, km, lo agree on keys, the other 25 may omit one (decision 30); a gap shows English (`check-ui-strings`). Emergency and first-aid
-  text is data: a lazy `js/data/safety-text.<code>.js` per host language. Coverage is `python3 tools/lang-check/lang-check.py` (F5, F5b).
+- Translations: th, vi, km, lo agree on keys, the other 25 may omit one (decision 30); a gap shows English (`check-ui-strings`). Emergency and first-aid text is data
+  (lazy `js/data/safety-text.<code>.js`). Coverage: `tools/lang-check/lang-check.py`. A string built from parts is a key with slots, `'Sources ({0})'` (F5c, `js/i18n.js`).
 
 ## Verification (a fix is done when shown on the real rendered screen)
 - Reload for real after a code change: `location.reload()` plus clearing the service worker and caches. A hash-only

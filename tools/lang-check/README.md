@@ -65,6 +65,17 @@ register (`source: safety-text`). `js/i18n.js` `ensureSafetyText()` loads the fi
 and merges it into the active dictionary. Add a string to either data file and the check in `scripts/check-ui-strings.py` fails until the four
 modules hold it (it also fails on a key the data no longer has). `backtranslate.py` samples both kinds (`BT_SINCE=<date>` limits it to new entries).
 
+## Composed strings (F5c)
+A string the app builds from parts ("6 nights · 4 stops", "Sources (3)") cannot be an exact key. A dictionary key may hold numbered slots, `{0}`, `{1}`
+(`'Sources ({0})': 'แหล่งที่มา ({0})'`); `js/i18n.js` tries the patterns after an exact key fails, carries what a slot caught into the value (a slot that is
+itself a key, "Thailand" or "🇹🇭 Thai", is translated), and reads a line joined with " · " part by part. A pattern that opens with a symbol or two fixed words applies to
+any text; every other one ("Copy {0}", "Hide {0}") to `aria-label` only, so prose that happens to start the same way is left alone. `check-ui-strings` holds the rules.
+- `tpl-list.py ROOT RUN_DIR en` lists, from a run, the composed strings (class `tpl`) with the code template each one came from (several minutes). Many `tpl` strings
+  are data that merely fits a loose template (`Explore Koh Chang gives 600 THB`): the list is where to look, not the list of keys to write.
+- Keys go in through `apply-strings.py` like any other (`{0}` is part of the key), so they land in the register for review.
+- The check cannot see a state it does not set up. F5c found that Emergency and the hospital screen with a GPS fix still showed English the check had called clean;
+  `drive-fix.py <base-url> <out-dir> <tree>` sets a fix through `setLastFix` and reads each screen with the in-page `__lc` measurer (env `LANGS`, `ONLY`, `ROUTES`, `SHOT`, `CLASSIFY`).
+
 ## Strings that must not change
 `KEEP` in `lang-check.py` lists strings every language shows as they are (web addresses, an example e-mail, brand and organisation names, file formats,
 a language written in its own name). They are not counted in `ui`.
