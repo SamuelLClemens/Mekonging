@@ -1013,7 +1013,7 @@ export const STRINGS = {
     'Mapped with a 24-hour emergency department.': 'Được ghi nhận trên bản đồ có khoa cấp cứu 24 giờ.',
     'From OpenStreetMap — name and location only. Telephone ahead if you can.': 'Từ OpenStreetMap — chỉ có tên và vị trí. Nếu được, hãy gọi điện trước.',
     'Closer, but a doctor’s surgery — right for something minor, not for an emergency': 'Gần hơn, nhưng là phòng khám bác sĩ — phù hợp cho vấn đề nhỏ, không phải cấp cứu',
-    'Then:': 'Sau đó:', '📞 Call {0}': '📞 Gọi {0}', '~{0} min walk': 'đi bộ ~{0} phút',
+    'Then:': 'Sau đó:', '~{0} min walk': 'đi bộ ~{0} phút',
     '~{0} by road (est.)': '~{0} đường bộ (ước tính)',
     '🚤 across the water — no road link': '🚤 qua mặt nước — không có đường bộ nối',
     // ---- end F5 harvest ----

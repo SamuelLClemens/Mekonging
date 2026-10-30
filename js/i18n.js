@@ -451,15 +451,17 @@ function matchPattern(d, s, attr) {
   return best.value.replace(SLOT, (_, n) => (by[n] === undefined ? '' : by[n]));
 }
 
-// Look a string up directly, then as a pattern, then as "<emoji> <label>" (the label by key, then by pattern).
+// Look a string up directly, then as "<emoji> <label>" by key, then as a pattern (the whole string, then the label). An exact key always
+// beats a pattern: "📍 Near Bangkok" is a pattern, but a heading that is itself a key is never read as one.
 function lookupWhole(d, s, attr) {
   const direct = d[s];
   if (direct) return direct;
+  const m = LEAD_EMOJI.exec(s);
+  const exact = m && d[m[3]];
+  if (exact) return m[1] + m[2] + exact;
   const whole = matchPattern(d, s, attr);
   if (whole) return whole;
-  const m = LEAD_EMOJI.exec(s);
-  if (!m) return null;
-  const inner = d[m[3]] || matchPattern(d, m[3], attr);
+  const inner = m && matchPattern(d, m[3], attr);
   return inner ? m[1] + m[2] + inner : null;
 }
 

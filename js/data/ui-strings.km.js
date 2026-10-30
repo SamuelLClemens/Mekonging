@@ -1016,7 +1016,7 @@ export const STRINGS = {
     'Mapped with a 24-hour emergency department.': 'មានផ្នែកសង្គ្រោះបន្ទាន់ 24 ម៉ោងតាមផែនទី។',
     'From OpenStreetMap — name and location only. Telephone ahead if you can.': 'ពី OpenStreetMap — មានតែឈ្មោះ និងទីតាំងប៉ុណ្ណោះ។ ប្រសិនបើអាច សូមទូរស័ព្ទទៅមុន។',
     'Closer, but a doctor’s surgery — right for something minor, not for an emergency': 'ជិតជាង ប៉ុន្តែជាគ្លីនិកវេជ្ជបណ្ឌិត — សមស្របសម្រាប់ជំងឺស្រាល មិនមែនសម្រាប់អាសន្នទេ',
-    'Then:': 'បន្ទាប់មក៖', '📞 Call {0}': '📞 ហៅ {0}', '~{0} min walk': 'ដើរ ~{0} នាទី',
+    'Then:': 'បន្ទាប់មក៖', '~{0} min walk': 'ដើរ ~{0} នាទី',
     '~{0} by road (est.)': '~{0} តាមផ្លូវគោក (ប៉ាន់ស្មាន)',
     '🚤 across the water — no road link': '🚤 ឆ្លងទឹក — គ្មានផ្លូវគោកតភ្ជាប់',
     // ---- end F5 harvest ----

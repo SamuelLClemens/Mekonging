@@ -177,6 +177,21 @@ def _data_strings():
     return out
 
 
+def _code_literals():
+    out = []
+    for dp, _, files in os.walk('js'):
+        if dp == os.path.join('js', 'data') or dp.startswith(os.path.join('js', 'data') + os.sep):
+            continue
+        for f in sorted(files):
+            if f.endswith('.js') and 'fixture' not in f:
+                path = os.path.join(dp, f)
+                for m in DATA_LIT.finditer(open(path, encoding='utf-8', errors='replace').read()):
+                    g = m.group(1) if m.group(1) is not None else m.group(2)
+                    if g is not None and len(g) >= 6:
+                        out.append((path, re.sub(r'\s+', ' ', re.sub(r'\\(.)', r'\1', g)).strip()))
+    return out
+
+
 def composed_strings(dicts, harvest, problems):
     """Item 8: pattern keys. Slots agree between key and value, the key can be found, its words still occur in the code, and no string in js/data/
     is one that a pattern for any text would rewrite."""
@@ -221,6 +236,19 @@ def composed_strings(dicts, harvest, problems):
                 hits.setdefault(k, []).append((path, s))
     for k, found in sorted(hits.items()):
         problems.append(f'pattern {k[:50]!r} would rewrite {len(found)} string(s) in js/data/, e.g. {found[0][1][:60]!r} in {found[0][0]}: make it aria-only (fewer fixed words) or split the screen\'s text nodes')
+    # A fixed string in the code that is not a key of its own but fits a text-wide pattern would be half translated ("📞 Call the national
+    # emergency number" under "📞 Call {0}"): it needs a key of its own, which an exact key beats.
+    have = set().union(*(set(dicts[c]) for c in harvest))
+    strip = lambda s: re.sub(r'^[^\w\s]+\s+', '', s)
+    stray = {}
+    for path, s in _code_literals():
+        if s in have or strip(s) in have:
+            continue
+        for k, p in wide.items():
+            if (p['rx'].match(s) or p['rx'].match(strip(s))) and not (p['head'] is None and p['tail'] is None and p['needle'] not in s):
+                stray.setdefault(k, []).append((path, s))
+    for k, found in sorted(stray.items()):
+        problems.append(f'pattern {k[:50]!r} would half translate {len(found)} fixed string(s) in the code that have no key, e.g. {found[0][1][:60]!r} in {found[0][0]}: give each its own key')
     print(f'composed strings: {len(pats)} pattern keys ({len(wide)} apply to any text, {len(pats) - len(wide)} to aria-label only); {len(hits)} collide with js/data/')
 
 
