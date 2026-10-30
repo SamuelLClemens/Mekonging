@@ -6,7 +6,7 @@ WHY. build_hospitals.py assigns a country by point-in-polygon against the app's 
 geometry, which is simplified to about 2 km (scripts/build_basemap.py's EPS). That is right
 for a basemap and wrong for a border: measured over the built data, eight of 7,398 facilities
 sit INSIDE the simplified Thai or Vietnamese outline while actually being in Myanmar or China
-— Myawaddy People's Hospital across the river from Mae Sot, Hekou County People's Hospital
+Myawaddy People's Hospital across the river from Mae Sot, Hekou County People's Hospital
 across from Lao Cai. Their names and distances are correct, but the country label is not, and
 on an emergency screen a wrong country means a wrong emergency number.
 
@@ -43,7 +43,7 @@ SCRIPTS = [
     ('khmer', r'[ក-៿]', {'kh'}),
 ]
 # NOT [A-Za-zÀ-ỹ]. That looks like "Latin plus accents" but as a single contiguous range it
-# spans U+00C0-U+1EF9, which swallows the Burmese, Thai, Lao and Khmer blocks whole — so every
+# spans U+00C0-U+1EF9, which swallows the Burmese, Thai, Lao and Khmer blocks whole, so every
 # Burmese-script clinic tested as "has Latin characters" and was skipped. Kept only as a note:
 # the candidate rule below needs no Latin test at all, because a purely Latin name matches none
 # of the SCRIPTS patterns and is skipped naturally.
@@ -62,7 +62,7 @@ def candidates():
             # Only the MAPPED name is evidence about where a facility is. The English field is
             # not: the tier pass in build_hospitals.py fills it with a generated gloss ("Health
             # centre") for downgraded entries, and an earlier version of this filter skipped
-            # anything with a non-empty `en` — which silently excluded every Burmese-script
+            # anything with a non-empty `en`, which silently excluded every Burmese-script
             # clinic near Mae Sot, i.e. most of the cases this script exists to find. A name
             # that mixes a local script with Latin ("သန့်ဇင်ဆေးခန်း Thant Zin Clinic") still
             # counts, so there is no Latin test here either.
@@ -99,7 +99,7 @@ def main():
     cands = candidates()
     print(f'{len(cands)} candidates (name in a script not native to the assigned country)')
     # A wrong answer splits two ways, and the distinction matters. If the facility is really in
-    # one of the four countries, REASSIGN it — Si Chiang Mai Hospital sits across the Mekong
+    # one of the four countries, REASSIGN it: Si Chiang Mai Hospital sits across the Mekong
     # from Vientiane and is a genuinely useful destination; dropping it would throw away real
     # nearby care to fix a label. Only a facility outside all four is EXCLUDED.
     reassign, excluded, ok, unknown = [], [], 0, 0

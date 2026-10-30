@@ -78,7 +78,7 @@ for (const p of allPlaces()) {
   ok(p.priceRange && p.priceRange.low <= p.priceRange.high, `place ${p.id}: price low>high`);
   ok(isYM(p.verified), `place ${p.id}: bad/missing verified (${p.verified})`);
   ok(p.mapQuery || p.coords, `place ${p.id}: missing mapQuery/coords`);
-  // Optional traveller-fit fields — validated only when present, so existing places pass.
+  // Optional traveller-fit fields, validated only when present, so existing places pass.
   if (p.kidFriendly != null) ok(typeof p.kidFriendly === 'boolean', `place ${p.id}: kidFriendly must be boolean`);
   // false is honest data (an international hotel, not locally owned); owner ruling 2026-10-12.
   if (p.isLocal != null) ok(typeof p.isLocal === 'boolean', `place ${p.id}: isLocal, if present, must be true or false`);
@@ -88,12 +88,12 @@ for (const p of allPlaces()) {
   if (p.amenities != null) ok(Array.isArray(p.amenities), `place ${p.id}: amenities must be an array`);
   if (p.recognition != null) ok(typeof p.recognition === 'string' && p.recognition.length > 0, `place ${p.id}: recognition must be a non-empty string`);
   if (p.localName != null) ok(typeof p.localName === 'string' && p.localName.length > 0, `place ${p.id}: localName must be a non-empty string`);
-  // Market metadata — optional, validated only when present. marketDays is an array of
+  // Market metadata, optional, validated only when present. marketDays is an array of
   // weekday indices (0=Sun … 6=Sat) for periodic markets; absent/empty means daily.
   if (p.marketDays != null) ok(Array.isArray(p.marketDays) && p.marketDays.every((d) => Number.isInteger(d) && d >= 0 && d <= 6), `place ${p.id}: marketDays must be an array of integers 0-6`);
   if (p.marketType != null) ok(typeof p.marketType === 'string' && p.marketType.length > 0, `place ${p.id}: marketType must be a non-empty string`);
   if (p.sells != null) ok(typeof p.sells === 'string' && p.sells.length > 0, `place ${p.id}: sells must be a non-empty string`);
-  // Beach & swimming safety — optional, validated only when present. lifeguard is an
+  // Beach & swimming safety, optional, validated only when present. lifeguard is an
   // enum; jellyfishMonths is an array of 1-12 month indices for elevated seasonal risk.
   if (p.lifeguard != null) ok(['yes', 'seasonal', 'no', 'unknown'].includes(p.lifeguard), `place ${p.id}: bad lifeguard (${p.lifeguard})`);
   if (p.swim != null) ok(typeof p.swim === 'string' && p.swim.length > 0, `place ${p.id}: swim must be a non-empty string`);
@@ -108,7 +108,7 @@ for (const p of allPlaces()) {
       // A famous sight (non-stay) with a tiny review count is almost certainly the wrong
       // map entity (e.g. a nearby cafe, not the park). Stays can genuinely have few reviews.
       warn(!(typeof e.count === 'number' && e.count < 200 && !p.stayType),
-        `place ${p.id}: externalRating '${e.site}' has only ${e.count} reviews for a non-stay place — verify it is the correct entity`);
+        `place ${p.id}: externalRating '${e.site}' has only ${e.count} reviews for a non-stay place, verify it is the correct entity`);
     }
   }
   if (p.externalPrices != null) {
@@ -125,7 +125,7 @@ for (const p of allPlaces()) {
 // Every dish is a diet-safety surface: its allergens[] tags drive the "you flagged this"
 // warnings on the food list and dish detail. A tag outside the FOOD_ALLERGENS vocabulary
 // (e.g. "treenut" instead of "tree nut") never matches a traveller's avoided set, so the
-// ⚠️ warning silently fails to fire — a false-negative in a safety feature. The vocabulary
+// ⚠️ warning silently fails to fire, a false-negative in a safety feature. The vocabulary
 // check below makes that class of defect un-mergeable.
 const ALLERGEN_VOCAB = new Set(FOOD_ALLERGENS);
 const FOOD_CAT_IDS = new Set(FOOD_CATEGORIES.map((c) => c.id));
@@ -145,7 +145,7 @@ for (const d of allFood()) {
   ok(FOOD_CAT_IDS.has(d.category), `dish ${tag}: bad category "${d.category}" (not a FOOD_CATEGORIES id)`);
   ok(Array.isArray(d.ingredients) && d.ingredients.length > 0 && d.ingredients.every((x) => typeof x === 'string' && x.trim()),
     `dish ${tag}: ingredients must be a non-empty array of strings`);
-  // Allergen vocabulary conformance — the safety-critical check. Empty allergens[] is valid
+  // Allergen vocabulary conformance, the safety-critical check. Empty allergens[] is valid
   // (a genuinely allergen-free dish); every listed token must be a FOOD_ALLERGENS member.
   ok(Array.isArray(d.allergens), `dish ${tag}: allergens must be an array`);
   for (const a of d.allergens || []) {
@@ -211,7 +211,7 @@ for (const it of ITINERARIES) {
 // --- photos: every registered image must key to a real, surfaceable entity ---
 // PHOTOS is a global id->image registry consumed generically as PHOTOS[item.id] for
 // places, dishes, produce and species alike. A key that matches no entity id is a dead
-// image (it can never render) or — worse — a near-miss typo that hides a real photo from
+// image (it can never render) or, worse, a near-miss typo that hides a real photo from
 // a real place. This cross-reference check is the one that spans datasets.
 const ENTITY_IDS = new Set([
   ...allPlaces().map((p) => p.id),
@@ -221,7 +221,7 @@ const ENTITY_IDS = new Set([
   ...POOLS.map((p) => p.id),
 ]);
 for (const key of Object.keys(PHOTOS)) {
-  ok(ENTITY_IDS.has(key), `PHOTOS key "${key}" matches no known entity id (place/dish/produce/species/pool) — the image can never render`);
+  ok(ENTITY_IDS.has(key), `PHOTOS key "${key}" matches no known entity id (place/dish/produce/species/pool), the image can never render`);
 }
 
 // --- per-country prices / routes / info --------------------------------------
@@ -262,14 +262,14 @@ for (const c of COUNTRIES) {
   }
 }
 
-// --- diet self-test (behavioural — imports the pure diet.js logic) -----------
+// --- diet self-test (behavioural, imports the pure diet.js logic) -----------
 // Every selectable diet flag must have a DEFINED handling, and the safety-critical matchers
 // must behave. Because js/data/diet.js is DOM-free, we can call it directly here.
 const dietIds = DIET_OPTIONS.flatMap((g) => g.items).map((it) => it.id);
 // (a) coverage: every diet option is an allergen, an evaluable belief, or explicitly inert.
 for (const id of dietIds) {
   const handled = FOOD_ALLERGENS.includes(id) || DIET_EVALUABLE_BELIEFS.includes(id) || VERDICT_INERT_DIET.includes(id);
-  ok(handled, `diet option "${id}" has no defined handling (allergen / evaluable belief / inert-whitelisted) — it would be silently inert`);
+  ok(handled, `diet option "${id}" has no defined handling (allergen / evaluable belief / inert-whitelisted), it would be silently inert`);
 }
 // classification lists must reference only real, selectable options (no dead ids).
 for (const id of [...DIET_EVALUABLE_BELIEFS, ...VERDICT_INERT_DIET])
@@ -284,7 +284,7 @@ for (const a of FOOD_ALLERGENS) {
   ok(hasPhrase || PHRASE_PENDING_ALLERGENS.includes(a),
     `FOOD_ALLERGEN "${a}" has no phrasebook mapping and is not on PHRASE_PENDING_ALLERGENS`);
 }
-ok(PHRASE_PENDING_ALLERGENS.length <= 1, `PHRASE_PENDING_ALLERGENS grew (${PHRASE_PENDING_ALLERGENS.join(', ')}) — add sourced phrases`);
+ok(PHRASE_PENDING_ALLERGENS.length <= 1, `PHRASE_PENDING_ALLERGENS grew (${PHRASE_PENDING_ALLERGENS.join(', ')}), add sourced phrases`);
 // (c) behavioural regression guards over real dishes + synthetic fixtures (no dish content added).
 const _dishes = allFood();
 // alcohol: fermented/distilled drinks named in name/roman must read as alcoholic and flag.
@@ -305,7 +305,7 @@ for (const d of _dishes) {
 for (const d of _dishes)
   if ((d.ingredients || []).some((i) => /nuoc cham/i.test(i)) && !(d.ingredients || []).some((i) => /\bham\b/i.test(i)))
     ok(!dishMeatHits(d).includes('ham'), `dish "${d.id}": 'nuoc cham' produced a spurious 'ham' meat hit`);
-// synthetic fixtures — exercise the matcher edge cases without shipping any dish content.
+// synthetic fixtures, exercise the matcher edge cases without shipping any dish content.
 ok(dishMeatHits({ ingredients: ['soy-braised pork'] }).includes('pork'), 'fixture: soy-braised pork must still count as pork (no false-negative)');
 ok(dishMeatHits({ ingredients: ['eggplant', 'tofu'] }).length === 0, 'fixture: eggplant must not count as meat');
 ok(dishMeatHits({ ingredients: ['mock duck'] }).length === 0, 'fixture: mock duck must not count as meat');
@@ -527,7 +527,7 @@ console.log(`market art: ${ART_KEYS.length} drawings, ${artBytes()} bytes of SVG
 
 // --- report ------------------------------------------------------------------
 if (warnings.length) {
-  console.warn(`\n${warnings.length} warning(s) — non-fatal, worth a look:`);
+  console.warn(`\n${warnings.length} warning(s), non-fatal, worth a look:`);
   for (const w of warnings) console.warn('  ⚠ ' + w);
   console.warn('');
 }

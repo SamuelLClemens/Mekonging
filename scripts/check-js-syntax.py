@@ -79,7 +79,7 @@ def parse_jsc(items):
             'print(JSON.stringify(out));\n')
         r = subprocess.run([JSC, driver], capture_output=True, text=True)
         if r.returncode != 0 or not r.stdout.strip():
-            raise SystemExit(f'FAIL — the JavaScriptCore shell did not run: {r.stderr.strip()[:300]}')
+            raise SystemExit(f'FAIL: the JavaScriptCore shell did not run: {r.stderr.strip()[:300]}')
         out = json.loads(r.stdout.strip().splitlines()[-1])
         return {label: (f'{label}: {e}' if e else None) for label, e in out.items()}
 
@@ -93,7 +93,7 @@ def main():
         name = 'JavaScriptCore'
         parse = parse_jsc
     else:
-        raise SystemExit('FAIL — no JavaScript parser: install Node, or run on macOS (JavaScriptCore)')
+        raise SystemExit('FAIL: no JavaScript parser: install Node, or run on macOS (JavaScriptCore)')
 
     with tempfile.TemporaryDirectory() as tmp:
         items = []
@@ -104,7 +104,7 @@ def main():
         got = parse(items)
     wrong = [label for label, _, _, ok in SELF_TEST if (got[label] is None) != ok]
     if wrong:
-        raise SystemExit(f'FAIL — {name} did not behave as a parser on its self-test: {", ".join(wrong)}')
+        raise SystemExit(f'FAIL: {name} did not behave as a parser on its self-test: {", ".join(wrong)}')
 
     files = tracked()
     items = []
@@ -116,9 +116,9 @@ def main():
     if errs:
         for label in sorted(errs):
             print('  ' + errs[label])
-        print(f'FAIL — {len(errs)} of {len(files)} JavaScript files do not parse ({name})')
+        print(f'FAIL: {len(errs)} of {len(files)} JavaScript files do not parse ({name})')
         sys.exit(1)
-    print(f'PASS — {len(files)} JavaScript files parse ({modules} modules, {len(files) - modules} scripts; {name})')
+    print(f'PASS: {len(files)} JavaScript files parse ({modules} modules, {len(files) - modules} scripts; {name})')
 
 
 if __name__ == '__main__':

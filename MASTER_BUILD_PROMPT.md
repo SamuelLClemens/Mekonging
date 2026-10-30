@@ -1,4 +1,4 @@
-# Mekonging — "Into the Future" Master Build Prompt
+# Mekonging: "Into the Future" Master Build Prompt
 
 > **Purpose.** This is a self-contained execution brief for Claude Code to bring the
 > Mekonging travel PWA to production quality across location accuracy, true offline
@@ -35,14 +35,14 @@ These apply to every phase. A phase is not "done" if it violates any of them.
   `git merge --no-ff` into `feat/scaffold-bangkok-slice` (the only auto-deploying branch →
   www.mekonging.com), push, then `git checkout feat/deep-content`. Bump `APP_VERSION`
   (js/main.js) and `CACHE_VERSION` (sw.js:11) in lockstep on every ship.
-- **No fabrication; real sources.** Cite specific, deep source URLs — never a homepage
+- **No fabrication; real sources.** Cite specific, deep source URLs, never a homepage
   placeholder (for example, an actual TripAdvisor attraction page, not `tripadvisor.com`).
   When a fact cannot be verified, omit it or leave native script blank rather than ship
   something wrong.
 - **Offline-first, self-hosted UI-critical data.** Any data whose absence breaks the UI is
   self-hosted in the repository, never fetched from a third-party CDN at runtime. External
   fetches are permitted only where graceful degradation is designed in (live weather, live
-  exchange rates, satellite tiles, TTS audio — all cached after first online use).
+  exchange rates, satellite tiles, TTS audio, all cached after first online use).
 - **No on-screen prose padding.** Add function, not paragraphs. Match the app's terse,
   helpful microcopy.
 - **Formal register in all reporting.** Active voice, no contractions, no slang, no
@@ -88,7 +88,7 @@ verification calls.
   `prefs.geoAsked` (js/main.js:1130, 1155, 1204). The last fix is cached as
   `prefs.lastFix { lat, lng, at }` (js/state.js:~38) and read by `getLastFix()`.
 - The current town is derived by **snapping the fix to the nearest hub in
-  `WEATHER_SPOTS`** — `nearestSpotGlobal(fix)` (js/main.js:10268) and
+  `WEATHER_SPOTS`**: `nearestSpotGlobal(fix)` (js/main.js:10268) and
   `nearestSpot(coords, country)` (js/weather.js:89). `WEATHER_SPOTS` (js/weather.js:17) is a
   sparse ~37-city list. **Pai is listed (weather.js:22); Mae Hong Son town is not.**
 - **This is the reported "in Mae Hong Son it says Pai" bug.** The hub list is correct for
@@ -109,11 +109,11 @@ verification calls.
   audio (`PREFETCH_TTS`, `TTS_CACHE`, host `translate.google.com`, cap 4000). Both survive
   version bumps (activate handler keeps them, sw.js:150).
 - **Confirmed offline holes:**
-  1. **Identifier photos:** none are bundled — `js/data/nature.js` header states "photo-
+  1. **Identifier photos:** none are bundled: `js/data/nature.js` header states "photo-
      search link; no bundled photos." Images resolve to an online search, so the identifier
      shows no picture offline.
   2. **Identifier sounds:** `playCall()` (js/main.js:9073) fetches the iNaturalist API
-     (`inatSoundUrl`, js/main.js:9068) at play time — online only.
+     (`inatSoundUrl`, js/main.js:9068) at play time, online only.
   3. **Live weather** requires network to refresh (correct by design; it caches after first
      fetch). Confirm the cache is honoured on every offline path.
   4. **Basemap GeoJSON:** verify whether the country GeoJSON the map needs is in `PRECACHE`
@@ -150,7 +150,7 @@ verification calls.
   coords, categories[], budgetTier, rating, reviewSources, priceRange {low, typical, high,
   currency, note}, hours, kidFriendly, activities[], amenities[], stayType, blurb,
   whyItFits, recognition, access, tips[], scamWarnings[], externalRatings[], externalPrices[]`.
-  Every field the requested quick-view needs already exists — **coverage and browsing UX are
+  Every field the requested quick-view needs already exists: **coverage and browsing UX are
   the gap, not the schema.** Two on-disk formats coexist: compact (unquoted keys) and
   JSON-style (quoted keys).
 - View and sort preferences exist: `prefs.placesView ('list'|'map')`,
@@ -186,11 +186,11 @@ verification calls.
 - **Voice infrastructure partly exists:** the translator already uses
   `webkitSpeechRecognition` (`rec.onresult`, js/main.js:4008) to fill an input by voice.
   Binary blobs already persist in IndexedDB with an object-URL helper that revokes on
-  cleanup (js/main.js:485; js/idb.js) — the exact pattern needed to store journal audio.
+  cleanup (js/main.js:485; js/idb.js), the exact pattern needed to store journal audio.
 
 ---
 
-## 3. Traceability — reported failures → phases
+## 3. Traceability, reported failures → phases
 
 The operator ran a live test and reported specific failures. Each maps to a phase.
 
@@ -221,7 +221,7 @@ Each phase states its goal, the exact change surface (with file and line), the a
 any state or data-schema change, acceptance criteria, and verification. Ship each phase on
 its own (`--no-ff` merge, version bump) so a regression is isolatable.
 
-### Phase 0 — Reproduce and instrument the bad first run *(do this first)*
+### Phase 0: Reproduce and instrument the bad first run *(do this first)*
 
 **Goal.** Reproduce the operator's failed test run and capture a baseline before changing
 anything.
@@ -240,7 +240,7 @@ fix can be checked against a real "before."
 
 ---
 
-### Phase A — Location: on from the start, real GPS, correct place name
+### Phase A: Location: on from the start, real GPS, correct place name
 
 **Goal.** From launch, obtain the user's actual position (with permission) and name the
 **actual nearest place/town**, not the nearest weather hub. Keep hub-snapping for weather
@@ -248,11 +248,11 @@ only.
 
 **Change surface.**
 
-- `nearestSpotGlobal(fix)` — js/main.js:10268 (weather-hub snap; keep for weather).
-- `nearestSpot(coords, country)` — js/weather.js:89 (weather-hub snap; keep for weather).
-- Home geo invite — js/main.js:1130, 1155, 1204; `prefs.geoAsked` (js/state.js:45).
-- SOS "You appear to be near {city}" — js/main.js:10290.
-- Province geometry `pointInProvince` — js/main.js:~2545; `haversineKm`, `getLastFix`.
+- `nearestSpotGlobal(fix)`, js/main.js:10268 (weather-hub snap; keep for weather).
+- `nearestSpot(coords, country)`, js/weather.js:89 (weather-hub snap; keep for weather).
+- Home geo invite, js/main.js:1130, 1155, 1204; `prefs.geoAsked` (js/state.js:45).
+- SOS "You appear to be near {city}", js/main.js:10290.
+- Province geometry `pointInProvince`, js/main.js:~2545; `haversineKm`, `getLastFix`.
 
 **Approach.**
 
@@ -289,7 +289,7 @@ confirm each names its own town. Toggle permission off; confirm graceful fallbac
 
 ---
 
-### Phase B — True offline, including identifier media
+### Phase B: True offline, including identifier media
 
 **Goal.** Everything the app shows must work with no signal, including identifier pictures
 and sounds. Close the confirmed holes in Section 2.2.
@@ -334,7 +334,7 @@ phrasebook, places, and money.
 
 ---
 
-### Phase C — Places: category-first browse, collapsible quick-view rows, and depth
+### Phase C: Places: category-first browse, collapsible quick-view rows, and depth
 
 **Goal.** Close the "too few options" gap and deliver the requested browsing model: choose a
 category, see a large list, each row a compact quick-view that expands in place for detail.
@@ -360,7 +360,7 @@ category, see a large list, each row a compact quick-view that expands in place 
    - the category.
    The **expanded** body shows the existing detail (blurb, hours, tips, scam warnings,
    sources, "open full page"). Expansion is per-row and does not navigate away.
-3. **Coverage expansion — realistic scope.** Literal Google-Maps parity is neither possible
+3. **Coverage expansion, realistic scope.** Literal Google-Maps parity is neither possible
    nor desirable for a curated, sourced, offline app. Instead, densify by **category × hub
    town**, each entry individually sourced with a real deep URL (no homepage placeholders,
    no fabrication). Prioritise the categories a traveller reaches for and that are currently
@@ -385,7 +385,7 @@ edited data files.
 
 ---
 
-### Phase D — Weather: watch-face hourly ring and month calendar, with metric toggles
+### Phase D: Weather: watch-face hourly ring and month calendar, with metric toggles
 
 **Goal.** Present the hourly forecast as an Apple-Watch-style ring the user can read at a
 glance, and the monthly outlook as a calendar, both with a metric toggle (temperature, rain
@@ -393,7 +393,7 @@ probability, humidity, and others the data supports).
 
 **Change surface.** `weatherScreen(country)` (js/main.js:8253); cached records from
 `js/weather.js` (hourly: `temp, pp, precip, wind, hum, app`; daily: `tmax, tmin, rainProb,
-precip, uv, windMax, sunrise, sunset`). No new network work — the data is already cached.
+precip, uv, windMax, sunrise, sunset`). No new network work, the data is already cached.
 
 **Approach.**
 
@@ -420,7 +420,7 @@ confirm offline still renders from cache.
 
 ---
 
-### Phase E — Money: one modern expense flow and a Home budget pie versus a set total
+### Phase E: Money: one modern expense flow and a Home budget pie versus a set total
 
 **Goal.** Make logging an expense fast and consistent everywhere, and put a budget widget on
 Home: a by-category pie measured against a total budget the user sets.
@@ -453,7 +453,7 @@ pie, total, and remaining are correct and identical across all three entry point
 
 ---
 
-### Phase F — Journal and translation: voice capture, transcription, editable text with original audio
+### Phase F: Journal and translation: voice capture, transcription, editable text with original audio
 
 **Goal.** Let the user record their voice in the journal and the translator. A journal
 recording is transcribed to written text that is editable, while the original audio is kept
@@ -490,7 +490,7 @@ and the original audio remain and play.
 
 ---
 
-### Phase G — "You": Your Dictionary and Your Identifier symmetry and findability
+### Phase G: "You": Your Dictionary and Your Identifier symmetry and findability
 
 **Goal.** A coherent "You" hub where starred phrases (Your Dictionary) and starred identifier
 items (Your Identifier) behave and read the same, and are easy to reach.
@@ -521,7 +521,7 @@ adds it to Your Identifier; both support the same organise actions and are one t
 
 ---
 
-### Phase H — Mobile optimisation and findability (cross-cutting)
+### Phase H: Mobile optimisation and findability (cross-cutting)
 
 **Goal.** The app is fast, legible, and obviously navigable on a phone; users reach what they
 need quickly.
@@ -553,7 +553,7 @@ scrolling on the heaviest new views.
   the `id-cardrow` / `id-cardmain` pattern from My Identifier, and `<details>`/`collapsibleCard`
   for accordions).
 - **State.** New `profile.prefs` and `trip` fields self-default via the migrate spread in
-  js/state.js; no store-version bump for additive fields. Remember `save()` is debounced — do
+  js/state.js; no store-version bump for additive fields. Remember `save()` is debounced, do
   not read `localStorage` synchronously right after a mutation to assert persistence; re-read
   after a tick.
 - **Data formats.** Respect the two place-file formats (compact vs JSON-style). Keep new

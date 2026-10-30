@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Data fields that no renderer reads — content written but never shown.
+"""Data fields that no renderer reads, content written but never shown.
 
     python3 scripts/orphan-fields.py                 # the report
     python3 scripts/orphan-fields.py --file nature   # one data module
     python3 scripts/orphan-fields.py --min 5         # only fields on 5+ records
     python3 scripts/orphan-fields.py --verbose       # list every field, read or not
 
-WHY THIS EXISTS. The recurring defect in this app is not a crash — it is content that was
+WHY THIS EXISTS. The recurring defect in this app is not a crash, it is content that was
 written, committed, and never reached a screen. Every one of these was found by accident:
 
   * `dangerNote` was populated on 215 species and rendered for 200 of them; 15 records had
@@ -26,8 +26,8 @@ HOW IT READS. Every key on every record in js/data/*.js, against every `.key`, `
 is reported.
 
 WHAT IT IS NOT. It is not a guard and it does not assert. A key can be read in a way this
-cannot see — built at runtime (`rec[fieldName]`), spread into a template, or handed to
-something generic like an exporter — so a name on this list is a QUESTION, not a defect. The
+cannot see, built at runtime (`rec[fieldName]`), spread into a template, or handed to
+something generic like an exporter, so a name on this list is a QUESTION, not a defect. The
 answer is either "wire it up", "delete it", or "read dynamically, here". Verify before acting:
 grep the name, then look at the screen. A key reported here that turns out to be read
 dynamically belongs in DYNAMIC below, with the reason.
@@ -73,7 +73,7 @@ def data_files(only=None):
 
 
 def strip_comments(src):
-    """Line comments FIRST — a path like js/screens/*.js in prose opens a phantom block
+    """Line comments FIRST, a path like js/screens/*.js in prose opens a phantom block
     comment and would swallow the rest of the file."""
     src = re.sub(r'(?m)^[ \t]*//.*$', '', src)
     src = re.sub(r'//[^\n"\']*$', '', src, flags=re.M)
@@ -134,7 +134,7 @@ def main():
 
     print('Fields declared in js/data/ that no file outside js/data/ reads.\n')
     if not orphan_total:
-        print('None — every data field on %d+ records is read somewhere.' % a.min)
+        print('None, every data field on %d+ records is read somewhere.' % a.min)
     for base, counts, orphans in rows:
         if not orphans and not a.verbose:
             continue

@@ -2,7 +2,7 @@
 """Build js/data/basemap.js: a self-hosted, lat/lng GeoJSON basemap of the four
 countries so the offline map needs NO external tiles (the old Protomaps demo bucket
 is dead). MapLibre renders these polygons directly; GPS, pins, places and routes draw
-on top. Streets are not included — this is a reliable always-offline geometry base.
+on top. Streets are not included, this is a reliable always-offline geometry base.
 
 Re-run after changing the country set:  python3 scripts/build_basemap.py
 Reads the cached /tmp/mk_<cca3>.geo.json files (mledoze/countries, public domain).
@@ -10,8 +10,8 @@ Reads the cached /tmp/mk_<cca3>.geo.json files (mledoze/countries, public domain
 import json, math, os
 
 COUNTRIES = [('th', 'tha', 'Thailand'), ('vi', 'vnm', 'Vietnam'), ('kh', 'khm', 'Cambodia'), ('la', 'lao', 'Laos')]
-EPS = 0.02       # simplify tolerance in degrees (~2 km) — plenty for a basemap
-AREA_MIN = 0.01  # deg^2 — drop tiny specks, keep mainland + big islands
+EPS = 0.02       # simplify tolerance in degrees (~2 km), plenty for a basemap
+AREA_MIN = 0.01  # deg^2, drop tiny specks, keep mainland + big islands
 
 
 def load(cca3):

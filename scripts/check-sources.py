@@ -6,7 +6,7 @@
 
 WHY THIS EXISTS. The audit spot-checked 10 places with deep-link sources and found 5 of 10
 contradicted or unsupported by their OWN cited source, plus 2 more whose only source was dead
-(404/403) — slice S2 fixed those eight records. But the audit also surfaced two structural gaps
+(404/403), slice S2 fixed those eight records. But the audit also surfaced two structural gaps
 that no amount of spot-fixing closes on its own, because nothing stopped them from getting worse
 one record at a time:
 
@@ -15,8 +15,8 @@ one record at a time:
     `https://vietnam.travel`) rather than a page that is actually about the place. A homepage
     tells a traveller nothing checkable; it is a citation in form only.
   * A route record can ship with no `sources` field at all. Fares and schedules drift constantly
-    — Pattaya's own baht-bus fare entry two records above the one S2 touched exists because an
-    April 2026 fare change needed a dated source — so an unsourced route is a claim nobody can
+    Pattaya's own baht-bus fare entry two records above the one S2 touched exists because an
+    April 2026 fare change needed a dated source, so an unsourced route is a claim nobody can
     re-verify.
 
 Neither gap is zero and neither should be: plenty of records cite a homepage alongside a real
@@ -31,7 +31,7 @@ HOMEPAGE HEURISTIC. A url is "homepage-only" if its path has no segments (a bare
 `https://www.tripadvisor.com`) or exactly one very short/generic segment (a locale root like
 `https://badenmountain.sunworld.vn/en/`, or literally `/home`, `/index`). Anything with a real
 slug or a multi-segment path counts as a specific page. This is a heuristic, not a scrape of each
-page's content — it will call a few genuinely-specific-but-short URLs homepage-only and miss a
+page's content, it will call a few genuinely-specific-but-short URLs homepage-only and miss a
 few long URLs that are themselves disguised redirects to a homepage. The audit's own spot check
 measured 224 of 783 by a different, manual methodology; this script's own figure is the one that
 matters for the ratchet, because it is the number this script will recompute every time.
@@ -49,7 +49,7 @@ PLACE_FILES = [f'js/data/places.{cc}{ext}.js' for cc in ('th', 'vi', 'kh', 'la')
 ROUTE_FILES = sorted(glob.glob('js/data/routes.*.js'))
 
 # Baseline measured on this script's own methodology against the tree immediately before S2's
-# content fixes (2026-10, mk-v0.600.0 plus S2's 8 corrections — none of which changed a place's
+# content fixes (2026-10, mk-v0.600.0 plus S2's 8 corrections, none of which changed a place's
 # homepage-only verdict, and none of which touch routes.*.js at all). Bump these ONLY when you
 # have actually reduced the count below it; lowering the number without doing the work defeats
 # the ratchet.
@@ -73,7 +73,7 @@ URL_RE = re.compile(r'\burl\s*:\s*["\']([^"\']+)["\']')
 
 
 def records(path):
-    """Yield (id, block) per record. Same id-line-as-boundary approach as the other guards —
+    """Yield (id, block) per record. Same id-line-as-boundary approach as the other guards,
     more reliable than brace counting on files this heavily nested."""
     lines = open(path, encoding='utf-8').read().split('\n')
     starts = [i for i, ln in enumerate(lines) if ID_RE.match(ln)]
@@ -99,7 +99,7 @@ def sources_array(block):
             depth -= 1
             if depth == 0:
                 return block[start:i + 1]
-    return block[start:]  # unterminated — hand back what there is rather than crash
+    return block[start:]  # unterminated, hand back what there is rather than crash
 
 
 def is_homepage_url(url):
@@ -160,21 +160,21 @@ def main():
     problems = []
     if homepage_n > BASELINE_HOMEPAGE_ONLY_PLACES:
         problems.append(f'{homepage_n} place records now cite only homepage URLs, up from a '
-                         f'baseline of {BASELINE_HOMEPAGE_ONLY_PLACES} — a new or edited record '
+                         f'baseline of {BASELINE_HOMEPAGE_ONLY_PLACES}, a new or edited record '
                          'added a citation with no specific page about the place. Re-run with '
                          '--report to see which.')
     if unsourced_n > BASELINE_UNSOURCED_ROUTES:
         problems.append(f'{unsourced_n} route records now have no sources field at all, up from '
-                         f'a baseline of {BASELINE_UNSOURCED_ROUTES} — a new or edited route '
+                         f'a baseline of {BASELINE_UNSOURCED_ROUTES}, a new or edited route '
                          'shipped without a source. Re-run with --report to see which.')
 
     print()
     if problems:
-        print(f'FAIL — {len(problems)} ratchet regression(s):')
+        print(f'FAIL: {len(problems)} ratchet regression(s):')
         for p in problems:
             print('  - ' + p)
         return 1
-    print('PASS — neither sourcing gap has grown past its baseline.')
+    print('PASS: neither sourcing gap has grown past its baseline.')
     return 0
 
 

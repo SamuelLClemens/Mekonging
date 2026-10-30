@@ -89,7 +89,7 @@ Sorted by the larger of the light and dark scores. The score is a triage aid, no
 | `#contributions` | Contributions | 0 / 0 | 4 / 4 | 0 / 0 | 0 / 0 | 0 / 0 | 0+0 / 0+0 | 4 / 4 |
 | `#family-th` | With kids | 0 / 0 | 4 / 4 | 0 / 0 | 0 / 0 | 0 / 0 | 0+0 / 0+0 | 4 / 4 |
 | `#foryou` | Best for you | 0 / 0 | 3 / 3 | 0 / 0 | 0 / 0 | 0 / 0 | 0+0 / 0+0 | 3 / 3 |
-| `#history-th` | Thailand — history | 0 / 0 | 3 / 3 | 0 / 0 | 0 / 0 | 0 / 0 | 0+0 / 0+0 | 3 / 3 |
+| `#history-th` | Thailand, history | 0 / 0 | 3 / 3 | 0 / 0 | 0 / 0 | 0 / 0 | 0+0 / 0+0 | 3 / 3 |
 | `#hub-plan` | Plan & travel | 0 / 0 | 3 / 3 | 0 / 0 | 0 / 0 | 0 / 0 | 0+0 / 0+0 | 3 / 3 |
 | `#explore` | Explore | 0 / 0 | 2 / 2 | 0 / 0 | 0 / 0 | 0 / 0 | 0+0 / 0+0 | 2 / 2 |
 | `#hub-identify` | Identify | 0 / 0 | 2 / 2 | 0 / 0 | 0 / 0 | 0 / 0 | 0+0 / 0+0 | 2 / 2 |
@@ -128,7 +128,7 @@ Measured on every route load. The hit area is the visual box plus whatever the c
 
 | Control | Selector | Visual w x h px | Hit area w x h px | Seen on routes |
 | --- | --- | --- | --- | --- |
-| Language: English — tap to change | `header.topbar > button.topbar-ic.topbar-lang` | 26 x 27.2 | 31 x 44 | 76 |
+| Language: English, tap to change | `header.topbar > button.topbar-ic.topbar-lang` | 26 x 27.2 | 31 x 44 | 76 |
 | Settings | `header.topbar > button.topbar-ic` | 26 x 30 | 31 x 44 | 75 |
 | Saved & collections | `header.topbar > button.topbar-ic` | 26 x 30 | 31 x 44 | 75 |
 | Search everything | `header.topbar > button.topbar-ic` | 26 x 30 | 36 x 44 | 74 |
@@ -171,7 +171,7 @@ Rendered foreground against the effective backdrop (opacity, alpha and gradient 
 | `div.wx-cal-cell > div.wx-cal-v` | light | 34 | `#1e1e1e` | `#de3535` | 3.7 | 4.5 | 10 | 2 | 2 |
 | `div.wx-cal-cell > div.wx-cal-num` | dark | 22 | `#1e1e1e` | `#de3535` | 3.7 | 4.5 | 11 | 2 | 4 |
 | `div.wx-cal-cell > div.wx-cal-v` | dark | 34 | `#1e1e1e` | `#de3535` | 3.7 | 4.5 | 10 | 2 | 2 |
-| `div.exp-title-pick > input#fld-N` | light | Optional — e.g. lunch, ta… | `#757575` | `#fbf7ee` | 4.31 | 4.5 | 16 | 2 | 2 |
+| `div.exp-title-pick > input#fld-N` | light | Optional, e.g. lunch, ta… | `#757575` | `#fbf7ee` | 4.31 | 4.5 | 16 | 2 | 2 |
 | `div.map-search-wrap > input.map-search` | light | Search any city or place,… | `#757575` | `#fbf7ee` | 4.31 | 4.5 | 16 | 2 | 2 |
 | `div.field > textarea#fld-N.ta` | light | One line about you (optio… | `#757575` | `#fbf7ee` | 4.31 | 4.5 | 16 | 2 | 2 |
 | `button.cal-cell.cal-today.cal-sel > span.cal-day` | dark | 19 | `#ffffff` | `#f3e8d2` | 1.21 | 4.5 | 13 | 1 | 1 |
@@ -199,7 +199,7 @@ The MapLibre attribution plate is the one overlay in the app that covers other c
 
 One table per route, both themes, sorted by severity. Topbar controls are in the shell table above and are not repeated. The light value comes first and the dark value second; `same` means the dark value equals the light one, and `ok` or `pass` means that theme had no finding for the row. Under-44 rows give the effective hit area (`::before` included) and the visual box in brackets; `xN` is the number of controls with that selector.
 
-### `#nature` — Identify nature
+### `#nature`: Identify nature
 
 _from Identify › Identify nature; 492 controls in light, 492 in dark._
 
@@ -210,7 +210,7 @@ _from Identify › Identify nature; 492 controls in light, 492 in dark._
 | Under 44 | `div.card.species-card.id-cardrow > button.id-play` "Play the White-throated Kin…" | 26 x 31 hit (25.8 x 30 visual) x50 | same |
 | Under 44 | `div.card.species-card.id-cardrow > button.id-star` "Save to my identifier" | 28 x 33 hit (28 x 32 visual) x207 | same |
 
-### `#phrasebook` — Phrasebook
+### `#phrasebook`: Phrasebook
 
 _from the tab bar; 595 controls in light, 595 in dark; DOM still changing after 6 s in both themes._
 
@@ -226,10 +226,10 @@ _from the tab bar; 595 controls in light, 595 in dark; DOM still changing after 
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "🔊 Offline phrase audio" | 309 x 27.3 hit (309 x 27.3 visual) | same |
 | Under 44 | `details.card.lg-card > summary` "📚 Learn more about Thai" | 309 x 35 hit (309 x 33.5 visual) | same |
 | Under 44 | `details.lg-sec > summary` "🔊 Sounds and tones" | 309 x 41 hit (309 x 40 visual) x5 | same |
-| route-sweep (info) | 1 CONTROL(S) DISABLED ON ARRIVAL — ⤓ Download selected | flagged | flagged |
+| route-sweep (info) | 1 CONTROL(S) DISABLED ON ARRIVAL, ⤓ Download selected | flagged | flagged |
 | route-sweep (info) | NEVER SETTLED — numbers unreliable | flagged | flagged |
 
-### `#transport-th` — Getting around
+### `#transport-th`: Getting around
 
 _from Transport › Getting around; 788 controls in light, 788 in dark._
 
@@ -242,7 +242,7 @@ _from Transport › Getting around; 788 controls in light, 788 in dark._
 | Under 44 | `div > a` "[number]" | 84.2 x 18 hit (84.2 x 17 visual) x19 | same |
 | Under 44 | `div.tiny > a` "[email]" | 147.8 x 18 hit (147.8 x 17 visual) x9 | same |
 
-### `#places` — Places for you
+### `#places`: Places for you
 
 _from the tab bar; 484 controls in light, 484 in dark; not hit-tested: 279 off-view, 4 off-map marker._
 
@@ -262,9 +262,9 @@ _from the tab bar; 484 controls in light, 484 in dark; not hit-tested: 279 off-v
 | Under 44 | `div.chips.month-strip > button.chip` "Jan" | 32 x 44 hit (30.9 x 44 visual) x11 | same |
 | Under 44 | `summary.pqr-summary > button.pqr-compare` "Add Guesthouses (Old City /…" | 20 x 22 hit (18.1 x 21 visual) x18 | same |
 | Under 44 | `summary.pqr-summary > button.pqr-star` "Quick save" | 24 x 24 hit (24 x 24 visual) x18 | same |
-| route-sweep (info) | 1 CONTROL(S) DISABLED ON ARRIVAL — Location not available | flagged | flagged |
+| route-sweep (info) | 1 CONTROL(S) DISABLED ON ARRIVAL: Location not available | flagged | flagged |
 
-### `#weather-th` — Weather
+### `#weather-th`: Weather
 
 _from Plan & travel › Weather; 109 controls in light, 109 in dark._
 
@@ -294,9 +294,9 @@ _from Plan & travel › Weather; 109 controls in light, 109 in dark._
 | Under 44 | `div.maplibregl-ctrl.maplibregl-ctrl-group > button.maplibregl-ctrl-geolocate` "Find my location" | 30 x 30 hit (29 x 29 visual) | same |
 | Under 44 | `div.maplibregl-ctrl.maplibregl-ctrl-scale > span.u-tap` "km, switch to imperial" | 15 x 12 hit (13.7 x 12 visual) | same |
 | Under 44 | `details.maplibregl-ctrl.maplibregl-ctrl-attrib.maplibregl-compact > summary.maplibregl-ctrl-attrib-…` "Toggle attribution" | 24 x 24 hit (24 x 24 visual) | same |
-| route-sweep (artefact) | 170 ZERO-SIZE CONTROL(S) — °C, switch to °F, °C, switch to °F, mm, switch to im…: `content-visibility` skips the cards until scrolled; the same controls measure 12 to 20 px here | flagged | flagged |
+| route-sweep (artefact) | 170 ZERO-SIZE CONTROL(S), °C, switch to °F, °C, switch to °F, mm, switch to im…: `content-visibility` skips the cards until scrolled; the same controls measure 12 to 20 px here | flagged | flagged |
 
-### `#map` — Full offline map
+### `#map`: Full offline map
 
 _from Transport › Full offline map; 42 controls in light, 42 in dark._
 
@@ -315,7 +315,7 @@ _from Transport › Full offline map; 42 controls in light, 42 in dark._
 | Under 44 | `div.maplibregl-ctrl.maplibregl-ctrl-group > button.maplibregl-ctrl-geolocate` "Find my location" | 30 x 30 hit (29 x 29 visual) | same |
 | Under 44 | `details.maplibregl-ctrl.maplibregl-ctrl-attrib.maplibregl-compact > summary.maplibregl-ctrl-attrib-…` "Toggle attribution" | 24 x 24 hit (24 x 24 visual) | same |
 
-### `#plans` — Trip plans
+### `#plans`: Trip plans
 
 _from Plan & travel › Trip plans; 135 controls in light, 135 in dark._
 
@@ -326,7 +326,7 @@ _from Plan & travel › Trip plans; 135 controls in light, 135 in dark._
 | Under 44 | `div.plan-nights > button.btn.ghost.plan-step` "One night fewer in Bangkok" | 36 x 36 hit (36 x 36 visual) x56 | same |
 | Under 44 | `div.plan-stop > button.btn.ghost.plan-drop` "Drop Bangkok from this plan" | 36 x 36 hit (36 x 36 visual) x28 | same |
 
-### `#produce` — Market produce
+### `#produce`: Market produce
 
 _from Identify › Market produce; 151 controls in light, 151 in dark._
 
@@ -336,7 +336,7 @@ _from Identify › Market produce; 151 controls in light, 151 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 | Under 44 | `div.card.species-card.id-cardrow > button.id-star` "Save to my identifier" | 28 x 33 hit (28 x 32 visual) x65 | same |
 
-### `#danger` — Dangerous
+### `#danger`: Dangerous
 
 _from Identify › Dangerous; 143 controls in light, 143 in dark._
 
@@ -348,7 +348,7 @@ _from Identify › Dangerous; 143 controls in light, 143 in dark._
 | Under 44 | `div.card.species-card.id-cardrow > button.id-play` "Play the Long-tailed Macaqu…" | 26 x 31 hit (25.8 x 30 visual) x2 | same |
 | Under 44 | `details.card.mosquito-card.foldcard > summary.foldcard-sum` "🦟 Mosquitoes & dengue" | 309 x 27.3 hit (309 x 27.3 visual) | same |
 
-### `#streetfood` — Street food
+### `#streetfood`: Street food
 
 _from See & do › Street food; 338 controls in light, 338 in dark._
 
@@ -358,7 +358,7 @@ _from See & do › Street food; 338 controls in light, 338 in dark._
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "Rate the classics" | 309 x 27.3 hit (309 x 27.3 visual) x2 | same |
 | Under 44 | `div.chips > button.chip` "Rate 1 star" | 41 x 45 hit (40.5 x 44 visual) x50 | same |
 
-### `#food-th` — Identify food
+### `#food-th`: Identify food
 
 _from Identify › Identify food; 123 controls in light, 123 in dark._
 
@@ -368,7 +368,7 @@ _from Identify › Identify food; 123 controls in light, 123 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 | Under 44 | `div.card.species-card.id-cardrow > button.id-star` "Save to my identifier" | 28 x 33 hit (28 x 32 visual) x40 | same |
 
-### `#home` — Bangkok · Mon, Oct 19
+### `#home`: Bangkok · Mon, Oct 19
 
 _from the tab bar; 47 controls in light, 47 in dark._
 
@@ -382,7 +382,7 @@ _from the tab bar; 47 controls in light, 47 in dark._
 | Under 44 | `details.home-group-d > summary.home-group` "🗓 Your trip" | 343 x 37.6 hit (343 x 37.6 visual) x4 | same |
 | Under 44 | `details.wx-cal-fold > summary.wx-cal-h` "Upcoming forecast" | 309 x 25 hit (309 x 24 visual) | same |
 
-### `#etiquette-th` — 🇹🇭 Culture & etiquette
+### `#etiquette-th`, 🇹🇭 Culture & etiquette
 
 _from Know this country › Culture & etiquette; 26 controls in light, 26 in dark._
 
@@ -393,14 +393,14 @@ _from Know this country › Culture & etiquette; 26 controls in light, 26 in dar
 | Under 44 | `details.foldcard.etiq-fold > summary.foldcard-sum` "⚠️ Rude · 3" | 343 x 28 hit (343 x 27.3 visual) x5 | same |
 | Under 44 | `details.foldcard.etiq-region > summary.foldcard-sum` "🌏 True in all four countrie…" | 343 x 28 hit (343 x 27.3 visual) | same |
 
-### `#expenses` — Budget
+### `#expenses`: Budget
 
 _from Money › Budget; 48 controls in light, 48 in dark._
 
 | Type | Detail | Measured light | Measured dark |
 | --- | --- | --- | --- |
 | Contrast | `div.field > input#fld-N` placeholder "Amount in USD" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) x5 | pass |
-| Contrast | `div.exp-title-pick > input#fld-N` placeholder "Optional — e.g. lunch, …" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
+| Contrast | `div.exp-title-pick > input#fld-N` placeholder "Optional, e.g. lunch, …" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
 | Under 44 | `details.card.budget-card.foldcard > summary.foldcard-sum` "💰 Budget" | 309 x 27.3 hit (309 x 27.3 visual) | same |
 | Under 44 | `div.row-between > select` "Currency" | 74 x 18 hit (74 x 17 visual) | same |
 | Under 44 | `details.budget-set > summary` "＋ Set your budget & trip da…" | 309 x 37 hit (309 x 37 visual) x3 | same |
@@ -413,7 +413,7 @@ _from Money › Budget; 48 controls in light, 48 in dark._
 | Under 44 | `details.card.exp-add-card.foldcard > summary.foldcard-sum` "Log an expense" | 309 x 28 hit (309 x 27.3 visual) | same |
 | Under 44 | `details.card.budget-card.withdrawals-card > summary.foldcard-sum` "🏧 Cash withdrawals" | 309 x 29 hit (309 x 27.3 visual) | same |
 
-### `#trip` — Your trip
+### `#trip`: Your trip
 
 _from Plan & travel › My trip; 30 controls in light, 30 in dark._
 
@@ -421,12 +421,12 @@ _from Plan & travel › My trip; 30 controls in light, 30 in dark._
 | --- | --- | --- | --- |
 | Contrast | `div.field > input` placeholder "Place or city" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
 | Contrast | `div.field > input#fld-N` placeholder "Amount" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
-| Contrast | `div.exp-title-pick > input#fld-N` placeholder "Optional — e.g. lunch, …" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
+| Contrast | `div.exp-title-pick > input#fld-N` placeholder "Optional, e.g. lunch, …" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "Itinerary" | 309 x 27.3 hit (309 x 27.3 visual) x3 | same |
 | Under 44 | `details.card.exp-add-card.foldcard > summary.foldcard-sum` "Log an expense" | 309 x 28 hit (309 x 27.3 visual) | same |
 | Under 44 | `label.exp-monthly-toggle > input` "on" | 48 x 25 hit (13 x 13 visual) | same |
 
-### `#settings` — Settings
+### `#settings`: Settings
 
 _from Settings & help › Settings; 111 controls in light, 111 in dark._
 
@@ -435,9 +435,9 @@ _from Settings & help › Settings; 111 controls in light, 111 in dark._
 | Contrast | `div.field > input#fld-N` placeholder "[email]" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) x3 | pass |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "📲 Install the app" | 309 x 27.3 hit (309 x 27.3 visual) x13 | same |
 | Under 44 | `label.qc-choice > input` "Calendar" | 52 x 33 hit (13 x 13 visual) x10 | same |
-| route-sweep (info) | 1 CONTROL(S) DISABLED ON ARRIVAL — ⤓ Download selected | flagged | flagged |
+| route-sweep (info) | 1 CONTROL(S) DISABLED ON ARRIVAL, ⤓ Download selected | flagged | flagged |
 
-### `#sos` — Emergency
+### `#sos`: Emergency
 
 _from the topbar emergency control; 121 controls in light, 121 in dark._
 
@@ -448,7 +448,7 @@ _from the topbar emergency control; 121 controls in light, 121 in dark._
 | Under 44 | `details.card.sos-card.foldcard > summary.foldcard-sum` "📖 Survival guide" | 309 x 27.3 hit (309 x 27.3 visual) | same |
 | Under 44 | `details.filters-collapse > summary` "🐍 Snake bite" | 149.2 x 39 hit (149.2 x 39 visual) x15 | same |
 
-### `#pantry` — 🧂 Market products
+### `#pantry`, 🧂 Market products
 
 _from Identify › Market products; 49 controls in light, 49 in dark._
 
@@ -458,7 +458,7 @@ _from Identify › Market products; 49 controls in light, 49 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 | Under 44 | `div.card.species-card.id-cardrow > button.id-star` "Save to my identifier" | 28 x 33 hit (28 x 32 visual) x14 | same |
 
-### `#circle` — Travel circle
+### `#circle`: Travel circle
 
 _from People › Travel circle; 26 controls in light, 26 in dark._
 
@@ -468,7 +468,7 @@ _from People › Travel circle; 26 controls in light, 26 in dark._
 | Contrast | `div.field > textarea#fld-N.ta` placeholder "One line about you (opt…" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "Traveller board" | 309 x 27.3 hit (309 x 27.3 visual) x4 | same |
 
-### `#feedback` — Send feedback
+### `#feedback`: Send feedback
 
 _from Settings & help › Send feedback; 21 controls in light, 21 in dark._
 
@@ -478,7 +478,7 @@ _from Settings & help › Send feedback; 21 controls in light, 21 in dark._
 | Contrast | `div.field > textarea#fld-N.ta` placeholder "Your message…" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 
-### `#export` — Export
+### `#export`: Export
 
 _from Settings & help › Export; 31 controls in light, 31 in dark._
 
@@ -488,7 +488,7 @@ _from Settings & help › Export; 31 controls in light, 31 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "📖 My travel book" | 307 x 27.3 hit (307 x 27.3 visual) x5 | same |
 
-### `#market-cash` — Market
+### `#market-cash`: Market
 
 _from Market; 29 controls in light, 29 in dark._
 
@@ -498,7 +498,7 @@ _from Market; 29 controls in light, 29 in dark._
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "💱 Post: Cash swap" | 309 x 28 hit (309 x 27.3 visual) x2 | same |
 | Under 44 | `details.card.foldcard.autofold > input` "Paste a board link a travel…" | 309 x 22 hit (309 x 21 visual) | 309 x 20 hit (309 x 19 visual) |
 
-### `#market-items` — Market
+### `#market-items`: Market
 
 _from Market; 33 controls in light, 33 in dark._
 
@@ -508,7 +508,7 @@ _from Market; 33 controls in light, 33 in dark._
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "🎒 Post: Gear & bikes" | 309 x 27.3 hit (309 x 27.3 visual) x2 | same |
 | Under 44 | `details.card.foldcard.autofold > input` "Paste a board link a travel…" | 309 x 22 hit (309 x 21 visual) | 309 x 20 hit (309 x 19 visual) |
 
-### `#market-rides` — Market
+### `#market-rides`: Market
 
 _from Market; 32 controls in light, 32 in dark._
 
@@ -518,7 +518,7 @@ _from Market; 32 controls in light, 32 in dark._
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "🚗 Post: Ride share" | 309 x 27.3 hit (309 x 27.3 visual) x2 | same |
 | Under 44 | `details.card.foldcard.autofold > input` "Paste a board link a travel…" | 309 x 22 hit (309 x 21 visual) | 309 x 20 hit (309 x 19 visual) |
 
-### `#market-rooms` — Market
+### `#market-rooms`: Market
 
 _from Market; 31 controls in light, 31 in dark._
 
@@ -528,7 +528,7 @@ _from Market; 31 controls in light, 31 in dark._
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "🏠 Post: Stay share" | 309 x 27.3 hit (309 x 27.3 visual) x2 | same |
 | Under 44 | `details.card.foldcard.autofold > input` "Paste a board link a travel…" | 309 x 22 hit (309 x 21 visual) | 309 x 20 hit (309 x 19 visual) |
 
-### `#calendar` — Calendar
+### `#calendar`: Calendar
 
 _from Plan & travel › Travel calendar; 58 controls in light, 58 in dark._
 
@@ -537,7 +537,7 @@ _from Plan & travel › Travel calendar; 58 controls in light, 58 in dark._
 | Contrast | `button.cal-cell.cal-today.cal-sel > span.cal-day` text "19" | pass | 1.21:1 (#ffffff on #f3e8d2, needs 4.5, 13px) |
 | Under 44 | `div.cal-head > button.chip` "Previous month" | 33 x 44 hit (32.3 x 44 visual) x2 | same |
 
-### `#route` — Journey planner
+### `#route`: Journey planner
 
 _from Transport › Journey planner; 17 controls in light, 17 in dark._
 
@@ -547,7 +547,7 @@ _from Transport › Journey planner; 17 controls in light, 17 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 | Under 44 | `div > button.btn.ghost.swap-btn` "Swap start and destination" | 99.6 x 41 hit (99.6 x 40 visual) | same |
 
-### `#donate` — Give back
+### `#donate`: Give back
 
 _from People › Give back; 29 controls in light, 29 in dark._
 
@@ -556,7 +556,7 @@ _from People › Give back; 29 controls in light, 29 in dark._
 | Contrast | `div.field > input#fld-N` placeholder "Cash withdrawn in USD" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 
-### `#saved` — Saved & collections
+### `#saved`: Saved & collections
 
 _from My stuff › Saved places; 34 controls in light, 34 in dark._
 
@@ -565,7 +565,7 @@ _from My stuff › Saved places; 34 controls in light, 34 in dark._
 | Contrast | `details.card.foldcard.autofold > input.search` placeholder "Name your theme…" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "New collection" | 309 x 27.3 hit (309 x 27.3 visual) | same |
 
-### `#bargain` — Bargain helper
+### `#bargain`: Bargain helper
 
 _from Money › Bargain helper; 17 controls in light, 17 in dark._
 
@@ -573,7 +573,7 @@ _from Money › Bargain helper; 17 controls in light, 17 in dark._
 | --- | --- | --- | --- |
 | Contrast | `div.field > input#fld-N` placeholder "Asking price" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
 
-### `#search` — Search
+### `#search`: Search
 
 _from Settings & help › Search everything; 30 controls in light, 30 in dark._
 
@@ -581,7 +581,7 @@ _from Settings & help › Search everything; 30 controls in light, 30 in dark._
 | --- | --- | --- | --- |
 | Contrast | `div.screen > input.search` placeholder "Find places, phrases, w…" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) | pass |
 
-### `#vault` — Documents
+### `#vault`: Documents
 
 _from My stuff › Documents; 18 controls in light, 18 in dark._
 
@@ -589,7 +589,7 @@ _from My stuff › Documents; 18 controls in light, 18 in dark._
 | --- | --- | --- | --- |
 | Contrast | `div.field > input#fld-N` placeholder "Choose a passcode (min …" | 4.31:1 (#757575 on #fbf7ee, needs 4.5, 16px) x3 | pass |
 
-### `#crossings` — Borders
+### `#crossings`: Borders
 
 _from Transport › Border crossings; 52 controls in light, 52 in dark._
 
@@ -598,7 +598,7 @@ _from Transport › Border crossings; 52 controls in light, 52 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Thailand ↔ Laos" | 343 x 28 hit (343 x 27.3 visual) x8 | same |
 
-### `#visa-th` — Entry & visa
+### `#visa-th`: Entry & visa
 
 _from Know this country › Entry & visa; 26 controls in light, 26 in dark._
 
@@ -606,7 +606,7 @@ _from Know this country › Entry & visa; 26 controls in light, 26 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "✅ Visa-freeFree (extension …" | 309 x 24 hit (309 x 22.8 visual) x9 | same |
 
-### `#checklist` — Pre-trip checklist
+### `#checklist`: Pre-trip checklist
 
 _from Plan & travel › Pre-trip checklist; 55 controls in light, 55 in dark._
 
@@ -614,7 +614,7 @@ _from Plan & travel › Pre-trip checklist; 55 controls in light, 55 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "🛂 Documents" | 343 x 28 hit (343 x 27.3 visual) x6 | same |
 
-### `#prices-th` — Fair prices
+### `#prices-th`: Fair prices
 
 _from Money › Fair prices; 25 controls in light, 25 in dark._
 
@@ -626,7 +626,7 @@ _from Money › Fair prices; 25 controls in light, 25 in dark._
 | Under 44 | `div.fx-line > input.fx-out` "Converted amount" | 217 x 36 hit (217 x 36 visual) | same |
 | Under 44 | `details.filters-collapse > summary` "All 23 everyday prices · 15…" | 275.9 x 40 hit (275.9 x 39 visual) | same |
 
-### `#arrival-th` — Just arrived
+### `#arrival-th`: Just arrived
 
 _from Know this country › Just arrived; 35 controls in light, 35 in dark._
 
@@ -635,7 +635,7 @@ _from Know this country › Just arrived; 35 controls in light, 35 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "💵 Cash without the fees" | 309 x 27.3 hit (309 x 27.3 visual) x4 | same |
 
-### `#currency` — Currency
+### `#currency`: Currency
 
 _from Money › Currency converter; 20 controls in light, 20 in dark._
 
@@ -646,7 +646,7 @@ _from Money › Currency converter; 20 controls in light, 20 in dark._
 | Under 44 | `div.fx-swap-row > button.fx-eq` "Swap currencies" | 34 x 34 hit (34 x 34 visual) | same |
 | Under 44 | `div.fx-line > input.fx-out` "Converted amount" | 217 x 36 hit (217 x 36 visual) | same |
 
-### `#help` — Help & FAQ
+### `#help`: Help & FAQ
 
 _from Settings & help › Help & FAQ; 23 controls in light, 23 in dark._
 
@@ -655,9 +655,9 @@ _from Settings & help › Help & FAQ; 23 controls in light, 23 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 | Under 44 | `details.card > summary` "How do I build and log a tr…" | 309 x 24 hit (309 x 24 visual) x4 | same |
 
-### `#me` — Your space
+### `#me`: Your space
 
-_from the tab bar — the You hub, Settings lives inside it; 37 controls in light, 37 in dark._
+_from the tab bar, the You hub, Settings lives inside it; 37 controls in light, 37 in dark._
 
 | Type | Detail | Measured light | Measured dark |
 | --- | --- | --- | --- |
@@ -667,7 +667,7 @@ _from the tab bar — the You hub, Settings lives inside it; 37 controls in ligh
 | Under 44 | `details.home-group-d > summary` "📔 My stuff" | 343 x 38 hit (343 x 37.6 visual) | same |
 | Under 44 | `details.home-group-d > summary.home-group` "🗂️ Everything else" | 343 x 37.6 hit (343 x 37.6 visual) | same |
 
-### `#pools-th` — Thailand pools
+### `#pools-th`: Thailand pools
 
 _from See & do › Pools; 26 controls in light, 26 in dark._
 
@@ -676,7 +676,7 @@ _from See & do › Pools; 26 controls in light, 26 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Bangkok" | 343 x 28 hit (343 x 27.3 visual) x4 | same |
 
-### `#scams-th` — Common scams
+### `#scams-th`: Common scams
 
 _from Know this country › Common scams; 30 controls in light, 30 in dark._
 
@@ -686,7 +686,7 @@ _from Know this country › Common scams; 30 controls in light, 30 in dark._
 | Under 44 | `details.card.scam-card.foldcard > summary.foldcard-sum` "“Meter broken” taxi" | 306 x 28 hit (306 x 27.3 visual) x2 | same |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "🛂 Visa & border scams" | 309 x 28 hit (309 x 27.3 visual) x2 | same |
 
-### `#worship-th` — Places of worship
+### `#worship-th`: Places of worship
 
 _from See & do › Places of worship; 38 controls in light, 38 in dark._
 
@@ -695,7 +695,7 @@ _from See & do › Places of worship; 38 controls in light, 38 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 26 hit (103.6 x 25 visual) | same |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "Find a place of worship nea…" | 309 x 28 hit (309 x 27.3 visual) x4 | same |
 
-### `#access-th` — Accessibility
+### `#access-th`: Accessibility
 
 _from Know this country › Accessibility; 18 controls in light, 18 in dark._
 
@@ -703,7 +703,7 @@ _from Know this country › Accessibility; 18 controls in light, 18 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "♿ Wheelchair / limited mobi…" | 309 x 27.3 hit (309 x 27.3 visual) x4 | same |
 
-### `#contributions` — Contributions
+### `#contributions`: Contributions
 
 _from My stuff › Your contributions; 22 controls in light, 22 in dark._
 
@@ -713,7 +713,7 @@ _from My stuff › Your contributions; 22 controls in light, 22 in dark._
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 26 hit (103.6 x 25 visual) | same |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "Ways to earn more" | 309 x 28 hit (309 x 27.3 visual) x2 | same |
 
-### `#family-th` — With kids
+### `#family-th`: With kids
 
 _from Know this country › Travelling with kids; 42 controls in light, 42 in dark._
 
@@ -721,17 +721,17 @@ _from Know this country › Travelling with kids; 42 controls in light, 42 in da
 | --- | --- | --- | --- |
 | Under 44 | `details.filters-collapse.fam-section > summary` "🎡 What to do with the kids …" | 152.8 x 40 hit (152.8 x 39 visual) x4 | same |
 
-### `#foryou` — Best for you
+### `#foryou`: Best for you
 
 _from Plan & travel › For you; 27 controls in light, 27 in dark._
 
 | Type | Detail | Measured light | Measured dark |
 | --- | --- | --- | --- |
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
-| Under 44 | `details.card.fy-controls > summary` "⚙ Nothing set yet — tap to …" | 309 x 25 hit (309 x 24 visual) | same |
+| Under 44 | `details.card.fy-controls > summary` "⚙ Nothing set yet, tap to …" | 309 x 25 hit (309 x 24 visual) | same |
 | Under 44 | `div.chips > button.chip` "$" | 36 x 45 hit (35.3 x 44 visual) | same |
 
-### `#history-th` — Thailand — history
+### `#history-th`: Thailand, history
 
 _from Know this country › History & culture; 18 controls in light, 18 in dark._
 
@@ -740,7 +740,7 @@ _from Know this country › History & culture; 18 controls in light, 18 in dark.
 | Under 44 | `details.card.history-card.foldcard > summary.foldcard-sum` "The short history" | 306 x 27.3 hit (306 x 27.3 visual) | same |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "Known for" | 309 x 27.3 hit (309 x 27.3 visual) x2 | same |
 
-### `#hub-plan` — Plan & travel
+### `#hub-plan`: Plan & travel
 
 _from hub › Plan & travel; 32 controls in light, 32 in dark._
 
@@ -748,7 +748,7 @@ _from hub › Plan & travel; 32 controls in light, 32 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Your trip" | 343 x 28 hit (343 x 27.3 visual) x3 | same |
 
-### `#explore` — Explore
+### `#explore`: Explore
 
 _from the tab bar; 24 controls in light, 24 in dark._
 
@@ -756,7 +756,7 @@ _from the tab bar; 24 controls in light, 24 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `div.svg-zoom-ctrl > button.svg-zoom-btn` "Zoom in" | 34 x 34 hit (34 x 34 visual) x2 | same |
 
-### `#hub-identify` — Identify
+### `#hub-identify`: Identify
 
 _from hub › Identify; 21 controls in light, 21 in dark._
 
@@ -764,7 +764,7 @@ _from hub › Identify; 21 controls in light, 21 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard > summary.foldcard-sum` "Food & market" | 343 x 28 hit (343 x 27.3 visual) x2 | same |
 
-### `#info-th` — Thailand guide
+### `#info-th`: Thailand guide
 
 _from Know this country › Country guide; 34 controls in light, 34 in dark._
 
@@ -772,7 +772,7 @@ _from Know this country › Country guide; 34 controls in light, 34 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "Emergency numbers" | 309 x 27.3 hit (309 x 27.3 visual) x2 | same |
 
-### `#market` — Market
+### `#market`: Market
 
 _from Market; 20 controls in light, 20 in dark._
 
@@ -780,7 +780,7 @@ _from Market; 20 controls in light, 20 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `div.card > input` "Paste a board link a travel…" | 309 x 22 hit (309 x 21 visual) | 309 x 20 hit (309 x 19 visual) |
 
-### `#nextstop` — Plan your next stop
+### `#nextstop`: Plan your next stop
 
 _from Plan & travel › Plan your next stop; 21 controls in light, 21 in dark._
 
@@ -789,7 +789,7 @@ _from Plan & travel › Plan your next stop; 21 controls in light, 21 in dark._
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "🚌 Where next, from Bangkok" | 343 x 28 hit (343 x 27.3 visual) | same |
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 
-### `#scrapbook` — Scrapbook
+### `#scrapbook`: Scrapbook
 
 _from My stuff › Trip scrapbook; 18 controls in light, 18 in dark._
 
@@ -798,7 +798,7 @@ _from My stuff › Trip scrapbook; 18 controls in light, 18 in dark._
 | Under 44 | `details.card.empty-state.foldcard > summary.foldcard-sum` "Your scrapbook builds itself" | 309 x 27.3 hit (309 x 27.3 visual) | same |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "📸 Photo album" | 309 x 28 hit (309 x 27.3 visual) | same |
 
-### `#today-th` — Things to do
+### `#today-th`: Things to do
 
 _from See & do › Things to do; 57 controls in light, 57 in dark._
 
@@ -807,7 +807,7 @@ _from See & do › Things to do; 57 controls in light, 57 in dark._
 | Under 44 | `details.todo-plan-d > summary` "🗓 Plan for a different time…" | 343 x 30 hit (343 x 29 visual) | same |
 | Under 44 | `div > button.linklike` "🎉 1 festival during your tr…" | 220.6 x 24 hit (220.6 x 24 visual) | same |
 
-### `#baby-th` — With a baby
+### `#baby-th`: With a baby
 
 _from Know this country › Travelling with a baby; 15 controls in light, 15 in dark._
 
@@ -815,7 +815,7 @@ _from Know this country › Travelling with a baby; 15 controls in light, 15 in 
 | --- | --- | --- | --- |
 | Under 44 | `details.card.foldcard.autofold > summary.foldcard-sum` "Handy to know" | 309 x 28 hit (309 x 27.3 visual) | same |
 
-### `#bestof-th` — Best of
+### `#bestof-th`: Best of
 
 _from See & do › Best of; 20 controls in light, 20 in dark._
 
@@ -823,7 +823,7 @@ _from See & do › Best of; 20 controls in light, 20 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.card.bestof-card.foldcard > summary.foldcard-sum` "👨‍👩‍👧 Best for families4" | 309 x 31 hit (309 x 29.8 visual) | same |
 
-### `#board-th` — Noticeboard
+### `#board-th`: Noticeboard
 
 _from People › Local noticeboard; 34 controls in light, 34 in dark._
 
@@ -831,7 +831,7 @@ _from People › Local noticeboard; 34 controls in light, 34 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 
-### `#events-th` — Festivals
+### `#events-th`: Festivals
 
 _from Plan & travel › Festivals; 37 controls in light, 37 in dark._
 
@@ -839,7 +839,7 @@ _from Plan & travel › Festivals; 37 controls in light, 37 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 
-### `#everything` — All features
+### `#everything`: All features
 
 _from the all-features index; 79 controls in light, 79 in dark._
 
@@ -847,7 +847,7 @@ _from the all-features index; 79 controls in light, 79 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.filters-collapse > summary` "🔤 Every feature, A–Z · 55" | 327.6 x 36 hit (327.6 x 34.5 visual) | same |
 
-### `#hub-admin` — Settings & help
+### `#hub-admin`: Settings & help
 
 _from hub › Settings & help; 27 controls in light, 27 in dark._
 
@@ -855,7 +855,7 @@ _from hub › Settings & help; 27 controls in light, 27 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Other sections" | 343 x 28 hit (343 x 27.3 visual) | same |
 
-### `#hub-around` — Transport
+### `#hub-around`: Transport
 
 _from hub › Transport; 27 controls in light, 27 in dark._
 
@@ -863,7 +863,7 @@ _from hub › Transport; 27 controls in light, 27 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Other sections" | 343 x 28 hit (343 x 27.3 visual) | same |
 
-### `#hub-country` — Know this country
+### `#hub-country`: Know this country
 
 _from hub › Know this country; 31 controls in light, 31 in dark._
 
@@ -871,7 +871,7 @@ _from hub › Know this country; 31 controls in light, 31 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Other sections" | 343 x 28 hit (343 x 27.3 visual) | same |
 
-### `#hub-mine` — My stuff
+### `#hub-mine`: My stuff
 
 _from hub › My stuff; 30 controls in light, 30 in dark._
 
@@ -879,7 +879,7 @@ _from hub › My stuff; 30 controls in light, 30 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Other sections" | 343 x 28 hit (343 x 27.3 visual) | same |
 
-### `#hub-money` — Money
+### `#hub-money`: Money
 
 _from hub › Money; 26 controls in light, 26 in dark._
 
@@ -887,7 +887,7 @@ _from hub › Money; 26 controls in light, 26 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Other sections" | 343 x 28 hit (343 x 27.3 visual) | same |
 
-### `#hub-people` — People
+### `#hub-people`: People
 
 _from hub › People; 26 controls in light, 26 in dark._
 
@@ -895,7 +895,7 @@ _from hub › People; 26 controls in light, 26 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Other sections" | 343 x 28 hit (343 x 27.3 visual) | same |
 
-### `#hub-seedo` — See & do
+### `#hub-seedo`: See & do
 
 _from hub › See & do; 28 controls in light, 28 in dark._
 
@@ -903,7 +903,7 @@ _from hub › See & do; 28 controls in light, 28 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.foldcard.autofold.autofold-run > summary.foldcard-sum` "Other sections" | 343 x 28 hit (343 x 27.3 visual) | same |
 
-### `#schedules-th` — Schedules
+### `#schedules-th`: Schedules
 
 _from Transport › Transport schedules; 21 controls in light, 21 in dark._
 
@@ -911,7 +911,7 @@ _from Transport › Transport schedules; 21 controls in light, 21 in dark._
 | --- | --- | --- | --- |
 | Under 44 | `details.screen-hint > summary` "What this is" | 103.6 x 25 hit (103.6 x 25 visual) | same |
 
-### `#dictionary` — My dictionary
+### `#dictionary`: My dictionary
 
 _from My stuff › Your dictionary; 14 controls in light, 14 in dark._
 
@@ -919,7 +919,7 @@ _from My stuff › Your dictionary; 14 controls in light, 14 in dark._
 | --- | --- | --- | --- |
 | none | no finding in either theme | clean | clean |
 
-### `#identified` — My identifier
+### `#identified`: My identifier
 
 _from Identify › My identifier; 17 controls in light, 17 in dark._
 
@@ -927,23 +927,23 @@ _from Identify › My identifier; 17 controls in light, 17 in dark._
 | --- | --- | --- | --- |
 | none | no finding in either theme | clean | clean |
 
-### `#inbox` — Shared with you
+### `#inbox`: Shared with you
 
 _from People › Shared with you; 13 controls in light, 13 in dark._
 
 | Type | Detail | Measured light | Measured dark |
 | --- | --- | --- | --- |
-| route-sweep (info) | very short — is the empty state saying enough? | flagged | flagged |
+| route-sweep (info) | very short, is the empty state saying enough? | flagged | flagged |
 
-### `#journal` — Journal
+### `#journal`: Journal
 
 _from My stuff › Journal; 15 controls in light, 15 in dark._
 
 | Type | Detail | Measured light | Measured dark |
 | --- | --- | --- | --- |
-| route-sweep (info) | very short — is the empty state saying enough? | flagged | flagged |
+| route-sweep (info) | very short, is the empty state saying enough? | flagged | flagged |
 
-### `#journey` — Journey
+### `#journey`: Journey
 
 _from My stuff › Your journey; 14 controls in light, 14 in dark._
 
@@ -951,15 +951,15 @@ _from My stuff › Your journey; 14 controls in light, 14 in dark._
 | --- | --- | --- | --- |
 | none | no finding in either theme | clean | clean |
 
-### `#nearby` — Near me
+### `#nearby`: Near me
 
 _from See & do › Near me; 16 controls in light, 16 in dark._
 
 | Type | Detail | Measured light | Measured dark |
 | --- | --- | --- | --- |
-| route-sweep (info) | very short — is the empty state saying enough? | flagged | flagged |
+| route-sweep (info) | very short, is the empty state saying enough? | flagged | flagged |
 
-### `#sharejourney` — Share my journey
+### `#sharejourney`: Share my journey
 
 _from My stuff › Share my journey; 15 controls in light, 15 in dark._
 
@@ -967,13 +967,13 @@ _from My stuff › Share my journey; 15 controls in light, 15 in dark._
 | --- | --- | --- | --- |
 | none | no finding in either theme | clean | clean |
 
-### `#welcome` — (no topbar)
+### `#welcome`: (no topbar)
 
 _from onboarding, reachable directly and easy to break unnoticed; 6 controls in light, 6 in dark._
 
 | Type | Detail | Measured light | Measured dark |
 | --- | --- | --- | --- |
-| route-sweep (info) | NO TOPBAR — title checks skipped | flagged | flagged |
+| route-sweep (info) | NO TOPBAR, title checks skipped | flagged | flagged |
 
 ### `#journey` with two trip stops (map rendered)
 
@@ -986,7 +986,7 @@ _from a separate profile with trip stops Bangkok and Chiang Mai; 38 controls in 
 | Contrast | `div.jr-map-toggles > button.status-chip.jr-tog` text "━ Route" | pass | 1.21:1 (#ffffff on #f3e8d2, needs 4.5, 14px) x3 |
 | Contrast | `button.jr-row > span.jr-row-n` text "1" | pass | 1.21:1 (#ffffff on #f3e8d2, needs 4.5, 14px) x2 |
 | Under 44 | `details.home-group-d > summary.home-group` "🗺 Your map" | 343 x 37.6 hit (343 x 37.6 visual) | same |
-| Under 44 | `div.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-drag-pan > div.mk-leg-glyph…` "Train to Chiang Mai — tap t…" | 22 x 23 hit (22 x 22 visual) | same |
+| Under 44 | `div.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-drag-pan > div.mk-leg-glyph…` "Train to Chiang Mai, tap t…" | 22 x 23 hit (22 x 22 visual) | same |
 | Under 44 | `div.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-drag-pan > div.mk-numpin-lb…` "1. Bangkok" | 22 x 22 hit (22 x 22 visual) x2 | same |
 | Under 44 | `div.maplibregl-ctrl.maplibregl-ctrl-group.mk-style-toggle > button` "Map view" | 29 x 30 hit (29 x 29 visual) x2 | same |
 | Under 44 | `div.maplibregl-ctrl.maplibregl-ctrl-group > button.maplibregl-ctrl-zoom-in` "Zoom in" | 30 x 29 hit (29 x 29 visual) | same |

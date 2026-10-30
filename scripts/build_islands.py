@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Build js/data/islands.geo.js — the outline of every inhabited or visited island in Thailand,
+"""Build js/data/islands.geo.js, the outline of every inhabited or visited island in Thailand,
 Vietnam, Cambodia and Laos, so the app knows when there is water between a traveller and a
 hospital.
 
 WHY THIS EXISTS. The emergency screen measured every hospital by straight-line distance and
 turned it into a road or walking time. On Koh Mak that produced "Koh Kood Hospital, 30 min-1h by
-road" — a hospital on another island, with no road to it — and a 19-minute walk to the island's
+road", a hospital on another island, with no road to it, and a 19-minute walk to the island's
 health centre framed as "not for an emergency", on an island where that centre is the first stop
 for one. Nothing in the app knew what an island was: the basemap is simplified far below the
 size of Koh Mak.
@@ -23,7 +23,7 @@ resort, hostel...). That is the set a traveller can actually be standing on.
 
 ROAD LINKS. For each island, the bridges, embankments and causeways within 25 m of its coast
 are fetched and tested against the full-resolution outline: a way with one end on the island and
-the other end off it is a crossing. Its far end decides the link — inside another kept island
+the other end off it is a crossing. Its far end decides the link, inside another kept island
 joins the two into one group; anywhere else is the mainland. Piers mapped as bridges would fake
 a mainland link, so the crossings are printed for review and MANUAL below overrides any that are
 wrong, each with its reason.
@@ -51,7 +51,7 @@ ENDPOINTS = [
     'https://overpass.kumi.systems/api/interpreter',
     'https://overpass.osm.jp/api/interpreter',
 ]
-# OSM area ids (3600000000 + relation id) — the same four scripts/build_outdoor_layers.py uses.
+# OSM area ids (3600000000 + relation id), the same four scripts/build_outdoor_layers.py uses.
 AREAS = {'th': 3602067731, 'vi': 3600049915, 'kh': 3600049898, 'la': 3600049903}
 MOTOR = ('^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|service|'
          'living_street|road|track|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link)$')
@@ -60,18 +60,18 @@ MOTOR = ('^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|s
 # kept as boat-only (a pier mapped as a bridge faked a mainland link); 'mainland' drops an island
 # the test missed (a causeway mapped without bridge/embankment tags). Each entry says why.
 MANUAL = {
-    # Ferry-only, no road bridge exists — Bangkok Hospital's boat ambulance and the Laem Ngop
+    # Ferry-only, no road bridge exists: Bangkok Hospital's boat ambulance and the Laem Ngop
     # car ferries are the only way in or out (ExploreKohChang FAQ; Bangkok Hospital boat-ambulance
     # page). The flagged "bridge" is a 29 m concrete service-road span, almost certainly over a
     # drainage creek or the Salak Kok inlet, not a crossing to the mainland 4-6 km away.
     'relation/5660060': ('boat', 'Ko Chang: no mainland bridge (ferry/boat ambulance only)'),
-    # Vietnam's third-largest island, reached only by ferry or flight from the mainland — the
+    # Vietnam's third-largest island, reached only by ferry or flight from the mainland, the
     # absence of a bridge is precisely why it is promoted as an island destination. The flagged
     # way is tagged bridge=low_water_crossing (a ford, not a span over open water), 306 m long;
     # almost certainly a tidal-creek crossing near Rach Vem/Rach Tram on the island's own coast.
     'relation/12033833': ('boat', 'Phu Quoc: no mainland bridge; flagged way is a low-water ford, not a sea crossing'),
     # 15 nautical miles offshore from Sa Ky port, Quang Ngai; boat is the only way across (well
-    # documented — its remoteness is the island's main tourism draw). The flagged way is a small,
+    # documented, its remoteness is the island's main tourism draw). The flagged way is a small,
     # generically-named 54 m "Cau ban BTCT" (reinforced-concrete slab bridge), the standard OSM
     # naming for a minor creek/harbour-channel bridge, not a named sea crossing.
     'way/860597998': ('boat', 'Ly Son: no mainland bridge, boat only from Sa Ky'),
@@ -373,7 +373,7 @@ def main(cache):
                 continue      # both ends on this island (a creek bridge) or neither (not this island's)
             far = g[-1] if a_in else g[0]
             other = island_of(far[0], far[1], skip=x)
-            label = f"{x['cc']} {x['name']} ({x['key']}) — way {wid} {w['tags'].get('highway')} {w['tags'].get('name', '')!r}"
+            label = f"{x['cc']} {x['name']} ({x['key']}), way {wid} {w['tags'].get('highway')} {w['tags'].get('name', '')!r}"
             if other:
                 print(f'  ISLAND LINK  {label} -> {other["name"]} ({other["key"]})')
                 parent[find(x['key'])] = find(other['key'])
@@ -424,7 +424,7 @@ def main(cache):
         '//\n'
         '// Row: [osmKey, name, localName|0, cc, roadGroup, simplifyToleranceM, [minLat, minLng, maxLat, maxLng], rings]\n'
         '// roadGroup: 0 = on its own; islands sharing a non-zero group are joined by a road bridge.\n'
-        '// rings: one flat array per outer ring of delta-encoded 1e-4 degree integers —\n'
+        '// rings: one flat array per outer ring of delta-encoded 1e-4 degree integers, \n'
         '// [lat0, lng0, dLat1, dLng1, ...]; decode with a running sum and divide by 1e4.\n'
     )
     body = 'export const ISLAND_ROWS = [\n' + ',\n'.join(json.dumps(r, ensure_ascii=False, separators=(',', ':')) for r in rows) + '\n];\n'

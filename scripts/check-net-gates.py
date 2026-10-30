@@ -12,15 +12,15 @@ without permission, and offline-first is the product.
 
 So `online()` is FALSE for a large share of real travellers, all of the time. Which means every
 `if (online())` wrapped around an append is a feature that, for those travellers, is not
-disabled and not explained — it is absent. They reasonably conclude it is broken.
+disabled and not explained, it is absent. They reasonably conclude it is broken.
 
 That has now shipped three times, in three different files, over eight releases:
 
-  * Home had no weather section at all — homeWeatherCard() returned null with no cached
+  * Home had no weather section at all, homeWeatherCard() returned null with no cached
     forecast and home.js did `if (wxCard) wrap.append(wxCard)`.        (fixed mk-v0.477.0)
   * Exchange rates froze on the hardcoded fallback table, measured 8% out.
                                                                         (fixed mk-v0.477.0)
-  * The whole live-translation card vanished from Talk — reported as
+  * The whole live-translation card vanished from Talk, reported as
     "talk isn't working at all", which is exactly how it looked.        (fixed mk-v0.511.0)
 
 Each was repaired where it was found. The class kept coming back, because nothing in the repo
@@ -32,14 +32,14 @@ WHAT IT FLAGS. Three shapes, all of which put nothing on screen when the gate is
   B  `if (!online()) return;`                  inside a function that builds DOM
   C  `online() ? h(...) : null`                a node on one side, nothing on the other
 
-WHAT IT DOES NOT FLAG, deliberately. A gate whose body only *refreshes* — `if (online())
-maybeRefreshWeather(spot).then(...)` — touches no DOM inline and is the correct pattern: the
+WHAT IT DOES NOT FLAG, deliberately. A gate whose body only *refreshes*: `if (online())
+maybeRefreshWeather(spot).then(...)`, touches no DOM inline and is the correct pattern: the
 card is already on screen and repaints if the fetch lands. Ternaries between two strings
 (`online() ? '' : ' · offline'`) are honest inline annotations, not gates.
 
 THE FIX, when it fires. Render the same section with the same heading, one sentence naming the
 gate, and one button that turns the connection on and re-renders into the working control.
-'ask' and a deliberate 'offline' deserve different sentences — one has never been asked, the
+'ask' and a deliberate 'offline' deserve different sentences, one has never been asked, the
 other made a choice. Nothing is fetched before that tap, so the consent promise is untouched.
 js/screens/home.js homeWeatherCard() and js/screens/phrasebook.js sayItCard() are both worked
 examples to copy.
@@ -79,7 +79,7 @@ RENDER_NAME = re.compile(
     r'(?:Card|Block|Row|Box|Section|Fold|Panel|Screen|List|Grid|Sheet|View|Widget|Tile|Bar)$')
 
 # The shut-gate branch, written any of the ways this codebase writes it. A gate tested this
-# way round is the CORRECT pattern — its body IS the offline explanation — so what matters
+# way round is the CORRECT pattern, its body IS the offline explanation, so what matters
 # there is only whether it returns something to show.
 #
 # Matched against the ORIGINAL source, not the stripped copy: strip_literals blanks string
@@ -161,7 +161,7 @@ def functions(code):
 
 
 def statement_after(code, i):
-    """(body_text, end_index) for the statement beginning at i — braced block or one line."""
+    """(body_text, end_index) for the statement beginning at i, braced block or one line."""
     while i < len(code) and code[i] in ' \t\r\n':
         i += 1
     if i >= len(code):
@@ -296,7 +296,7 @@ def check(path, rel, report):
             seen.append((ln, 'A', (owner(m.start()) or (0, 0, ''))[2], 'builds DOM, no else'))
             if key not in ALLOW:
                 shown = ' '.join(src[m.end():head_end - 1].split())
-                bad.append('  %s:%d  `if (%s)` builds DOM with no else — shut, it shows nothing'
+                bad.append('  %s:%d  `if (%s)` builds DOM with no else, shut, it shows nothing'
                            % (rel, ln, shown if len(shown) <= 48 else shown[:45] + '...'))
             continue
         seen.append((ln, '-', (owner(m.start()) or (0, 0, ''))[2], 'refresh trigger'))

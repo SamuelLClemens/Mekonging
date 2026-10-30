@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """What the interface renders that it cannot translate, and a per-language review sheet.
 
-WHY THIS EXISTS. The app has 29 interface dictionaries at full parity — 168 keys each,
+WHY THIS EXISTS. The app has 29 interface dictionaries at full parity: 168 keys each,
 4,872 entries, and check-ui-strings.py keeps them in step. That guard answers "are the
 dictionaries consistent with each other". It cannot answer the question that actually
 matters, which is "does the screen come out in the traveller's language", and the answer
@@ -14,8 +14,8 @@ So this reports the gap the guard cannot see:
   * `--missing` lists user-visible strings the code renders that have no dictionary key.
     That is the work queue: every line is a string a non-English traveller reads in English.
 
-  * `--export <lang>` writes a tab-separated review sheet — English, the current
-    translation, and a blank column — so a native speaker can check a whole language in one
+  * `--export <lang>` writes a tab-separated review sheet: English, the current
+    translation, and a blank column, so a native speaker can check a whole language in one
     pass and hand back a file, instead of reading 168 keys out of a JavaScript object.
 
 WHAT THIS DELIBERATELY DOES NOT DO. It does not judge whether a translation is CORRECT. No
@@ -25,7 +25,7 @@ export exists precisely so that review can happen; the report exists so it is ai
 right strings.
 
 A NOTE ON SCALE, because it frames everything above. The 168 keys cover the interface
-chrome: tabs, buttons, headings, labels. They do not cover the app's CONTENT — 25,917 prose
+chrome: tabs, buttons, headings, labels. They do not cover the app's CONTENT: 25,917 prose
 strings and roughly 2.55 million characters of place descriptions, species field marks,
 hospital notes and country guides live in js/data/*.js, and none of it is bundled in any
 language. A traveller reading the app in Hebrew gets Hebrew navigation around English
@@ -50,7 +50,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAIR = re.compile(r"'((?:[^'\\]|\\.)*)'\s*:\s*'((?:[^'\\]|\\.)*)'")
 
 # A rendered string worth translating: passed to h() as text, or as one of the attributes the
-# i18n walker swaps. Deliberately narrow — the point is a list someone can act on, not every
+# i18n walker swaps. Deliberately narrow, the point is a list someone can act on, not every
 # literal in the codebase.
 RENDERED = [
     re.compile(r"h\('(?:h1|h2|h3|h4|p|span|strong|em|summary|label|button|dt|dd|li|option)'[^)]*?,\s*'((?:[^'\\]|\\.){3,})'"),
@@ -64,7 +64,7 @@ RENDERED = [
 SKIP = re.compile(r"^(#|\.|/|https?:|img/|js/|data-|[a-z-]+:)|\$\{|^[a-z-]+$|^[A-Z_]+$")
 # The h(tag, attrs, 'text') pattern can straddle lines and capture code, which produced
 # entries like ")}`));" in the first run of this report. A real interface string carries no
-# code punctuation, so that is the filter — cheap, and it keeps the queue actionable.
+# code punctuation, so that is the filter, cheap, and it keeps the queue actionable.
 CODEISH = re.compile(r"[(){}`;]|=>|\n")
 
 
@@ -130,15 +130,15 @@ def cmd_missing(limit):
 # the tab bar are seen on every launch; the emergency and medical screens are read in the worst
 # moment of a trip and by someone who may not read English at all. Everything else is ordinary.
 PRIORITY = [
-    ('critical — emergency & medical', ('js/screens/medical.js', 'js/main.js:sos')),
-    ('every launch — Home & navigation', ('js/screens/home.js', 'js/nav-groups.js')),
-    ('high traffic — places, talk, money', ('js/screens/places.js', 'js/screens/phrasebook.js',
+    ('critical, emergency & medical', ('js/screens/medical.js', 'js/main.js:sos')),
+    ('every launch: Home & navigation', ('js/screens/home.js', 'js/nav-groups.js')),
+    ('high traffic, places, talk, money', ('js/screens/places.js', 'js/screens/phrasebook.js',
                                             'js/screens/budget.js', 'js/screens/trip.js')),
 ]
 
 
 def cmd_priority(limit):
-    """The work queue, ordered by who reads it and how often — not alphabetically.
+    """The work queue, ordered by who reads it and how often, not alphabetically.
 
     877 untranslated strings is a number nobody can act on. The first hundred, chosen by where
     they appear, is a decision somebody can fund."""
@@ -153,14 +153,14 @@ def cmd_priority(limit):
         want = [t for t, fs in sorted(missing.items())
                 if t not in used and any(any(f.startswith(pfx.split(':')[0]) for pfx in files) for f in fs)]
         used |= set(want)
-        print('%s — %d strings' % (label, len(want)))
+        print('%s, %d strings' % (label, len(want)))
         for t in want[:limit or 12]:
             print('    %s' % t)
         if limit and len(want) > limit:
             print('    ... and %d more' % (len(want) - limit))
         print()
     rest = [t for t in missing if t not in used]
-    print('everything else — %d strings' % len(rest))
+    print('everything else, %d strings' % len(rest))
     print('\nTranslating the first two groups (%d strings) covers what a traveller sees on every'
           % sum(1 for t, fs in missing.items()
                 if any(any(f.startswith(pfx.split(':')[0]) for pfx in PRIORITY[0][1] + PRIORITY[1][1])
@@ -182,7 +182,7 @@ def cmd_export(code, out_path):
         # A value identical to the key is either a real cognate ("Vietnam", "Budget") or an
         # untranslated string; the reviewer is the one who can tell, so it is flagged, not
         # guessed at.
-        note = 'same as English — cognate, or not yet translated?' if k.strip() == d[k].strip() else ''
+        note = 'same as English, cognate, or not yet translated?' if k.strip() == d[k].strip() else ''
         lines.append('%s\t%s\t\t%s' % (k, d[k], note))
     text = '\n'.join(lines) + '\n'
     if out_path:

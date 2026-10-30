@@ -6,7 +6,7 @@
     python3 scripts/check-place-dupes.py --update   # re-record the accepted collisions
 
 WHY THIS EXISTS. It was written immediately after adding twenty-two place records of which
-SEVENTEEN duplicated a subject the app already covered — the Grand Palace, Wat Pho, Wat Arun,
+SEVENTEEN duplicated a subject the app already covered, the Grand Palace, Wat Pho, Wat Arun,
 the Dragon Bridge, Tra Que, Thanh Ha, Bai Dinh and more. Three of them collided on the record
 id itself, which is straightforward data corruption.
 
@@ -14,7 +14,7 @@ The cause is worth stating because it will happen again. These files carry TWO f
 conventions side by side: hand-authored records with bare keys (`id: "x"`) and pretty-printed
 ones with quoted keys (`"id": "x"`). A quick audit regex written against the bare-key form,
 matching id/name/city/country in that order on one line, silently missed every pretty-printed
-record — so Bangkok looked like it had seventeen records and no temples, when it had
+record, so Bangkok looked like it had seventeen records and no temples, when it had
 forty-five records including all three. check-place-fields.py's own docstring warns that a
 bare-key-only pass misses about 8% of records; here it hid 60% of one city.
 
@@ -24,7 +24,7 @@ question an audit regex got wrong: does this place already exist?
 TWO SEVERITIES.
   * A duplicate `id` is a hard failure. Nothing legitimate needs two records under one id, and
     whichever loads last silently wins.
-  * A near-duplicate NAME inside one city is a warning, because plenty are genuinely distinct —
+  * A near-duplicate NAME inside one city is a warning, because plenty are genuinely distinct,
     Banteay Kdei and Banteay Srei are different temples, Mae Klang and Mae Ya are different
     waterfalls, and Chiang Mai really does have a Saturday AND a Sunday walking street. So the
     pairs standing when this was written are recorded below and only NEW ones fail. Some of
@@ -141,17 +141,17 @@ def main():
     names = {r[0]: r[1] for r in recs}
     for a, b in new_pairs:
         problems.append(f'"{names.get(a, a)}" ({a}) and "{names.get(b, b)}" ({b}) are the same '
-                        f'city and nearly the same name — is one of them already the other?')
+                        f'city and nearly the same name, is one of them already the other?')
 
     if problems:
         print('\nFAIL:\n')
         for p in problems:
             print('  - ' + p)
         print('\nSearch the data by NAME before adding a place, and parse both key conventions'
-              '\nwhen you do — a bare-key-only regex hides most of some cities. If the pair is'
+              '\nwhen you do, a bare-key-only regex hides most of some cities. If the pair is'
               '\ngenuinely two different places, re-run with --update to accept it.')
         return 1
-    print('\nPASS — no duplicate ids, no new name collisions.')
+    print('\nPASS: no duplicate ids, no new name collisions.')
     return 0
 
 
