@@ -403,7 +403,7 @@ function buildPatterns(d) {
     const open = first.trim(), fixed = lits.join('');
     const anywhere = (open.length > 0 && (/[^\p{L}\p{N}\s]/u.test(open) || (wordCount(open) >= 1 && wordCount(fixed) >= 2)))
       || (fixed.trim().length >= 20 && wordCount(fixed) >= 3);   // a long, distinctive tail, however the string opens
-    const p = { re: new RegExp('^' + lits.map(reEscape).join('([\\s\\S]+?)') + '$'), slots, value: v, weight: lits.join('').length, anywhere };
+    const p = { re: new RegExp('^' + lits.map(reEscape).join('([\\s\\S]*?)') + '$'), slots, value: v, weight: lits.join('').length, anywhere };
     // Found by the first character of a string that opens with fixed text, else by the last character of one that ends with it; a
     // pattern with a slot at both ends is found by its longest fixed text, and only if it is long enough to be distinctive.
     if (open || last.trim().length >= 2) {
@@ -452,7 +452,7 @@ function matchPattern(d, s, attr) {
 }
 
 // Look a string up directly, then as a pattern, then as "<emoji> <label>" (the label by key, then by pattern).
-function lookup(d, s, attr) {
+function lookupWhole(d, s, attr) {
   const direct = d[s];
   if (direct) return direct;
   const whole = matchPattern(d, s, attr);
@@ -461,6 +461,22 @@ function lookup(d, s, attr) {
   if (!m) return null;
   const inner = d[m[3]] || matchPattern(d, m[3], attr);
   return inner ? m[1] + m[2] + inner : null;
+}
+
+// A line the app joins from parts with " · " ("Bangkok · ~23 min walk", "Dec 1–4 · 3 nights · Old-city temples") is looked up whole first,
+// and failing that part by part: a part that is a key or a pattern is translated, the rest (a place, a date, a sentence of data) stays.
+// Nothing is returned unless a part changed.
+function lookup(d, s, attr) {
+  const whole = lookupWhole(d, s, attr);
+  if (whole || s.indexOf(' · ') < 0) return whole;
+  let changed = false;
+  const parts = s.split(' · ').map((p) => {
+    const t = lookupWhole(d, p.trim(), attr);
+    if (!t) return p;
+    changed = true;
+    return t;
+  });
+  return changed ? parts.join(' · ') : null;
 }
 
 // Translate every known string inside `root`. Cheap enough to run on every render: a single

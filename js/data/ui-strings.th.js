@@ -986,5 +986,18 @@ export const STRINGS = {
     'Stays on your device until you share its link. {0}': 'อยู่ในอุปกรณ์ของคุณจนกว่าคุณจะแชร์ลิงก์ {0}',
     '{0} stalls & food streets on the map — tap a pin': '{0} แผงและถนนอาหารบนแผนที่ — แตะหมุด',
     '{0}% of {1}. Many travellers give around 1% of what they withdraw on a trip.': '{0}% ของ {1} นักเดินทางหลายคนให้ราว 1% ของเงินที่ถอนระหว่างการเดินทาง',
+    'Your coordinates:': 'พิกัดของคุณ:', 'International emergency number: 112': 'เบอร์ฉุกเฉินสากล: 112',
+    '📍 Showing {0}, from your location. Wrong country? Pick yours:': '📍 กำลังแสดง{0} จากตำแหน่งของคุณ ประเทศไม่ถูกต้อง? เลือกประเทศของคุณ:',
+    '📍 Showing {0}, near {1}. Wrong country? Pick yours:': '📍 กำลังแสดง{0} ใกล้ {1} ประเทศไม่ถูกต้อง? เลือกประเทศของคุณ:',
+    '📍 Showing {0}, from your location — within {1} km of {2}. Wrong country? Pick yours:': '📍 กำลังแสดง{0} จากตำแหน่งของคุณ — ห่างจาก {2} ไม่เกิน {1} กม. ประเทศไม่ถูกต้อง? เลือกประเทศของคุณ:',
+    '📍 Showing {0}, near {1} — within {2} km of {3}. Wrong country? Pick yours:': '📍 กำลังแสดง{0} ใกล้ {1} — ห่างจาก {3} ไม่เกิน {2} กม. ประเทศไม่ถูกต้อง? เลือกประเทศของคุณ:',
+    'Near you:': 'ใกล้คุณ:', 'Closer, capability unknown:': 'ใกล้กว่า แต่ไม่ทราบขีดความสามารถ:',
+    'Closest hospital to you right now': 'โรงพยาบาลที่ใกล้คุณที่สุดตอนนี้',
+    'Closest hospital to you right now — across the border in {0}': 'โรงพยาบาลที่ใกล้คุณที่สุดตอนนี้ — อีกฝั่งชายแดนใน {0}',
+    'Mapped with a 24-hour emergency department.': 'มีแผนกฉุกเฉิน 24 ชั่วโมงตามที่ระบุในแผนที่',
+    'From OpenStreetMap — name and location only. Telephone ahead if you can.': 'จาก OpenStreetMap — มีเพียงชื่อและตำแหน่ง หากทำได้ให้โทรสอบถามล่วงหน้า',
+    'Closer, but a doctor’s surgery — right for something minor, not for an emergency': 'ใกล้กว่า แต่เป็นคลินิกแพทย์ — เหมาะกับอาการเล็กน้อย ไม่ใช่เหตุฉุกเฉิน',
+    'Then:': 'จากนั้น:', '📞 Call {0}': '📞 โทร {0}', '~{0} min walk': 'เดิน ~{0} นาที',
+    '~{0} by road (est.)': '~{0} ทางถนน (ประมาณ)', '🚤 across the water — no road link': '🚤 ข้ามน้ำ — ไม่มีถนนเชื่อม',
     // ---- end F5 harvest ----
 };

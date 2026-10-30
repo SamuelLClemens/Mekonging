@@ -148,7 +148,7 @@ def pattern_of(key):
         reach = 'anywhere' if anywhere else 'aria'
     else:
         reach = 'anywhere' if anywhere else 'refused'
-    return {'slots': slots, 'lits': lits, 'reach': reach, 'rx': re.compile('^' + '(.+?)'.join(re.escape(x) for x in lits) + '$', re.S),
+    return {'slots': slots, 'lits': lits, 'reach': reach, 'rx': re.compile('^' + '(.*?)'.join(re.escape(x) for x in lits) + '$', re.S),
             'head': first[:1] if opening else None, 'tail': last[-1:] if not opening and len(last.strip()) >= 2 else None,
             'needle': max(lits, key=len) if not opening and len(last.strip()) < 2 else None}
 
