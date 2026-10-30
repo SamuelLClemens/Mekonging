@@ -295,7 +295,7 @@ export function audioPacksCard() {
           // selections' focus for nothing; the button row is the only thing a toggle changes.
           paintButtons(remaining);
         },
-      }, `${l.book.label} (${l.urls.length} clips, ≈ ${size(l.urls.length * CLIP_BYTES)})`);
+      }, [l.book.label, ` (${l.urls.length} clips, ≈ ${size(l.urls.length * CLIP_BYTES)})`]);   // two text nodes (F5c): the name and the pattern are keys
       choices.append(chip);
     });
     paintQuota(remaining);
