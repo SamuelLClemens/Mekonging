@@ -38,6 +38,7 @@ import { hasVoiceFor, canSay, audioSupport, phrasePlayer } from '../tts.js';
 import { audioPacksCard } from '../audio-packs.js';
 import { translate, TranslateAborted } from '../translate.js';
 import { startTask, stopTask, stopPlayback } from '../audio-control.js';
+import { joinSpeechResults } from '../speech-input.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../lazy-data.js';
 import { ALLERGENS } from '../data/allergens.js';
@@ -1092,25 +1093,6 @@ function offlineTranslateBox(code, label) {
   return box;
 }
 
-// One transcript from a continuous recognition session's result list. Desktop engines send
-// each phrase as its own result ("where is the bus station", "and how much is it"), so those
-// are joined. Android Chrome instead re-sends the growing sentence as a NEW result each time
-// ("where", "where is", "where is the bus station"), so a result that repeats the previous one
-// word-for-word and carries on replaces it rather than being appended after it.
-function joinSpeechResults(results) {
-  const parts = [];
-  for (let i = 0; i < results.length; i++) {
-    const t = String((results[i] && results[i][0] && results[i][0].transcript) || '').trim();
-    if (!t) continue;
-    const last = parts.length ? parts[parts.length - 1].toLowerCase() : null;
-    const cur = t.toLowerCase();
-    if (last != null && (cur === last || cur.startsWith(last + ' '))) parts[parts.length - 1] = t;
-    else if (last != null && last.startsWith(cur + ' ')) continue;
-    else parts.push(t);
-  }
-  return parts.join(' ');
-}
-
 // Speak/type-in-English → local-language text + spoken audio. Works with no setup
 // (free online service); the offline phrasebook below covers the essentials.
 function liveTranslateBox(code, label, locale, onChange) {
@@ -1384,5 +1366,7 @@ function liveTranslateBox(code, label, locale, onChange) {
     box.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#signtranslate-${code}`) },
       `📷 Point & translate a ${label} sign`));
   }
+  box.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#facetalk-${code}`) },
+    '🗣 Face to face on this phone'));
   return box;
 }

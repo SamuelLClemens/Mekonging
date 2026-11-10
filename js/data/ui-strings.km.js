@@ -1062,6 +1062,20 @@ export const STRINGS = {
     'Further afield · next destinations ({0})': 'ឆ្ងាយជាងនេះ · ទិសដៅបន្ទាប់ ({0})', 'You are near': 'អ្នកនៅជិត',
     'You are in': 'អ្នកនៅ', 'near': 'ជិត', 'in': 'នៅ', 'Early morning': 'ព្រឹកព្រហាម', 'Midday': 'ថ្ងៃត្រង់',
     'Late night': 'យប់ជ្រៅ', 'Search places…': 'ស្វែងរកទីកន្លែង…', 'Search places in {0}…': 'ស្វែងរកទីកន្លែងនៅ {0}…',
-    
+    'Face to face': 'និយាយផ្ទាល់មុខ',
+    'Each person types or speaks in their own half. The other half shows the translation. Needs a connection. Nothing leaves this phone except the text being translated.': 'ម្នាក់ៗវាយ ឬនិយាយនៅផ្នែករបស់ខ្លួន។ ផ្នែកម្ខាងទៀតបង្ហាញការបកប្រែ។ ត្រូវការអ៊ីនធឺណិត។ គ្មានអ្វីចេញពីទូរសព្ទនេះទេ លើកលែងតែអត្ថបទដែលកំពុងបកប្រែ។',
+    'Face to face needs a connection': 'និយាយផ្ទាល់មុខត្រូវការអ៊ីនធឺណិត',
+    'There is no connection right now. The phrasebook works without one.': 'ពេលនេះគ្មានការតភ្ជាប់ទេ។ សៀវភៅឃ្លាប្រើបានដោយមិនចាំបាច់មានការតភ្ជាប់។',
+    'Nothing said yet.': 'មិនទាន់មានការសន្ទនាទេ។', 'Send': 'ផ្ញើ', 'Voice on': 'អានឮៗ៖ បើក',
+    'Voice off': 'អានឮៗ៖ បិទ', 'Clear the conversation?': 'សម្អាតការសន្ទនាឬទេ?',
+    'This removes the transcript from this phone.': 'សកម្មភាពនេះលុបកំណត់ត្រាសន្ទនាចេញពីទូរសព្ទនេះ។',
+    'Typing only: this phone has no voice input for this language.': 'វាយបានតែប៉ុណ្ណោះ៖ ទូរសព្ទនេះមិនមានការបញ្ចូលសំឡេងសម្រាប់ភាសានេះទេ។',
+    'Type or speak here': 'វាយ ឬនិយាយនៅទីនេះ', 'Far side': 'ផ្នែកម្ខាងទៀត', 'Your side': 'ផ្នែករបស់អ្នក',
+    'Face to face on this phone': 'និយាយផ្ទាល់មុខលើទូរសព្ទនេះ',
+    'Microphone blocked. Allow it for this site in your browser settings.': 'មីក្រូហ្វូនត្រូវបានរារាំង។ សូមអនុញ្ញាតឱ្យគេហទំព័រនេះក្នុងការកំណត់កម្មវិធីរុករក។',
+    'No microphone found on this device.': 'រកមិនឃើញមីក្រូហ្វូនលើឧបករណ៍នេះទេ។',
+    'Voice input needs a connection on this device.': 'ការបញ្ចូលសំឡេងលើឧបករណ៍នេះត្រូវការអ៊ីនធឺណិត។',
+    'No speech heard. Tap the microphone and try again.': 'មិនឮសំឡេងនិយាយទេ។ ចុចមីក្រូហ្វូន ហើយព្យាយាមម្តងទៀត។',
+    'This device cannot take voice input in that language.': 'ឧបករណ៍នេះមិនអាចបញ្ចូលសំឡេងជាភាសានោះបានទេ។',
     // ---- end F5 harvest ----
 };

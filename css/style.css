@@ -4408,3 +4408,33 @@ html:lang(km) :is(.attr-tag, .swap-calc) { line-height: 1.45; }
 :root[data-skin="flags"] .home-section::before,
 :root[data-skin="temples"] .home-section::before { background: var(--teal); }
 /* ==== END GENERATED THEMES ==== */
+
+/* Face to face (L1): two halves on one phone, the far one turned 180 degrees. Sizes are tokens. */
+.ft-stage { display: flex; flex-direction: column; gap: var(--sp-2); }
+.ft-half { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2);
+  display: flex; flex-direction: column; gap: var(--sp-2); }
+.ft-far { transform: rotate(180deg); }
+.ft-lang { width: 100%; min-width: 0; min-height: 44px; font-family: inherit; font-size: var(--fs-base);
+  border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); }
+.ft-log { height: 8vh; min-height: 60px; overflow-y: auto; display: flex; flex-direction: column; gap: var(--sp-2); }
+.ft-empty { margin: auto; }
+.ft-turn { display: flex; align-items: flex-start; gap: var(--sp-2); max-width: 92%; }
+.ft-text { font-size: var(--fs-base); line-height: 1.35; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); overflow-wrap: anywhere; }
+.ft-in { align-self: flex-start; }
+.ft-in .ft-text { background: var(--bg-alt, var(--bg)); border: 1px solid var(--line); font-size: var(--fs-h3); }
+.ft-own { align-self: flex-end; }
+.ft-own .ft-text { color: var(--muted); border: 1px dashed var(--line); }
+.ft-replay { flex: none; min-width: 44px; min-height: 44px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); color: var(--ink); }
+.ft-compose { display: flex; flex-direction: column; gap: var(--sp-2); }
+.ft-input { width: 100%; }
+.ft-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.ft-actions .btn { width: 100%; justify-content: center; }
+.ft-actions .ft-mic[hidden] { display: none; }
+.ft-actions .ft-mic[hidden] + .btn { grid-column: 1 / -1; }
+.ft-mic.is-listening { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55), var(--shadow-soft); }
+.ft-note, .ft-status { margin: 0; }
+.ft-note[hidden] { display: none; }
+.ft-mid { display: flex; gap: var(--sp-2); }
+.ft-mid .btn { flex: 1; justify-content: center; min-height: 44px; }
+@media (prefers-reduced-motion: no-preference) { .ft-mic.is-listening { animation: talk-listening 1.4s ease-in-out infinite; } }
+

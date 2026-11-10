@@ -232,6 +232,7 @@ const SCREEN_LOADERS = {
   streetfood: (b) => import('./screens/streetfood.js' + b),
   phrasebook: (b) => import('./screens/phrasebook.js' + b),
   signtranslate: (b) => import('./screens/signtranslate.js' + b),
+  facetalk: (b) => import('./screens/facetalk.js' + b),
   places: (b) => import('./screens/places.js' + b),
   budget: (b) => import('./screens/budget.js' + b),
   weather: (b) => import('./screens/weather.js' + b),
@@ -278,6 +279,7 @@ const ROUTE_SCREENS = {
   board: ['board'], streetfood: ['streetfood'],
   phrasebook: ['phrasebook'], dictionary: ['phrasebook'],
   signtranslate: ['signtranslate'],
+  facetalk: ['facetalk'],
   places: ['places'], place: ['places'],
   expenses: ['budget'],
   weather: ['weather'],
@@ -825,7 +827,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.661.0';
+export const APP_VERSION = 'mk-v0.662.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -907,7 +909,7 @@ const SECTION_ACCENT = {
   food: '#E0663A', dish: '#E0663A', streetfood: '#D2542E', produce: '#CE8A3A',
   nature: '#4E9A52', species: '#4E9A52', sounds: '#4E9A52', pools: '#2E8FB0',
   // talk
-  phrasebook: '#7A5FB0', dictionary: '#8A5FA8', signtranslate: '#7A5FB0',
+  phrasebook: '#7A5FB0', dictionary: '#8A5FA8', signtranslate: '#7A5FB0', facetalk: '#7A5FB0',
   // getting around & practicalities
   transport: '#6E7BC0', route: '#6E7BC0', schedules: '#6E7BC0', crossings: '#5E6FB0',
   visa: '#B0567F', info: '#6E8FA0', history: '#9C7A3A', weather: '#3FA0C0', today: '#3FA0C0',
@@ -1340,7 +1342,7 @@ const TAB_FOR_HEAD = {
   // the country at large.
   places: '#places', place: '#places', map: '#places', addpin: '#places', nearby: '#places',
   arrival: '#places', weather: '#places', today: '#places', setcity: '#places',
-  phrasebook: '#phrasebook', signtranslate: '#phrasebook',
+  phrasebook: '#phrasebook', signtranslate: '#phrasebook', facetalk: '#phrasebook',
   // The personal hub ("YOU"/name) owns everything that is about the traveller themselves:
   // their calendar, memories, money, saved things, documents — and Settings.
   me: '#me', dictionary: '#me', settings: '#me', export: '#me', identified: '#me',
@@ -7290,6 +7292,7 @@ export function render() {
       case 'phrasebook': return screenMod('phrasebook').phrasebookScreen(arg);
       case 'dictionary': return screenMod('phrasebook').dictionaryScreen();
       case 'signtranslate': return screenMod('signtranslate').signTranslateScreen(arg);
+      case 'facetalk': return screenMod('facetalk').faceTalkScreen(arg);
       case 'places': return screenMod('places').placesScreen(arg);
       case 'place': return screenMod('places').placeScreen(arg);
       case 'prices': return pricesScreen(arg);
