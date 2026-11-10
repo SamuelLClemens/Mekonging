@@ -1057,5 +1057,6 @@ export const STRINGS = {
     'Voice input needs a connection on this device.': 'การป้อนเสียงบนอุปกรณ์นี้ต้องใช้อินเทอร์เน็ต',
     'No speech heard. Tap the microphone and try again.': 'ไม่ได้ยินเสียงพูด แตะไมโครโฟนแล้วลองอีกครั้ง',
     'This device cannot take voice input in that language.': 'อุปกรณ์นี้ไม่รองรับการป้อนเสียงในภาษานั้น',
+    'Refresh to use face to face': 'รีเฟรชเพื่อใช้การคุยต่อหน้ากัน',
     // ---- end F5 harvest ----
 };
