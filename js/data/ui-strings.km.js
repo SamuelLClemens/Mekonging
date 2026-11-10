@@ -1077,5 +1077,9 @@ export const STRINGS = {
     'Voice input needs a connection on this device.': 'ការបញ្ចូលសំឡេងលើឧបករណ៍នេះត្រូវការអ៊ីនធឺណិត។',
     'No speech heard. Tap the microphone and try again.': 'មិនឮសំឡេងនិយាយទេ។ ចុចមីក្រូហ្វូន ហើយព្យាយាមម្តងទៀត។',
     'This device cannot take voice input in that language.': 'ឧបករណ៍នេះមិនអាចបញ្ចូលសំឡេងជាភាសានោះបានទេ។',
+    'Good tonight': 'ល្អសម្រាប់យប់នេះ', 'Near Bangkok': 'ជិតទីក្រុងបាងកក', 'Sources (3)': 'ប្រភព (3)',
+    'What is rude, what is polite, and what is against the law — before you do it rather than after. Ordered by how much it costs you to get wrong.': 'អ្វីដែលមិនគួរសម អ្វីដែលគួរសម និងអ្វីដែលខុសច្បាប់ — ដឹងមុនពេលធ្វើ មិនមែនក្រោយពេលធ្វើទេ។ រៀបតាមតម្លៃដែលអ្នកត្រូវបង់ប្រសិនបើធ្វើខុស។',
+    'clubs': 'ក្លឹបរាត្រី', 'hostel': 'ផ្ទះសំណាក់ក្រុម', 'live-music': 'តន្ត្រីផ្ទាល់',
+    'read this one': 'សូមអានចំណុចនេះ',
     // ---- end F5 harvest ----
 };
