@@ -32,7 +32,7 @@ import {
 import {
   LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree, retranslate, watchLateText,
   detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady, ensureSafetyText, safetyTextReady,
-  ensureSafetyData, safetyDataReady, primeSafetyPathBatch, isMachineTranslated,
+  ensureSafetyData, safetyDataReady, primeSafetyPathBatch, isMachineTranslated, t as tUi,
 } from './i18n.js';
 import { DEFAULT_SKIN, SKIN_MODE, resolveSkin, modeFor } from './theme.js';
 import { homeScreen } from './screens/home.js';
@@ -825,7 +825,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.660.0';
+export const APP_VERSION = 'mk-v0.661.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1078,7 +1078,7 @@ export function topbar(title, backHash) {
     // here changes it. `data-no-i18n` keeps the translation pass off the flag itself.
     h('button', {
       class: 'topbar-ic topbar-lang', 'data-no-i18n': '',
-      'aria-label': `Language: ${lang.name} — tap to change`, title: `${lang.native} — change language`,
+      'aria-label': `Language: ${lang.name} — tap to change`, title: tUi(`${lang.native} — change language`),
       onclick: () => languageSheet(),
     }, lang.flag),
     // Settings: takes the slot that used to hold the online/offline toggle, by request. That
@@ -2382,7 +2382,8 @@ function homeRightNowCard(ctx) {
   card.append(h('div', { class: 'rn-head' }, [
     h('span', { class: 'rn-emoji' }, meta.emoji),
     h('div', {}, [
-      h('div', { class: 'rn-title' }, ctx.seeded ? `${meta.label} in ${cityName}` : (ctx.near ? `${meta.label} near ${cityName}` : `${meta.label}, ${ctx.dayName}`)),
+      // Separate nodes (F5e): the label, "in" / "near" and the city are each a key or a name; one template literal could not be.
+      h('div', { class: 'rn-title' }, ctx.seeded ? [h('span', {}, meta.label), ' in ', cityName] : (ctx.near ? [h('span', {}, meta.label), ' near ', cityName] : [h('span', {}, meta.label), ', ', ctx.dayName])),
       h('div', { class: 'rn-sub muted' }, [
         ctx.dayName,
         ctx.wx ? h('button', {
@@ -2659,7 +2660,7 @@ export function whereAmICard(cc) {
 export function cityAboutCard(cc, slug) {
   const hi = cityHistory(cc, slug);
   if (!hi || !hi.blurb) return null;
-  const card = h('div', { class: 'card history-card' }, [h('h2', {}, `About ${hi.name}`)]);
+  const card = h('div', { class: 'card history-card' }, [h('h2', {}, ['About ', h('span', {}, hi.name)])]);  // two nodes, so "About" is a key (F5e)
   card.append(h('p', {}, hi.blurb));
   const kf = knownForRow(hi.knownFor); if (kf) card.append(kf);
   if (hi.bestTime) card.append(h('p', { class: 'culture-tip', style: 'margin-bottom: 0' }, `🗓 Best time: ${hi.bestTime}`));
@@ -3514,11 +3515,12 @@ function groupBadge(group) {
 export function hubRow(item, cc, accent) {
   const live = item.live ? liveStatus(item.live) : null;
   const name = itemLabel(item, whoName());
-  const label = live && live.sub ? `${name} · ${live.sub}` : name;
+  // The accessible name is built from pieces, each looked up on its own (F5e): the whole line is not a key.
+  const label = live && live.sub ? `${tUi(name)} · ${live.sub}` : tUi(name);
   const attrs = {
     class: 'hub-row' + (live && live.cls ? ' ' + live.cls : ''),
     onclick: () => go(resolveHash(item, cc)),
-    'aria-label': item.blurb ? `${label}. ${item.blurb}` : label,
+    'aria-label': item.blurb ? `${label}. ${tUi(item.blurb)}` : label,
   };
   if (accent) attrs.style = `--tile-accent:${accent}`;
   return h('button', attrs, [
@@ -4190,8 +4192,12 @@ export function nearbySafetyStrip(country, fix) {
     const inSeason = jellyInSeason(b, m);
     const near = withinNear(beaches[0].km, bcc);
     const dl = driveLabel(beaches[0].km, bcc);
-    card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${b.id}`) },
-      `${inSeason ? '🪼' : '🏖️'} ${near ? 'Nearest beach' : 'Closest beach'}: ${b.name} (${dl})${inSeason ? ' — jellyfish season, check first' : ' — swim & sea info'}`));
+    // Separate nodes (F5e), so the label, the drive time and the closing words are each a key or a pattern; one template literal could not be.
+    // One wrapper span, so the nodes flow as a line inside the button instead of becoming flex items.
+    card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${b.id}`) }, h('span', {}, [
+      `${inSeason ? '🪼' : '🏖️'} `, h('span', {}, near ? 'Nearest beach' : 'Closest beach'), `: ${b.name} (`, h('span', {}, dl), ')',
+      h('span', {}, inSeason ? ' — jellyfish season, check first' : ' — swim & sea info'),
+    ])));
   }
   card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#danger') }, '🩹 Health & hazards'));
   return card;
@@ -4767,7 +4773,8 @@ function crossingsScreen() {
   }
   // Per-country entry/visa guides (visa type, official portal, land-border tips, overstay).
   wrap.append(h('div', { class: 'chips', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, COUNTRIES.filter((c) => getVisa(c.id)).map((c) =>
-    h('button', { class: 'chip', onclick: () => go(`#visa-${c.id}`) }, `🛂 ${c.flag} ${c.name} entry`))));
+    // Three nodes, so the country name and "entry" are each a key (F5e); one template literal could not be.
+    h('button', { class: 'chip', onclick: () => go(`#visa-${c.id}`) }, [`🛂 ${c.flag} `, h('span', {}, c.name), ' entry']))));
   const groups = {};
   CROSSINGS.forEach((x) => { (groups[x.pair] = groups[x.pair] || []).push(x); });
   Object.keys(groups).forEach((pair) => {
