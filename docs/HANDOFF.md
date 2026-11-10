@@ -1,39 +1,44 @@
-# Handoff, 2026-11-10 (F5e built; L1 is next)
+# Handoff, 2026-11-10 (L1 built; L2 is next)
 
-The previous handoff (F5d) is `git show 0acbce9:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
+The previous handoff (F5e) is `git show 9b5b6ef:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
 
 ## Shipped
-- **F5e**, branch `feat/f5e-composed-fix-sweep`, [PR #151](https://github.com/SamuelLClemens/Mekonging/pull/151), `mk-v0.661.0` (store version unchanged). Open, for the owner to merge; CI had not reported when this was written. F5d ([PR #150](https://github.com/SamuelLClemens/Mekonging/pull/150)) is merged.
-  - **Crossings:** the four "<country> entry" buttons are three text nodes; the freshness line's nouns are keys. `#crossings` shows 0 `ui` and 0 `tpl` in th, vi, km, lo.
-  - **Fix-state sweep** (Home, Nearby, Places, journey with a GPS fix): 43 fixed strings and 18 composed ones (keys and `{0}` patterns, `source: core` in the register, dated 2026-11-10). Fixed in code: Home time-of-day title, Nearby status line and beach button (nodes), hub tiles' accessible names, language button title, journey marker labels (`t()`).
-  - **Layout:** a translated drive-time chip left the screen (`.near-open .dist-chip` now shrinks): Nearby overflow 16 to 0.
-  - **Rule change:** a pattern's fixed text is "distinctive" at 14 characters and three words (was 20) in `js/i18n.js` and `scripts/check-ui-strings.py`.
-  - **Not done:** the 55 species-name nulls (no source named; item 3 of the brief).
+- **L1**, branch `feat/l1-talk-face-to-face`, [PR #152](https://github.com/SamuelLClemens/Mekonging/pull/152), `mk-v0.662.0` (store version unchanged). Open, for the owner to merge; CI had not reported when this was written. F5e ([PR #151](https://github.com/SamuelLClemens/Mekonging/pull/151)) is merged.
+  - **`#facetalk`** (`js/screens/facetalk.js`, lazy; button "Face to face on this phone" under the Talk box). The screen splits in two, the far half turned 180 degrees (`.ft-far`, CSS `rotate(180deg)`). Each half: a language select (the other half's language is left out), a transcript, a text box, Speak and Send. A turn goes through `translate()` into the other half's language and shows there; the sender's half shows what they said.
+  - **Read aloud** is a toggle in the middle strip, off by default, kept in `prefs.faceTalk.speak`. It runs through `say()`, so every sound registers with `audio-control`. Each incoming turn has its own replay button, because iOS may refuse speech started after an `await`.
+  - **Transcript** in `prefs.faceTalk.log` (last 100 turns, on the phone only, no store version change), cleared by the Clear button after `confirmAction`.
+  - **Gates.** Offline at mount: the screen says so and opens the phrasebook. A half is typing only, with a note, when the phone has no recognition object, the language has no `speech` locale, or the engine answered `language-not-supported` (remembered for the session).
+  - **`js/speech-input.js`** (new): `joinSpeechResults` moved out of `phrasebook.js`, plus `createDictation`, `speechCtor`, `MIC_ERRORS`. Talk's single box still has its own copy of the dictation state machine; folding it onto `createDictation` is a later tidy.
+  - **Strings:** 20 new keys in th, vi, km, lo (machine-made, register `source: core`, dated 2026-11-10). `phrasebook.js` is now 1,372 lines.
 
 ## Verified
-Headless Chrome over CDP, fresh profiles, 127.0.0.1, 375 px at DPR 2, `document.hidden` false on all 60 sweep rows. Drivers and results in `~/Library/Caches/mk-f5e/` (not in the repo).
-- **Sweep** (`drive-fix.py`, three fixes, four screens, four languages, each string compared with the English render of the same point and route): `ui` 0 in th and vi, 3 in km and lo ("Oct"); overflow 0; glyph 0; `undefined` 0. `tight` Home 3 and Places 1 are unchanged from before (Home phase labels, one place-name row; no clipped ink).
-- **`lang-check.py`** on `#crossings,#schedules-th,#prices-th,#home`: `ui` 0 and `tpl` 0 on `#crossings` in all four; `#home` 0 `ui`.
-- **The full 96-route four-language run** was made on the pre-change tree: `tpl` 495 (th), 496 (vi), 533 (km), 484 (lo); 37 templates, most of them data that merely fits a loose template.
-- **Guards:** every guard in `CLAUDE.md`, `check-cache-version` against `origin/feat/scaffold-bangkok-slice` and `jsc -m scripts/validate-jsc.mjs` pass.
-- **Not verified:** an iPhone (Safari); any native speaker's reading; a blind back-translation of the new values; the full 96 routes on the final code; the offline reload; the live site; CI.
+Headless Chrome over CDP, fresh profile, 375 x 812 at DPR 2, `document.hidden` false. Driver in `~/Library/Caches/mk-l1/drive.py` (not in the repo; modes `main`, `voice`, `nosr`, `pb`).
+- **Four-turn English and Thai exchange by typing**, live translation services: en to th and th to en both correct, 4 of 4 turns on both halves. The log held 4 turns; Clear left 0. 0 console errors.
+- **Layout:** far half `matrix(-1,0,0,-1,0,0)`; 0 boxes outside 375 px; 0 controls under 44 px; the stage runs y 108 to 742, above the tab bar (first build ended at 917 and was compacted: log 8vh, 60 px minimum, shorter toggle labels).
+- **Voice, with a fake recognition engine:** Thai starts with `th-TH`, text reaches the box, Done stops it. Lao answers `language-not-supported` and that half becomes typing only with its note. With no recognition object, both halves are typing only.
+- **Talk's single box** still takes dictation after `joinSpeechResults` moved; the new button routes to `#facetalk-th`.
+- **`lang-check`** on `#facetalk-th` and `#phrasebook-th`, th, vi, km, lo: `ui` 0, clip 0, over 0, tight 0, CLIPS 0, glyph 0 (`tpl` 12 and `data` 379 on `#phrasebook-th` are as before).
+- **Guards:** every guard in `CLAUDE.md`, place-fields, port-themes, derive-viz, `check-cache-version` against `origin/feat/scaffold-bangkok-slice` (`mk-v0.661.0` to `mk-v0.662.0`, 304 manifest files) and `jsc -m scripts/validate-jsc.mjs` pass.
+- **Not verified:** Safari and any iPhone; real speech recognition in any browser (fake engine only); read-aloud audio; the dark skins and the far half's look on a real phone held flat; a native speaker's reading of the 20 new strings (80 register entries); CI on the PR.
 
 ## Owner checks
-- [ ] **F5e, iPhone Safari (or the Home Screen app), after the deploy**, in Thai, Vietnamese, Khmer, Lao, with location on:
-  1. Border crossings: the four buttons under the freshness line read "<country name> + entry" and fit.
-  2. Nearby (Places, near me): the line under the title, the "Nearest beach" button and the grey distance pills read in your language and stay on screen.
-  3. **Khmer and Lao: the date on Home ("Tue, Nov 10") and month names on Places; tell me if they show in English.** Chrome here had no km or lo date data, so this is unmeasured on Safari.
-  4. Read any five of the new lines you know well and tell me which are wrong (register entries dated 2026-11-10, `source: core`).
-- Carried: F5d's list (`git show 0acbce9:docs/HANDOFF.md`), F5c's, F7b's, F5b's, F5's and the F4, F7a, F3, M3b checks.
+- [ ] **L1, iPhone Safari (or the Home Screen app), after the deploy, with a connection.** Open Talk, tap "Face to face on this phone".
+  1. The top half is upside down and the bottom half reads normally; both fit with the tab bar showing.
+  2. Set the bottom to English and the top to Thai. Type "Where is the bus station?" in the bottom half and tap Send: the Thai appears in the top half, upside down, and your own words show dashed in the bottom half.
+  3. Type a Thai reply in the top half and Send: the English appears in the bottom half. Do two more turns, four in all.
+  4. Tap Speak in the bottom half, say a sentence, tap Done, read the text, Send. Tell me if the microphone asks permission, whether it hears you, and whether it stops when you tap Done.
+  5. Switch the top to Khmer or Lao: does the top half's Speak button disappear with a "Typing only" note, or does it listen? Tell me which languages listen.
+  6. Turn Voice on and send a turn: does the translation speak aloud by itself? If not, does the speaker button on the turn work? (Lao and Khmer may have no voice offline.)
+  7. Turn on airplane mode and reopen Face to face: it should say it needs a connection and offer the phrasebook. Tap Clear: the transcript goes after you confirm.
+- Carried: F5e's list (`git show 9b5b6ef:docs/HANDOFF.md`), F5d's, F5c's, F7b's, F5b's, F5's and the F4, F7a, F3, M3b checks.
 
 ## Not done / known issues
-- **Remainder after F5e, each with a reason** (`docs/PROGRAM.md` 4.1): place and city names, guide titles and editorial text (data text); `unit · note` price lines on `#prices-th` and the railway lines on `#schedules-th` (data); "Step 1 of 3" (a `Step {0} of {1}` pattern would rewrite 5 strings in `js/data/`: split the welcome screen's nodes instead); `h`/`m`/`min` units inside a drive time and compass letters.
-- **The species page and the rest of the wildlife library** are still English (the next data-text group is `nature`); so are transport, history, places and food data text. The hospital guides stay English (decision 35).
-- **55 species names are null** (km 36, lo 19): English shows. No source named.
-- **Nothing has been read by a native speaker** (decision 6).
-- **Short keys apply app-wide** once loaded: F5e added "near", "in", "About", "Eat", "Hotel", "beach", "hotel" as exact keys. Same meaning where measured; not scanned for collisions the way F5d's 93 were.
-- **Drive-time text** shows English units inside the translated phrase ("1h 45m-3h 45m").
-- Tooling: `git switch -c ... origin/...` sets the integration branch as upstream: `git branch --unset-upstream`. `apply-strings.py` keeps a key it already wrote: to remove a key, edit the four dictionaries and the register by hand and keep the register's one-line-per-entry layout (`json.dumps(indent=...)` rewrites the whole file). A scratch script named `grp.py` shadows the standard module and breaks `drive-fix.py`. The worktree `Mekong-f5e` is spent when the PR merges, with `f8-location-staleness`, `docs-em-dashes` and `s1-tokens`. A dev server on port 8782 (and 8781) served the trees and may still run.
+- **Speech recognition language support is unmeasured on Safari.** The engine's own error is the only signal, and it may arrive only after the first tap; the first tap on an unsupported language shows "Listening" briefly before the note appears. The owner's check 5 measures it.
+- **Translation errors** (the service's own English sentences from `translate.js`) still show in English in every language, as in the single Talk box.
+- **Folding Talk's single box onto `createDictation`** (about 80 duplicated lines in `phrasebook.js`) is not done: it was out of scope and untested on a phone.
+- **No conversation language pair is remembered per phrasebook:** the far language comes from the route, else the last used (`prefs.faceTalk.b`), and the near language is the last used.
+- **Carried from F5e:** the remainder list (data text, `unit · note` price lines, "Step 1 of 3"), the 55 null species names, nothing read by a native speaker, short exact keys applied app-wide, English units in drive times.
+- Tooling: `git switch -c ... origin/...` sets the integration branch as upstream (`git branch --unset-upstream`); `git push -u` creates no local remote-tracking ref in this clone, so check a push with `git ls-remote --heads origin <branch>`. Headless Chrome exposes its own `SpeechRecognition` as well as `webkitSpeechRecognition`: a fake must override both. The worktrees `Mekong-f5e` and `Mekong-l1` (after its PR merges), `f8-location-staleness`, `docs-em-dashes` and `s1-tokens` are spent when their PRs merge.
 
 ## Open decisions (need the user)
 Closed on 2026-10-30: the F5c form is `{0}`, `{1}`, the data text is a plan only, and 35 (hold the hospital guides; applied in F5d, 2026-11-10). Closed on 2026-10-29: 28 (built, F7b), 30 (relax the key rule), 31 (F7b went before F5c, as recommended). Closed on 2026-10-27: 25 (worktrees), 29. The numbers keep their old values.
@@ -50,18 +55,18 @@ Closed on 2026-10-30: the F5c form is `{0}`, `{1}`, the data text is a plan only
 37. **New (F5d):** the 55 species names left null (km 36, lo 19) and the 122 names taken from `js/data/nature.js` (no native speaker has read them). Recommended: leave the nulls until a native speaker or a named source supplies the names (English and the Latin name show meanwhile); put the 122 and the 907 machine-made values in front of a native reader with decision 6's list.
 
 ## Next session prompts
-Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~, ~~S1~~, ~~F7a~~, ~~F4~~, ~~F5~~, ~~the decision 26 measurement~~, ~~F5b~~, ~~F7b~~ ([PR #146](https://github.com/SamuelLClemens/Mekonging/pull/146), merged), ~~F5c~~ ([PR #147](https://github.com/SamuelLClemens/Mekonging/pull/147), merged), ~~F5d~~ ([PR #150](https://github.com/SamuelLClemens/Mekonging/pull/150), merged), ~~F5e~~ ([PR #151](https://github.com/SamuelLClemens/Mekonging/pull/151), built), **L1** (next), L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4**, **R1 to R3**, Bangkok B1 to B8, city depth C1 onward, then T3 to T15; F6 is unplaced. Each releasing slice stacks on the merged tip of the one before. Q2, S0 and Q8 change no shipped file and can run alongside any of them.
+Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~, ~~S1~~, ~~F7a~~, ~~F4~~, ~~F5~~, ~~the decision 26 measurement~~, ~~F5b~~, ~~F7b~~ ([PR #146](https://github.com/SamuelLClemens/Mekonging/pull/146), merged), ~~F5c~~ ([PR #147](https://github.com/SamuelLClemens/Mekonging/pull/147), merged), ~~F5d~~ ([PR #150](https://github.com/SamuelLClemens/Mekonging/pull/150), merged), ~~F5e~~ ([PR #151](https://github.com/SamuelLClemens/Mekonging/pull/151), merged), ~~L1~~ ([PR #152](https://github.com/SamuelLClemens/Mekonging/pull/152), built), **L2** (next), L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4**, **R1 to R3**, Bangkok B1 to B8, city depth C1 onward, then T3 to T15; F6 is unplaced. Each releasing slice stacks on the merged tip of the one before. Q2, S0 and Q8 change no shipped file and can run alongside any of them.
 
-**Next is L1** (F5e must be merged first).
+**Next is L2** (L1 must be merged first).
 
-### F5e (built)
-> See "Shipped" above and `docs/PROGRAM.md` 4.1. The species-name nulls and the remainder list are the only open pieces; neither blocks L1.
+### L1 (built)
+> See "Shipped" above and `docs/PROGRAM.md` 4.1. Open: the owner's iPhone check, and what Safari reports for speech recognition in each language.
 
-### L1 to L4 (and L5 after M5)
-> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <L1 to L4 or L5>, as written there.
+### L2 to L4 (and L5 after M5)
+> Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <L2 to L4 or L5>, as written there.
 > **Start.** `git fetch`; `gh pr list --state all`. The slice before it must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`. Reproduce the problem on a rendered screen before changing code. `preview_start` needs an entry in the PARENT folder's `.claude/launch.json` (CLAUDE.md).
-> L1 and L5 end with a check by the owner on their iPhone in Safari, from a short checklist the slice writes. L5 starts only after M5 has merged.
-> L3 draws its charts with S1's `--viz-*` tokens (built: `css/refined.css`; slots in the fixed order brick, plum, gold, teal, blue, green, violet, rose, never cycled; lines, bars and stacks only, a scatter or a map takes the first three; the `dataviz` skill's rules apply). Their screens carry `data-refined` on the root to get the refined type scale; new text sizes use `--fs-*` (`check-font-sizes`), new icons `js/icons.js`. The check for L2 is `tools/lang-check/` (F5).
+> L5 ends with a check by the owner on their iPhone in Safari, from a short checklist the slice writes. L5 starts only after M5 has merged.
+> L3 draws its charts with S1's `--viz-*` tokens (built: `css/refined.css`; slots in the fixed order brick, plum, gold, teal, blue, green, violet, rose, never cycled; lines, bars and stacks only, a scatter or a map takes the first three; the `dataviz` skill's rules apply). Their screens carry `data-refined` on the root to get the refined type scale; new text sizes use `--fs-*` (`check-font-sizes`), new icons `js/icons.js`. The check for L2 is `tools/lang-check/` (F5); L1 added 20 keys in th, vi, km, lo, so `check-ui-strings` counts 1,620 keys in the host languages.
 
 ### Q3 to Q7, then T1 and T2 (after L4)
 > Read CLAUDE.md, docs/HANDOFF.md, docs/AUDIT_375.md ("Proposed fix slices") and docs/PROGRAM.md (sections 4.4, 5.4 and 6). Run /slice for the next of Q3, Q4, Q5, Q6, Q7, T1 or T2, in that order. Re-measure with Q2's driver first. Decision 10 (topbar spacing) is asked after Q5.

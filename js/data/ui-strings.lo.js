@@ -1039,6 +1039,20 @@ export const STRINGS = {
     'Further afield · next destinations ({0})': 'ໄກອອກໄປ · ຈຸດໝາຍຕໍ່ໄປ ({0})', 'You are near': 'ທ່ານຢູ່ໃກ້',
     'You are in': 'ທ່ານຢູ່', 'near': 'ໃກ້', 'in': 'ໃນ', 'Early morning': 'ເຊົ້າຕຣູ່', 'Midday': 'ທ່ຽງ',
     'Late night': 'ເດິກ', 'Search places…': 'ຄົ້ນຫາສະຖານທີ່…', 'Search places in {0}…': 'ຄົ້ນຫາສະຖານທີ່ໃນ {0}…',
-    
+    'Face to face': 'ລົມກັນຕໍ່ໜ້າ',
+    'Each person types or speaks in their own half. The other half shows the translation. Needs a connection. Nothing leaves this phone except the text being translated.': 'ແຕ່ລະຄົນພິມ ຫຼື ເວົ້າໃນຝັ່ງຂອງຕົນເອງ. ຝັ່ງອື່ນຈະສະແດງຄຳແປ. ຕ້ອງມີອິນເຕີເນັດ. ບໍ່ມີຂໍ້ມູນໃດອອກຈາກໂທລະສັບເຄື່ອງນີ້ ຍົກເວັ້ນຂໍ້ຄວາມທີ່ກຳລັງແປ.',
+    'Face to face needs a connection': 'ການລົມກັນຕໍ່ໜ້າຕ້ອງມີອິນເຕີເນັດ',
+    'There is no connection right now. The phrasebook works without one.': 'ຕອນນີ້ບໍ່ມີການເຊື່ອມຕໍ່. ປຶ້ມສຳນວນໃຊ້ໄດ້ໂດຍບໍ່ຕ້ອງມີການເຊື່ອມຕໍ່.',
+    'Nothing said yet.': 'ຍັງບໍ່ມີການສົນທະນາ.', 'Send': 'ສົ່ງ', 'Voice on': 'ອ່ານອອກສຽງ: ເປີດ',
+    'Voice off': 'ອ່ານອອກສຽງ: ປິດ', 'Clear the conversation?': 'ລ້າງການສົນທະນາບໍ?',
+    'This removes the transcript from this phone.': 'ການດຳເນີນການນີ້ຈະລຶບບົດສົນທະນາອອກຈາກໂທລະສັບເຄື່ອງນີ້.',
+    'Typing only: this phone has no voice input for this language.': 'ພິມໄດ້ຢ່າງດຽວ: ໂທລະສັບເຄື່ອງນີ້ບໍ່ຮອງຮັບການປ້ອນສຽງສຳລັບພາສານີ້.',
+    'Type or speak here': 'ພິມ ຫຼື ເວົ້າທີ່ນີ້', 'Far side': 'ຝັ່ງກົງກັນຂ້າມ', 'Your side': 'ຝັ່ງຂອງທ່ານ',
+    'Face to face on this phone': 'ລົມກັນຕໍ່ໜ້າຢູ່ໃນໂທລະສັບເຄື່ອງນີ້',
+    'Microphone blocked. Allow it for this site in your browser settings.': 'ໄມໂຄຣໂຟນຖືກບລັອກ. ກະລຸນາອະນຸຍາດໃຫ້ເວັບໄຊນີ້ໃນການຕັ້ງຄ່າບຣາວເຊີ.',
+    'No microphone found on this device.': 'ບໍ່ພົບໄມໂຄຣໂຟນໃນອຸປະກອນນີ້.',
+    'Voice input needs a connection on this device.': 'ການປ້ອນສຽງໃນອຸປະກອນນີ້ຕ້ອງມີອິນເຕີເນັດ.',
+    'No speech heard. Tap the microphone and try again.': 'ບໍ່ໄດ້ຍິນສຽງເວົ້າ. ແຕະໄມໂຄຣໂຟນແລ້ວລອງໃໝ່.',
+    'This device cannot take voice input in that language.': 'ອຸປະກອນນີ້ບໍ່ຮອງຮັບການປ້ອນສຽງເປັນພາສານັ້ນ.',
     // ---- end F5 harvest ----
 };

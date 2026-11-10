@@ -1042,6 +1042,20 @@ export const STRINGS = {
     'Further afield · next destinations ({0})': 'ไกลออกไป · จุดหมายถัดไป ({0})', 'You are near': 'คุณอยู่ใกล้',
     'You are in': 'คุณอยู่ที่', 'near': 'ใกล้', 'in': 'ใน', 'Early morning': 'เช้าตรู่', 'Midday': 'เที่ยงวัน',
     'Late night': 'ดึก', 'Search places…': 'ค้นหาสถานที่…', 'Search places in {0}…': 'ค้นหาสถานที่ใน {0}…',
-    
+    'Face to face': 'คุยต่อหน้ากัน',
+    'Each person types or speaks in their own half. The other half shows the translation. Needs a connection. Nothing leaves this phone except the text being translated.': 'แต่ละคนพิมพ์หรือพูดในฝั่งของตนเอง อีกฝั่งจะแสดงคำแปล ต้องใช้อินเทอร์เน็ต ไม่มีข้อมูลใดออกจากโทรศัพท์เครื่องนี้ นอกจากข้อความที่กำลังแปล',
+    'Face to face needs a connection': 'การคุยต่อหน้ากันต้องใช้อินเทอร์เน็ต',
+    'There is no connection right now. The phrasebook works without one.': 'ขณะนี้ไม่มีการเชื่อมต่อ คู่มือวลีใช้งานได้โดยไม่ต้องเชื่อมต่อ',
+    'Nothing said yet.': 'ยังไม่มีบทสนทนา', 'Send': 'ส่ง', 'Voice on': 'เสียงอ่าน: เปิด',
+    'Voice off': 'เสียงอ่าน: ปิด', 'Clear the conversation?': 'ล้างบทสนทนาหรือไม่?',
+    'This removes the transcript from this phone.': 'การดำเนินการนี้จะลบบทสนทนาออกจากโทรศัพท์เครื่องนี้',
+    'Typing only: this phone has no voice input for this language.': 'พิมพ์ได้อย่างเดียว: โทรศัพท์เครื่องนี้ไม่รองรับการป้อนเสียงสำหรับภาษานี้',
+    'Type or speak here': 'พิมพ์หรือพูดที่นี่', 'Far side': 'ฝั่งตรงข้าม', 'Your side': 'ฝั่งของคุณ',
+    'Face to face on this phone': 'คุยต่อหน้ากันบนโทรศัพท์เครื่องนี้',
+    'Microphone blocked. Allow it for this site in your browser settings.': 'ไมโครโฟนถูกบล็อก โปรดอนุญาตให้ไซต์นี้ใช้ในการตั้งค่าเบราว์เซอร์',
+    'No microphone found on this device.': 'ไม่พบไมโครโฟนบนอุปกรณ์นี้',
+    'Voice input needs a connection on this device.': 'การป้อนเสียงบนอุปกรณ์นี้ต้องใช้อินเทอร์เน็ต',
+    'No speech heard. Tap the microphone and try again.': 'ไม่ได้ยินเสียงพูด แตะไมโครโฟนแล้วลองอีกครั้ง',
+    'This device cannot take voice input in that language.': 'อุปกรณ์นี้ไม่รองรับการป้อนเสียงในภาษานั้น',
     // ---- end F5 harvest ----
 };
