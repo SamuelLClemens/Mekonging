@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.663.0';
+const CACHE_VERSION = 'mk-v0.664.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -564,21 +564,21 @@ const MANIFEST = {
   'js/data/ui-strings.it.js': '1df76a7b',
   'js/data/ui-strings.ja.js': '4ff22ff3',
   'js/data/ui-strings.js': '325f9569',
-  'js/data/ui-strings.km.js': '47a598d0',
+  'js/data/ui-strings.km.js': '77a58326',
   'js/data/ui-strings.ko.js': 'bcd0c655',
-  'js/data/ui-strings.lo.js': 'a86206e0',
+  'js/data/ui-strings.lo.js': '3931745f',
   'js/data/ui-strings.ms.js': '2fd04546',
   'js/data/ui-strings.nl.js': 'f10e467b',
   'js/data/ui-strings.pl.js': 'e39a3f03',
   'js/data/ui-strings.pt.js': 'b64ce569',
   'js/data/ui-strings.ru.js': 'd69c3df6',
   'js/data/ui-strings.sv.js': 'f0f7e53a',
-  'js/data/ui-strings.th.js': '69566022',
+  'js/data/ui-strings.th.js': '4d664032',
   'js/data/ui-strings.tl.js': '158b48e9',
   'js/data/ui-strings.tr.js': 'cc07c058',
   'js/data/ui-strings.uk.js': 'fe44df9c',
   'js/data/ui-strings.ur.js': '9740c4f2',
-  'js/data/ui-strings.vi.js': '686a32dc',
+  'js/data/ui-strings.vi.js': 'bbf9ad82',
   'js/data/ui-strings.zh-CN.js': '0eb794d6',
   'js/data/ui-strings.zh-TW.js': 'a451cf3b',
   'js/data/visa.js': 'fb2914ac',
@@ -599,7 +599,7 @@ const MANIFEST = {
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
   'js/location-ask.js': '2be4200d',
-  'js/main.js': 'b8f2c3e3',
+  'js/main.js': 'f92ceac9',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'baf60785',
   'js/market-api.js': '0f0d76c5',
@@ -624,6 +624,7 @@ const MANIFEST = {
   'js/recap-charts.js': 'a403434d',
   'js/recap-data.js': '36fda65a',
   'js/recap-spend.js': '3697b9e8',
+  'js/refresh-app.js': '78fa26ba',
   'js/reminders.js': 'f18165dd',
   'js/render-utils.js': '154dc807',
   'js/screens/arrival-info.js': 'a6846fa4',
@@ -656,7 +657,7 @@ const MANIFEST = {
   'js/screens/medical.js': '8d1e6062',
   'js/screens/nearby.js': 'edfe911a',
   'js/screens/nextstop.js': '657c8d05',
-  'js/screens/phrasebook.js': '0037675d',
+  'js/screens/phrasebook.js': '355e2b65',
   'js/screens/places.js': '0b92c166',
   'js/screens/produce.js': '31aeadd6',
   'js/screens/schedules.js': 'e04d0ae5',

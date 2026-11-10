@@ -7533,7 +7533,11 @@
   {"lang": "km", "key": "Refresh to use face to face", "machine": true, "date": "2026-11-10", "group": "talk"},
   {"lang": "lo", "key": "Refresh to use face to face", "machine": true, "date": "2026-11-10", "group": "talk"},
   {"lang": "th", "key": "Refresh to use face to face", "machine": true, "date": "2026-11-10", "group": "talk"},
-  {"lang": "vi", "key": "Refresh to use face to face", "machine": true, "date": "2026-11-10", "group": "talk"}
+  {"lang": "vi", "key": "Refresh to use face to face", "machine": true, "date": "2026-11-10", "group": "talk"},
+  {"lang": "km", "key": "Updating…", "machine": true, "date": "2026-11-10", "group": "talk"},
+  {"lang": "lo", "key": "Updating…", "machine": true, "date": "2026-11-10", "group": "talk"},
+  {"lang": "th", "key": "Updating…", "machine": true, "date": "2026-11-10", "group": "talk"},
+  {"lang": "vi", "key": "Updating…", "machine": true, "date": "2026-11-10", "group": "talk"}
  ],
  "backTranslation": [
   {"lang": "th", "key": "Insurer, policy 12345", "back": "Insurance company, policy 12345", "verdict": "same", "note": "", "date": "2026-10-28"},

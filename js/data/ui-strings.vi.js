@@ -1073,6 +1073,6 @@ export const STRINGS = {
     'Voice input needs a connection on this device.': 'Nhập giọng nói trên thiết bị này cần có kết nối.',
     'No speech heard. Tap the microphone and try again.': 'Không nghe thấy giọng nói. Chạm vào micrô và thử lại.',
     'This device cannot take voice input in that language.': 'Thiết bị này không hỗ trợ nhập giọng nói bằng ngôn ngữ đó.',
-    'Refresh to use face to face': 'Làm mới để dùng nói chuyện trực tiếp',
+    'Refresh to use face to face': 'Làm mới để dùng nói chuyện trực tiếp', 'Updating…': 'Đang cập nhật…',
     // ---- end F5 harvest ----
 };
