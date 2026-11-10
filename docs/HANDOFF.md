@@ -1,44 +1,39 @@
-# Handoff, 2026-11-10 (F5d built; F5e is next)
+# Handoff, 2026-11-10 (F5e built; L1 is next)
 
-The previous handoff (F5c) is `git show 21088be:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
+The previous handoff (F5d) is `git show 0acbce9:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
 
 ## Shipped
-- **F5d**, the data text of `#danger`, `#crossings` and `#etiquette-<cc>` in Thai, Vietnamese, Khmer and Lao, branch `feat/f5d-data-text`, [PR #150](https://github.com/SamuelLClemens/Mekonging/pull/150), `mk-v0.660.0` (store version unchanged). Open, for the owner to merge; CI had not reported when this was written. F5c ([PR #147](https://github.com/SamuelLClemens/Mekonging/pull/147)) and the docs PRs #148 and #149 are merged.
-  - **Method** (F5b's, in a second family): `js/data/safety-data.<code>.js`, lazy, one file per language, exact English keys; `ensureSafetyData` in `js/i18n.js` loads it when `#danger`, `#crossings` or `#etiquette-<cc>` opens (`js/main.js` render), merges it into the dictionary and skips a `null`. It is separate from `safety-text` so an Emergency screen never loads it. 23.1, 21.2, 23.0 and 22.6 KB gzip (th, vi, km, lo), precached in `sw.js`.
-  - **Keys:** 381 distinct English strings on the six routes (24,301 characters): 270 translated, plus one new heading key, "read this one"; 111 left in English on purpose (59 scientific names, 52 crossing names). Rules are in `safety-text.py --set data data-keys`.
-  - **Species names:** `js/data/nature.js` already holds native names for most dangerous species (th 53 of 59, vi 41, km 10, lo 18). Those are used first and registered `machine: false` with `from`; the gaps are machine-made or an explicit `null` (km 36, lo 19), where neither the data nor I had a reliable name. 907 machine-made values and 122 curated ones are in `scripts/ui-strings-review.json` (`source: safety-data`).
-  - **Code:** `check-ui-strings` item 7 now covers both families (a `null` is allowed in `safety-data` and counted per language; `js/screens/etiquette.js` counts as a source); `lang-check.py --data`; `safety-text.py --set data`; `backtranslate.py` samples the new groups. `js/screens/etiquette.js` joins its two-literal hint into one literal and splits its first heading into three text nodes (`${emoji} ${label}`, a dash, `read this one`).
-  - **A defect found and fixed:** the blind back-translation showed the Lao "stamp fee" written as an "eye-striking fee" (in two crossing notes). Fixed.
-  - **Session mechanics:** this session was launched in the `f8-location-staleness` worktree; the branch was cut from `origin/feat/scaffold-bangkok-slice` inside it. The app moved the session's working directory away and back several times: absolute paths and `git -C` kept every edit on the right tree. Plain `git switch -c ... origin/...` sets the integration branch as the upstream: unset it (`git branch --unset-upstream`) so a bare `git push` cannot reach it.
+- **F5e**, branch `feat/f5e-composed-fix-sweep`, [PR #151](https://github.com/SamuelLClemens/Mekonging/pull/151), `mk-v0.661.0` (store version unchanged). Open, for the owner to merge; CI had not reported when this was written. F5d ([PR #150](https://github.com/SamuelLClemens/Mekonging/pull/150)) is merged.
+  - **Crossings:** the four "<country> entry" buttons are three text nodes; the freshness line's nouns are keys. `#crossings` shows 0 `ui` and 0 `tpl` in th, vi, km, lo.
+  - **Fix-state sweep** (Home, Nearby, Places, journey with a GPS fix): 43 fixed strings and 18 composed ones (keys and `{0}` patterns, `source: core` in the register, dated 2026-11-10). Fixed in code: Home time-of-day title, Nearby status line and beach button (nodes), hub tiles' accessible names, language button title, journey marker labels (`t()`).
+  - **Layout:** a translated drive-time chip left the screen (`.near-open .dist-chip` now shrinks): Nearby overflow 16 to 0.
+  - **Rule change:** a pattern's fixed text is "distinctive" at 14 characters and three words (was 20) in `js/i18n.js` and `scripts/check-ui-strings.py`.
+  - **Not done:** the 55 species-name nulls (no source named; item 3 of the brief).
 
 ## Verified
-Headless Chrome over CDP, fresh profiles, 127.0.0.1, 375 px at DPR 2, `document.hidden` false (the driver refuses a hidden page). Drivers in `~/Library/Caches/mk-f5d/` (`shots.py`, `switch-test.py`, `map-batch.py`, `script-check.py`; not in the repo), the language check in `tools/lang-check/`.
-- **Language check, the six routes in four languages, every layout check, on the final code:** `data` 535 to 111 (th), 111 (vi), 147 (km), 130 (lo); `#etiquette-<cc>` 0 in all four; `ui` 0; clip, overflow, tight, CLIPS, glyph, word and letter breaks all 0. `tpl` 8 per language (composed strings, F5e).
-- **The remainder is explained:** it equals the kept names plus the explicit nulls in every language, 0 unexplained (checked by script against the keep list and the modules).
-- **Back-translation, blind:** 200 values (50 per language) read back to English by a separate reader that saw only the target text: 184 same, 15 close, 1 differing (the Lao stamp fee, fixed). The close ones are tone ("Never" read as "Absolutely not"), the Vietnamese name for the American War, and literal readings of idioms.
-- **A language switch on the screen** (the real picker's path: `ensureUiStrings` then a router repaint): Thai on `#etiquette-th` leaves 0 English prose; Khmer on `#crossings` leaves one composed sources line.
-- **Short keys** ("Never", "Rude", "bridge" and 90 more): 3 of 93 also occur as a literal elsewhere in the code, all with the same meaning.
-- **Screenshots** at 375 px: Thai and Khmer etiquette, Lao crossings, Vietnamese danger (`~/Library/Caches/mk-f5d/shots/`, not committed).
+Headless Chrome over CDP, fresh profiles, 127.0.0.1, 375 px at DPR 2, `document.hidden` false on all 60 sweep rows. Drivers and results in `~/Library/Caches/mk-f5e/` (not in the repo).
+- **Sweep** (`drive-fix.py`, three fixes, four screens, four languages, each string compared with the English render of the same point and route): `ui` 0 in th and vi, 3 in km and lo ("Oct"); overflow 0; glyph 0; `undefined` 0. `tight` Home 3 and Places 1 are unchanged from before (Home phase labels, one place-name row; no clipped ink).
+- **`lang-check.py`** on `#crossings,#schedules-th,#prices-th,#home`: `ui` 0 and `tpl` 0 on `#crossings` in all four; `#home` 0 `ui`.
+- **The full 96-route four-language run** was made on the pre-change tree: `tpl` 495 (th), 496 (vi), 533 (km), 484 (lo); 37 templates, most of them data that merely fits a loose template.
 - **Guards:** every guard in `CLAUDE.md`, `check-cache-version` against `origin/feat/scaffold-bangkok-slice` and `jsc -m scripts/validate-jsc.mjs` pass.
-- **Not verified:** an iPhone (Safari); any native speaker's reading of any value; the full 96-route four-language check (about 25 minutes; only the six routes and the switch test were run); the offline reload of the three screens in the four languages; the live site; CI on the PR; the 784 values that were not back-translated.
+- **Not verified:** an iPhone (Safari); any native speaker's reading; a blind back-translation of the new values; the full 96 routes on the final code; the offline reload; the live site; CI.
 
 ## Owner checks
-- [ ] **F5d, iPhone Safari (or the Home Screen app), after the deploy:**
-  1. Settings, language Thai (then Vietnamese, Khmer, Lao). Open Culture and etiquette for your own country: the first group is the "against the law" one. Read its lines. **Thai: the line about Article 112 and the Vietnamese one about Articles 117 and 331 matter most; tell me if either reads wrong.**
-  2. Border crossings: the note about the closed Thailand to Cambodia land border (the Trat, Koh Kong crossing) must read as closed and "check before you travel".
-  3. Dangerous: names show beside the Latin name. **Khmer and Lao: tell me which species names are wrong; 36 Khmer and 19 Lao names are English on purpose.**
-  4. Switch language while standing on one of these screens: it repaints in the new language.
-  5. Read any five lines you know well and tell me which are wrong (the register is in review order, entries dated 2026-11-10, `source: safety-data`).
-- Carried: F5c's list (`git show 21088be:docs/HANDOFF.md`, "Owner checks"), F7b's, F5b's, F5's, and from F4/F7a/F3/M3b the F4 recap on the iPhone, the Xcode location usage description, the F3 location dialogs and the M3b sign-in checks.
+- [ ] **F5e, iPhone Safari (or the Home Screen app), after the deploy**, in Thai, Vietnamese, Khmer, Lao, with location on:
+  1. Border crossings: the four buttons under the freshness line read "<country name> + entry" and fit.
+  2. Nearby (Places, near me): the line under the title, the "Nearest beach" button and the grey distance pills read in your language and stay on screen.
+  3. **Khmer and Lao: the date on Home ("Tue, Nov 10") and month names on Places; tell me if they show in English.** Chrome here had no km or lo date data, so this is unmeasured on Safari.
+  4. Read any five of the new lines you know well and tell me which are wrong (register entries dated 2026-11-10, `source: core`).
+- Carried: F5d's list (`git show 0acbce9:docs/HANDOFF.md`), F5c's, F7b's, F5b's, F5's and the F4, F7a, F3, M3b checks.
 
 ## Not done / known issues
-- **F5e** (`docs/PROGRAM.md` 4.1): the about 40 composed interface strings still English (now also the Crossings screen's "Border crossing details checked" line, its "Thailand entry" buttons and its sources line), and the fix-state sweep (Home, Nearby, Places and the journey with a GPS fix). Items 2 and 3 of the F5d brief; the brief allowed the split.
+- **Remainder after F5e, each with a reason** (`docs/PROGRAM.md` 4.1): place and city names, guide titles and editorial text (data text); `unit · note` price lines on `#prices-th` and the railway lines on `#schedules-th` (data); "Step 1 of 3" (a `Step {0} of {1}` pattern would rewrite 5 strings in `js/data/`: split the welcome screen's nodes instead); `h`/`m`/`min` units inside a drive time and compass letters.
 - **The species page and the rest of the wildlife library** are still English (the next data-text group is `nature`); so are transport, history, places and food data text. The hospital guides stay English (decision 35).
-- **55 species names are null** (km 36, lo 19): English shows.
-- **Nothing has been read by a native speaker** (decision 6), including the 122 names taken from `nature.js`.
-- **Short keys apply app-wide** once the module is loaded: "Never" or "bridge" elsewhere would translate too. Measured 3 of 93 collide, same meaning.
-- **A pattern could still rewrite UGC** (F5c's note) and **a key is one string literal**: a screen that builds text from parts is `tpl`, not data.
-- Tooling: the shell's directory resets between calls; the worktree is named `f8-location-staleness` but holds `feat/f5d-data-text` (spent when the PR merges, with `docs-em-dashes` and `s1-tokens`). A dev server on port 8771 served the tree during the session and was stopped. The main checkout `Mekong/` is at `2f65d17`, stale.
+- **55 species names are null** (km 36, lo 19): English shows. No source named.
+- **Nothing has been read by a native speaker** (decision 6).
+- **Short keys apply app-wide** once loaded: F5e added "near", "in", "About", "Eat", "Hotel", "beach", "hotel" as exact keys. Same meaning where measured; not scanned for collisions the way F5d's 93 were.
+- **Drive-time text** shows English units inside the translated phrase ("1h 45m-3h 45m").
+- Tooling: `git switch -c ... origin/...` sets the integration branch as upstream: `git branch --unset-upstream`. `apply-strings.py` keeps a key it already wrote: to remove a key, edit the four dictionaries and the register by hand and keep the register's one-line-per-entry layout (`json.dumps(indent=...)` rewrites the whole file). A scratch script named `grp.py` shadows the standard module and breaks `drive-fix.py`. The worktree `Mekong-f5e` is spent when the PR merges, with `f8-location-staleness`, `docs-em-dashes` and `s1-tokens`. A dev server on port 8782 (and 8781) served the trees and may still run.
 
 ## Open decisions (need the user)
 Closed on 2026-10-30: the F5c form is `{0}`, `{1}`, the data text is a plan only, and 35 (hold the hospital guides; applied in F5d, 2026-11-10). Closed on 2026-10-29: 28 (built, F7b), 30 (relax the key rule), 31 (F7b went before F5c, as recommended). Closed on 2026-10-27: 25 (worktrees), 29. The numbers keep their old values.
@@ -55,19 +50,12 @@ Closed on 2026-10-30: the F5c form is `{0}`, `{1}`, the data text is a plan only
 37. **New (F5d):** the 55 species names left null (km 36, lo 19) and the 122 names taken from `js/data/nature.js` (no native speaker has read them). Recommended: leave the nulls until a native speaker or a named source supplies the names (English and the Latin name show meanwhile); put the 122 and the 907 machine-made values in front of a native reader with decision 6's list.
 
 ## Next session prompts
-Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~, ~~S1~~, ~~F7a~~, ~~F4~~, ~~F5~~, ~~the decision 26 measurement~~, ~~F5b~~, ~~F7b~~ ([PR #146](https://github.com/SamuelLClemens/Mekonging/pull/146), merged), ~~F5c~~ ([PR #147](https://github.com/SamuelLClemens/Mekonging/pull/147), merged), ~~F5d~~ ([PR #150](https://github.com/SamuelLClemens/Mekonging/pull/150), built), **F5e** (unplaced; next), L1, L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4**, **R1 to R3**, Bangkok B1 to B8, city depth C1 onward, then T3 to T15; F6 is unplaced. Each releasing slice stacks on the merged tip of the one before. Q2, S0 and Q8 change no shipped file and can run alongside any of them.
+Order (owner, 2026-10-25; `docs/PROGRAM.md` section 2): ~~F2~~, ~~F1b~~, ~~F3~~, ~~S1~~, ~~F7a~~, ~~F4~~, ~~F5~~, ~~the decision 26 measurement~~, ~~F5b~~, ~~F7b~~ ([PR #146](https://github.com/SamuelLClemens/Mekonging/pull/146), merged), ~~F5c~~ ([PR #147](https://github.com/SamuelLClemens/Mekonging/pull/147), merged), ~~F5d~~ ([PR #150](https://github.com/SamuelLClemens/Mekonging/pull/150), merged), ~~F5e~~ ([PR #151](https://github.com/SamuelLClemens/Mekonging/pull/151), built), **L1** (next), L2, L3, L4, **Q3 to Q7**, **T1**, **T2**, then M4b-2, M4c (installs `pglast`), M5, L5, D5 tidy, **G1 to G4**, **R1 to R3**, Bangkok B1 to B8, city depth C1 onward, then T3 to T15; F6 is unplaced. Each releasing slice stacks on the merged tip of the one before. Q2, S0 and Q8 change no shipped file and can run alongside any of them.
 
-**Next is F5e** (F5d must be merged first).
+**Next is L1** (F5e must be merged first).
 
-### F5e: composed strings, the fix-state sweep, and the species-name gaps (unplaced; next)
-> Read CLAUDE.md, docs/HANDOFF.md, `tools/lang-check/README.md` ("Composed strings", "The safety data text") and `docs/PROGRAM.md` (4.1 F5e, 4.4 Language). Run /slice for slice F5e.
-> **Start.** `git fetch`; `gh pr list --state all`. F5d must be merged and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice`, made from the Mekong repo itself (`git -C <Mekong> worktree add`); then `git branch --unset-upstream` so a bare push cannot reach the integration branch. Serve it with `python3 scripts/serve.py <port>` and drive headless Chrome (`--no-sandbox`, profile outside `/private/tmp`, `document.hidden` false). Run a full four-language `lang-check.py` in the background first, on a `git archive` copy, to get the real `tpl` list.
-> **Scope.**
-> 1. The composed interface strings still English (the list in `docs/PROGRAM.md` 4.4 and `tpl-list.py`; the Crossings screen's "Border crossing details checked" line, its "Thailand entry" buttons and its sources line first): split each screen's text nodes (the F5b method), then a key; do not add a pattern for them.
-> 2. A fix-state sweep: Home, Nearby, Places and the journey with a GPS fix, in th, vi, km and lo, with `tools/lang-check/drive-fix.py`; count `data-no-mt` text too.
-> 3. The 55 species names left null (km 36, lo 19): only if a source for them is named; otherwise leave them and say so.
-> **Done when:** `lang-check.py` shows 0 `tpl` on the routes item 1 names (or a measured remainder with each reason), the sweep's four screens show 0 English interface strings with a fix, no clipping, overflow or missing glyphs at 375 px, every guard passes, the PR is open. If it does not fit one session, split by route group and say where it stopped. Then run /handoff.
-> **Out of scope:** the hospital guides (decision 35), the next data-text groups (`nature`, transport, history, places, food), the other 25 languages (L2), right-to-left, Talk's conversation mode (L1).
+### F5e (built)
+> See "Shipped" above and `docs/PROGRAM.md` 4.1. The species-name nulls and the remainder list are the only open pieces; neither blocks L1.
 
 ### L1 to L4 (and L5 after M5)
 > Read CLAUDE.md, docs/HANDOFF.md and the "Traveller fixes and language work" section of docs/PLAN.md. Run /slice for slice <L1 to L4 or L5>, as written there.
