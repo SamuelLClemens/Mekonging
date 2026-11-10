@@ -45,7 +45,8 @@ function levelBlock(items, level, opts = {}) {
   // 'law' is deliberately NOT a fold: it is the one group where a traveller who never taps
   // anything must still have read it.
   if (opts.noFold) {
-    return h('div', {}, [h('h2', { class: 'home-section', 'data-nofold': '' }, `${lv.emoji} ${lv.label} — read this one`), body]);
+    // Three text nodes, so the label and "read this one" are each a key (F5d); one template literal could not be.
+    return h('div', {}, [h('h2', { class: 'home-section', 'data-nofold': '' }, [`${lv.emoji} ${lv.label}`, ' — ', h('span', {}, 'read this one')]), body]);
   }
   return h('details', { class: 'foldcard etiq-fold', open: opts.open ? '' : null }, [
     h('summary', { class: 'foldcard-sum' }, `${lv.emoji} ${lv.label} · ${of.length}`),
@@ -62,8 +63,7 @@ export function etiquetteScreen(cc) {
   wrap.append(topbar(c ? `${c.flag} Culture & etiquette` : 'Culture & etiquette', '#home'));
   wrap.append(countryChips((next) => go(`#etiquette-${next}`)));
   wrap.append(screenHint(
-    'What is rude, what is polite, and what is against the law — before you do it rather than after. '
-    + 'Ordered by how much it costs you to get wrong.', 'About this screen'));
+    'What is rude, what is polite, and what is against the law — before you do it rather than after. Ordered by how much it costs you to get wrong.', 'About this screen'));
 
   if (!own.length) {
     wrap.append(h('p', { class: 'empty' }, `${c ? c.name : 'This country'} etiquette is being written. The region-wide rules below apply here too.`));

@@ -76,6 +76,15 @@ any text; every other one ("Copy {0}", "Hide {0}") to `aria-label` only, so pros
 - The check cannot see a state it does not set up. F5c found that Emergency and the hospital screen with a GPS fix still showed English the check had called clean;
   `drive-fix.py <base-url> <out-dir> <tree>` sets a fix through `setLastFix` and reads each screen with the in-page `__lc` measurer (env `LANGS`, `ONLY`, `ROUTES`, `SHOT`, `CLASSIFY`).
 
+## The safety data text (F5d)
+`#danger`, `#crossings` and `#etiquette-<cc>` are data too (`js/data/nature.js`, `borders.js`, `etiquette.js`; 381 distinct English strings, 24,301 characters a language), so they follow the F5b method in a second lazy file per language, `js/data/safety-data.<code>.js` (`export const SAFETY_DATA_STRINGS`), loaded by `ensureSafetyData()` when one of those screens opens. It is separate from `safety-text` so an Emergency screen never loads it. Register entries carry `source: safety-data`.
+1. `lang-check.py --lang th --route '#danger,#crossings,#etiquette-th,#etiquette-vi,#etiquette-km,#etiquette-lo' --data` writes `<out>/data-strings.json`: every `data` string those routes show, as the screen renders it.
+2. `safety-text.py --set data data-keys <out>/data-strings.json` splits it into `safety-data-keys.json` (to translate) and `safety-data-keep.json` (left in English, with the reason: a scientific name, or a place name such as a crossing). Rules in the tool: Latin binomials from `NATURE.sciName`; a crossing name (`A – B`, `A ↔ B`, `Friendship Bridge N`) but not a country pair.
+3. `safety-text.py --set data show 0:44` numbers the keys; a batch is `n<TAB>prefix<TAB>th<TAB>vi<TAB>km<TAB>lo`; `apply` writes the module and the register. **An empty cell becomes an explicit `null`** (English shows; the guard counts nulls per language, as for the dictionaries). A value the data already holds, listed in `safety-data-curated.json` beside the keys (`{lang: {key: "js/data/nature.js names"}}`), is registered `machine: false` with `from`, not as machine-made: the species' own native names in `nature.js` are used first.
+4. `check-ui-strings.py` item 7 holds both families to the same rules: the same keys in all four files, no value equal to its key, every key still occurring in its data file (and `js/screens/etiquette.js`, whose header is screen text), the register agreeing both ways.
+5. A screen's text must be one string literal per key. `etiquette.js` built its header from two literals and its first heading from a template literal; both were split or joined (F5d). The language check files such text under `tpl`, not `data`.
+6. `backtranslate.py` samples the new groups (`BT_SINCE=<date> BT_MAX=<chars>`), skips the curated entries, and records `source: safety-data`.
+
 ## Strings that must not change
 `KEEP` in `lang-check.py` lists strings every language shows as they are (web addresses, an example e-mail, brand and organisation names, file formats,
 a language written in its own name). They are not counted in `ui`.

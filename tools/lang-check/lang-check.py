@@ -31,6 +31,8 @@ Options:
   --strings            write <out>/strings.json: every untranslated `ui` string, keyed the way the dictionaries are (a leading emoji
                        is left off, js/i18n.js puts it back), with the routes it appears on and a review group
                        (emergency, medical, firstaid, safety, core, talk, then the rest), safety groups first
+  --data               write <out>/data-strings.json: every untranslated `data` string on #danger, #crossings and #etiquette-<cc> (F5d),
+                       keyed the way the dictionaries are, with the routes it appears on and its group (danger, crossings, etiquette)
 
 It refuses a page whose document.hidden is true (a hidden page has no layout), and every host except 127.0.0.1
 (and the two translation hosts with --mt) is unresolvable, so a result never depends on the network.
@@ -265,7 +267,10 @@ def table(rows, head):
     return '\n'.join([line(head), '  '.join('-' * x for x in w)] + [line(r) for r in rows])
 
 
-def report(outdir, summary, want_strings):
+DATA_GROUPS = [('danger', r'^#danger'), ('crossings', r'^#crossings'), ('etiquette', r'^#etiquette-')]
+
+
+def report(outdir, summary, want_strings, want_data=False):
     runs = load_run(outdir)
     if 'en' not in runs:
         sys.exit('no English baseline in ' + outdir)
@@ -273,6 +278,7 @@ def report(outdir, summary, want_strings):
     data = data_strings()
     summ = []
     strings = {}
+    dstrings = {}
     for lang in [l for l in all_langs() if l in runs]:
         recs = runs[lang]
         dv = dict_values(lang)
@@ -298,6 +304,8 @@ def report(outdir, summary, want_strings):
             tot['mt'] += mt if isinstance(mt, int) else 0
             for s in ui:
                 strings.setdefault(app_key(s), set()).add(r['route'])
+            for s in dat:
+                dstrings.setdefault(app_key(s), set()).add(r['route'])
         summ.append([lang, len(recs), tot['ui'], tot['tpl'], tot['dat'], tot['clip'], tot['over'], tot['tight'], tot['clips'], tot['glyph'], tot['wb'], tot['lb'], tot['rtl'], tot['mt']])
         if not summary:
             print('\n== %s  (%d routes)' % (lang, len(recs)))
@@ -315,6 +323,17 @@ def report(outdir, summary, want_strings):
         print('\n%d distinct untranslated interface strings -> %s' % (len(rows), p))
         for g in sorted({r[1] for r in rows}, key=lambda g: min(r[0] for r in rows if r[1] == g)):
             print('  %-10s %d' % (g, sum(1 for r in rows if r[1] == g)))
+    if want_data:
+        rows = []
+        for s, rs in dstrings.items():
+            rank, g = min(((i, g) for r in rs for i, (g, pat) in enumerate(DATA_GROUPS) if re.search(pat, r)), default=(len(DATA_GROUPS), 'other'))
+            rows.append((rank, g, s, sorted(rs)))
+        rows.sort(key=lambda t: (t[0], t[3][0], t[2]))
+        p = os.path.join(outdir, 'data-strings.json')
+        json.dump([{'key': s, 'group': g, 'routes': rs} for _, g, s, rs in rows], open(p, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+        print('\n%d distinct untranslated data strings -> %s' % (len(rows), p))
+        for g in sorted({r[1] for r in rows}, key=lambda g: min(r[0] for r in rows if r[1] == g)):
+            print('  %-10s %d' % (g, sum(1 for r in rows if r[1] == g)))
 
 
 def main():
@@ -329,10 +348,11 @@ def main():
     ap.add_argument('--mt', action='store_true')
     ap.add_argument('--jobs', type=int, default=3)
     ap.add_argument('--strings', action='store_true')
+    ap.add_argument('--data', action='store_true')
     ap.add_argument('--checks', default='')
     a = ap.parse_args()
     if a.report:
-        return report(a.report, a.summary, a.strings)
+        return report(a.report, a.summary, a.strings, a.data)
     langs = [l for l in (a.lang.split(',') if a.lang else all_langs()) if l and l != 'en']
     routes = [r if r.startswith('#') else '#' + r for r in a.route.split(',')] if a.route else None
     out = a.out or os.path.join(CACHE, 'run-' + time.strftime('%Y%m%d-%H%M%S'))
@@ -351,7 +371,7 @@ def main():
             for f in futs:
                 f.result()
     print('%d languages in %.0f s' % (len(langs), time.time() - t0), flush=True)
-    report(out, a.summary, a.strings)
+    report(out, a.summary, a.strings, a.data)
 
 
 if __name__ == '__main__':

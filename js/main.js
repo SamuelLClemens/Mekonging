@@ -32,7 +32,7 @@ import {
 import {
   LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree, retranslate, watchLateText,
   detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady, ensureSafetyText, safetyTextReady,
-  primeSafetyPathBatch, isMachineTranslated,
+  ensureSafetyData, safetyDataReady, primeSafetyPathBatch, isMachineTranslated,
 } from './i18n.js';
 import { DEFAULT_SKIN, SKIN_MODE, resolveSkin, modeFor } from './theme.js';
 import { homeScreen } from './screens/home.js';
@@ -825,7 +825,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.659.0';
+export const APP_VERSION = 'mk-v0.660.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7239,6 +7239,12 @@ export function render() {
   // that cannot be fetched renders the English guides.
   if ((head === 'sos' || head === 'firstaid' || head === 'hospital') && !safetyTextReady()) {
     ensureSafetyText().then(render);
+    return;
+  }
+  // Safety data text (F5d): the species names on #danger, the crossings' notes, the etiquette guides. A second lazy
+  // file per host language (js/data/safety-data.<code>.js), held for the same way; it never rejects.
+  if ((head === 'danger' || head === 'crossings' || head === 'etiquette') && !safetyDataReady()) {
+    ensureSafetyData().then(render);
     return;
   }
 

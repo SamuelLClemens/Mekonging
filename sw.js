@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.659.0';
+const CACHE_VERSION = 'mk-v0.660.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -225,6 +225,12 @@ const PRECACHE = [
   'js/data/safety-text.vi.js',
   'js/data/safety-text.km.js',
   'js/data/safety-text.lo.js',
+  // The safety data text (F5d: #danger, #crossings, #etiquette-<cc>): the same, a second file per language
+  // (js/i18n.js ensureSafetyData). Kept apart so an Emergency screen never loads it.
+  'js/data/safety-data.th.js',
+  'js/data/safety-data.vi.js',
+  'js/data/safety-data.km.js',
+  'js/data/safety-data.lo.js',
   // The worldwide Emergency data (F7b): lazy, read only for a fix more than 10 km from the four countries
   // (js/emergency-world.js ensureWorld). Precached anyway: a traveller needs it with no signal, abroad.
   'js/data/world-outline.js',
@@ -525,6 +531,10 @@ const MANIFEST = {
   'js/data/routes.la.js': '061e7b7e',
   'js/data/routes.th.js': '9586afab',
   'js/data/routes.vi.js': 'ab59fde0',
+  'js/data/safety-data.km.js': '74f08496',
+  'js/data/safety-data.lo.js': '941cd526',
+  'js/data/safety-data.th.js': '5eb2f27b',
+  'js/data/safety-data.vi.js': 'ac6f79b6',
   'js/data/safety-text.km.js': 'b9075f83',
   'js/data/safety-text.lo.js': '221d82e5',
   'js/data/safety-text.th.js': 'f12a0c8a',
@@ -581,7 +591,7 @@ const MANIFEST = {
   'js/exporter.js': 'e301db80',
   'js/fix-place.js': 'd7ca920d',
   'js/gamify.js': '235c330e',
-  'js/i18n.js': '651daa50',
+  'js/i18n.js': 'eb67a107',
   'js/icons.js': '2538ab47',
   'js/idb.js': 'c5e4e32a',
   'js/journey-share.js': 'e859a00d',
@@ -589,7 +599,7 @@ const MANIFEST = {
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
   'js/location-ask.js': '2be4200d',
-  'js/main.js': 'd3ba859a',
+  'js/main.js': 'd49eeb7a',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'baf60785',
   'js/market-api.js': '0f0d76c5',
@@ -625,7 +635,7 @@ const MANIFEST = {
   'js/screens/contributions.js': 'f86462b4',
   'js/screens/country-info.js': '1cca1ef0',
   'js/screens/emergency-outside.js': '6b7f860d',
-  'js/screens/etiquette.js': '7fc329c4',
+  'js/screens/etiquette.js': '649f29ff',
   'js/screens/exchange.js': 'a1df3dfc',
   'js/screens/explore.js': '6d2e67cc',
   'js/screens/export.js': '1429f50c',

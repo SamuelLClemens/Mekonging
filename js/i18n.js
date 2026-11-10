@@ -305,6 +305,40 @@ export function ensureSafetyText(code) {
   return SAFETY_PENDING[c];
 }
 
+// ---- safety data text (F5d) -----------------------------------------------------------
+// #danger, #crossings and #etiquette-<cc> are data too (js/data/nature.js, borders.js, etiquette.js): about 380
+// distinct strings, 24,000 characters a language. They sit in a second lazy file per host language,
+// js/data/safety-data.<code>.js, so the Emergency screens above do not pay for them. Same merge into the active
+// dictionary, same fallback: a file that cannot be fetched, or a key it lacks, shows English.
+const SAFETY_DATA_DONE = new Set();
+const SAFETY_DATA_PENDING = Object.create(null);
+
+// True when the safety data text for this language is loaded, attempted, or does not exist.
+export function safetyDataReady(code) {
+  const c = code || uiLang();
+  return c === FALLBACK || !SAFETY_LANGS.has(c) || SAFETY_DATA_DONE.has(c);
+}
+
+// Load one language's safety data text into its dictionary. ALWAYS resolves, never rejects. An entry the
+// dictionary already holds keeps its value.
+export function ensureSafetyData(code) {
+  const c = code || uiLang();
+  if (safetyDataReady(c)) return Promise.resolve();
+  if (SAFETY_DATA_PENDING[c]) return SAFETY_DATA_PENDING[c];
+  SAFETY_DATA_PENDING[c] = ensureUiStrings(c)
+    .then(() => import(`./data/safety-data.${c}.js`))
+    .then((m) => {
+      const add = m && m.SAFETY_DATA_STRINGS;
+      if (!add) return;
+      const d = DICTS[c] || (DICTS[c] = {});
+      for (const k of Object.keys(add)) if (!d[k] && add[k]) d[k] = add[k];   // a null is a gap: English shows
+      PATTERNS.delete(d);
+    })
+    .catch(() => {})
+    .then(() => { SAFETY_DATA_DONE.add(c); delete SAFETY_DATA_PENDING[c]; });
+  return SAFETY_DATA_PENDING[c];
+}
+
 // Translate one English UI string. Returns the English unchanged when the active language has
 // no entry for it — a missing translation must degrade to readable English, never to a blank
 // or a raw key.
