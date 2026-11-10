@@ -39,6 +39,7 @@ import { audioPacksCard } from '../audio-packs.js';
 import { translate, TranslateAborted } from '../translate.js';
 import { startTask, stopTask, stopPlayback } from '../audio-control.js';
 import { joinSpeechResults } from '../speech-input.js';
+import { refreshApp } from '../refresh-app.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../lazy-data.js';
 import { ALLERGENS } from '../data/allergens.js';
@@ -1382,6 +1383,15 @@ function faceTalkLauncher(code) {
     return h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#facetalk-${code}`) },
       '🗣 Face to face on this phone');
   }
-  return h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => location.reload() },
-    '🔄 Refresh to use face to face');
+  // A bare reload can bring the same old main.js back (the worker serves it cache-first until the new worker
+  // activates), so the button updates the worker first (js/refresh-app.js). A second tap after a reload that
+  // changed nothing removes the worker and its shell cache and loads from the network.
+  const btn = h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => {
+    let tried = false;
+    try { tried = sessionStorage.getItem('mk-refresh-tried') === '1'; sessionStorage.setItem('mk-refresh-tried', '1'); } catch { /* private mode */ }
+    btn.disabled = true;
+    btn.textContent = 'Updating…';
+    refreshApp({ hard: tried });
+  } }, '🔄 Refresh to use face to face');
+  return btn;
 }

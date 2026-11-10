@@ -1054,6 +1054,6 @@ export const STRINGS = {
     'Voice input needs a connection on this device.': 'ການປ້ອນສຽງໃນອຸປະກອນນີ້ຕ້ອງມີອິນເຕີເນັດ.',
     'No speech heard. Tap the microphone and try again.': 'ບໍ່ໄດ້ຍິນສຽງເວົ້າ. ແຕະໄມໂຄຣໂຟນແລ້ວລອງໃໝ່.',
     'This device cannot take voice input in that language.': 'ອຸປະກອນນີ້ບໍ່ຮອງຮັບການປ້ອນສຽງເປັນພາສານັ້ນ.',
-    'Refresh to use face to face': 'ໂຫຼດຄືນເພື່ອໃຊ້ການລົມກັນຕໍ່ໜ້າ',
+    'Refresh to use face to face': 'ໂຫຼດຄືນເພື່ອໃຊ້ການລົມກັນຕໍ່ໜ້າ', 'Updating…': 'ກຳລັງອັບເດດ…',
     // ---- end F5 harvest ----
 };
