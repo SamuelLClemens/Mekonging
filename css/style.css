@@ -2430,7 +2430,7 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 /* Near-me directory rows reuse the suggestion-row shell (clickable body + action column). */
 .near-open { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .near-open .near-name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.near-open .dist-chip { flex: none; }
+.near-open .dist-chip { flex: 0 1 auto; max-width: 100%; }   /* a translated drive time is longer: wrap inside the pill, never leave the screen (F5e) */
 .near-item.is-done { opacity: 0.62; }
 .near-item.is-done .near-name { text-decoration: line-through; text-decoration-color: var(--line); }
 .rn-act.done.on { color: var(--green, #4a7a5a); font-weight: 800; }

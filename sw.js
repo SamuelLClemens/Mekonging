@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.660.0';
+const CACHE_VERSION = 'mk-v0.661.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -405,7 +405,7 @@ const PRECACHE = [
 const MANIFEST = {
   'css/market.css': 'd4a46cd8',
   'css/refined.css': 'a7ff407b',
-  'css/style.css': '3c658912',
+  'css/style.css': 'bab3b149',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'icons/ui.svg': '8b29a252',
@@ -564,21 +564,21 @@ const MANIFEST = {
   'js/data/ui-strings.it.js': '1df76a7b',
   'js/data/ui-strings.ja.js': '4ff22ff3',
   'js/data/ui-strings.js': '325f9569',
-  'js/data/ui-strings.km.js': 'ad20abcf',
+  'js/data/ui-strings.km.js': '4a077669',
   'js/data/ui-strings.ko.js': 'bcd0c655',
-  'js/data/ui-strings.lo.js': '5e867919',
+  'js/data/ui-strings.lo.js': 'a21e4cdd',
   'js/data/ui-strings.ms.js': '2fd04546',
   'js/data/ui-strings.nl.js': 'f10e467b',
   'js/data/ui-strings.pl.js': 'e39a3f03',
   'js/data/ui-strings.pt.js': 'b64ce569',
   'js/data/ui-strings.ru.js': 'd69c3df6',
   'js/data/ui-strings.sv.js': 'f0f7e53a',
-  'js/data/ui-strings.th.js': 'fd0860ff',
+  'js/data/ui-strings.th.js': 'cbde4feb',
   'js/data/ui-strings.tl.js': '158b48e9',
   'js/data/ui-strings.tr.js': 'cc07c058',
   'js/data/ui-strings.uk.js': 'fe44df9c',
   'js/data/ui-strings.ur.js': '9740c4f2',
-  'js/data/ui-strings.vi.js': '1cca202d',
+  'js/data/ui-strings.vi.js': '4a31af88',
   'js/data/ui-strings.zh-CN.js': '0eb794d6',
   'js/data/ui-strings.zh-TW.js': 'a451cf3b',
   'js/data/visa.js': 'fb2914ac',
@@ -591,7 +591,7 @@ const MANIFEST = {
   'js/exporter.js': 'e301db80',
   'js/fix-place.js': 'd7ca920d',
   'js/gamify.js': '235c330e',
-  'js/i18n.js': 'eb67a107',
+  'js/i18n.js': '6ed18481',
   'js/icons.js': '2538ab47',
   'js/idb.js': 'c5e4e32a',
   'js/journey-share.js': 'e859a00d',
@@ -599,7 +599,7 @@ const MANIFEST = {
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
   'js/location-ask.js': '2be4200d',
-  'js/main.js': 'd49eeb7a',
+  'js/main.js': 'ea72fb04',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'baf60785',
   'js/market-api.js': '0f0d76c5',
@@ -645,7 +645,7 @@ const MANIFEST = {
   'js/screens/giveback.js': '6ed0573a',
   'js/screens/help.js': '4af2770c',
   'js/screens/home.js': '8291cefc',
-  'js/screens/journal.js': '626968d6',
+  'js/screens/journal.js': '72769ceb',
   'js/screens/journey-edit.js': '2ab9426e',
   'js/screens/map.js': '69c5faff',
   'js/screens/market-account.js': '7024bb25',
@@ -653,7 +653,7 @@ const MANIFEST = {
   'js/screens/market-listing.js': 'e46103f1',
   'js/screens/market-parts.js': '91f2c17b',
   'js/screens/medical.js': '8d1e6062',
-  'js/screens/nearby.js': '6729197f',
+  'js/screens/nearby.js': 'edfe911a',
   'js/screens/nextstop.js': '657c8d05',
   'js/screens/phrasebook.js': '89eb5faa',
   'js/screens/places.js': '0b92c166',
@@ -669,7 +669,7 @@ const MANIFEST = {
   'js/screens/trip-recap.js': '41d9b262',
   'js/screens/trip.js': '600962b1',
   'js/screens/vault.js': '4ad7cc26',
-  'js/screens/visitors.js': '6746db81',
+  'js/screens/visitors.js': 'db0d791b',
   'js/screens/weather.js': '73b718f6',
   'js/screens/welcome.js': '05ce2939',
   'js/screens/you.js': '05c7503c',

@@ -41,7 +41,7 @@ import {
 } from '../trail.js';
 import { stopForm } from './journey-edit.js';
 import { WEATHER_SPOTS } from '../weather.js';
-import { dateLocale } from '../i18n.js';
+import { dateLocale, t as tUi } from '../i18n.js';
 import { journeyStops, journeyLegs, legKey, MODE_GLYPHS, MODE_LABELS } from '../journey-stops.js';
 import {
   go, mount, topbar, render, focusSpot, chipIcon, setBlobThumb, nearestSpotGlobal, homeFold,
@@ -740,8 +740,8 @@ export function journeyScreen() {
     // getElement() afterwards instead.
     hereMarker = new maplibregl.Marker({ element: el0, anchor: 'bottom' }).setLngLat([fix.lng, fix.lat]).addTo(map);
     const el = hereMarker.getElement();
-    el.title = 'You are here';
-    el.setAttribute('aria-label', 'Your current location');
+    el.title = tUi('You are here');
+    el.setAttribute('aria-label', tUi('Your current location'));
   }
   const select = (i) => {
     selected = i;

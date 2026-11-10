@@ -67,7 +67,7 @@ export function nearbyScreen() {
     const cName = getCountry(country) ? getCountry(country).name : '';
     status.innerHTML = '';
     status.append(
-      h('strong', {}, info ? `You are ${info.near ? 'near' : 'in'} ${info.city}` : 'You are here'),
+      h('strong', {}, info ? [info.near ? 'You are near ' : 'You are in ', h('span', {}, info.city)] : 'You are here'),   // two nodes: the sentence is a key, the city stays (F5e)
       (info && cName) ? h('span', { class: 'muted' }, ` · ${cName}${info.km > 60 ? ` (${fmtDistance(info.km)} away)` : ''}`) : null,
     );
 

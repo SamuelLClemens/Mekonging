@@ -7,6 +7,7 @@
 // screen can always show is YOUR OWN journey, kept on your device. What it can show as
 // well — if the traveller points it at a collector of their own — is a shared feed. There
 // is no default endpoint, deliberately.
+import { t as tUi } from '../i18n.js';
 import { h } from '../util.js';
 import { infoTip, field, confirmAction } from '../ui-widgets.js';
 import { getCountry } from '../data/regions.js';
@@ -132,8 +133,8 @@ export function visitorsScreen() {
     el0.style.cssText = 'font-size:16px;width:28px;height:28px;line-height:28px;text-align:center;background:#E3F0FF;border:2px solid #1A6FC0;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4)';
     const marker = new maplibregl.Marker({ element: el0, anchor: 'bottom' }).setLngLat([fix.lng, fix.lat]).addTo(map);
     const el = marker.getElement();
-    el.title = 'You are here';
-    el.setAttribute('aria-label', 'Your current location');
+    el.title = tUi('You are here');
+    el.setAttribute('aria-label', tUi('Your current location'));
   }
 
   // ---- Draw, after mount so the container has a size ----------------------

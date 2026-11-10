@@ -414,7 +414,7 @@ const LEAD_EMOJI = /^([\p{Extended_Pictographic}\p{So}\p{Sm}←-↓‍️⃣\p{R
 //
 // A pattern must not rewrite prose it was not written for (a place note that starts "Near the temple", a journal entry that starts
 // "Copy of my visa"), so it has two reaches. A pattern applies to any text and attribute when it opens with a symbol or with two or
-// more fixed words ("Visa: {0}", "📍 Near {0}", "Sources ({0})"), or when its fixed text is long and distinctive (20 characters, three
+// more fixed words ("Visa: {0}", "📍 Near {0}", "Sources ({0})"), or when its fixed text is long and distinctive (14 characters, three
 // words) wherever it sits. Every other pattern ("Copy {0}", "Hide {0}", "{0} left") applies to `aria-label` only, which the app
 // composes and a traveller never types. check-ui-strings refuses a pattern that begins and ends with a slot, and one that any string
 // in js/data/ would match.
@@ -436,7 +436,7 @@ function buildPatterns(d) {
     const first = lits[0], last = lits[lits.length - 1];
     const open = first.trim(), fixed = lits.join('');
     const anywhere = (open.length > 0 && (/[^\p{L}\p{N}\s]/u.test(open) || (wordCount(open) >= 1 && wordCount(fixed) >= 2)))
-      || (fixed.trim().length >= 20 && wordCount(fixed) >= 3);   // a long, distinctive tail, however the string opens
+      || (fixed.trim().length >= 14 && wordCount(fixed) >= 3);   // a long, distinctive tail, however the string opens
     const p = { re: new RegExp('^' + lits.map(reEscape).join('([\\s\\S]*?)') + '$'), slots, value: v, weight: lits.join('').length, anywhere };
     // Found by the first character of a string that opens with fixed text, else by the last character of one that ends with it; a
     // pattern with a slot at both ends is found by its longest fixed text, and only if it is long enough to be distinctive.

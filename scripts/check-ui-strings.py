@@ -40,7 +40,7 @@ Checks performed:
      `machine: false` with `from`, and counts as listed for review, not as machine-made.
   8. Composed strings (F5c): a key with numbered slots (`Sources ({0})`, `{0} nights · {1} stops`) is a pattern that js/i18n.js
      matches after an exact key fails. The value must hold the same slots as the key; no slot twice; a pattern that begins and ends with
-     a slot needs 20 characters and three words of fixed text (it is found by them); each word of the key must still occur in the code;
+     a slot needs 14 characters and three words of fixed text (it is found by them); each word of the key must still occur in the code;
      and no string in js/data/ may be one a text-wide pattern would rewrite (a pattern whose opening is a symbol or two fixed words
      applies to any text, every other one to aria-label only; the rule is in js/i18n.js and `pattern_of` here).
 """
@@ -153,7 +153,7 @@ def pattern_of(key):
     lits, slots = bits[0::2], [int(x) for x in bits[1::2]]
     first, last = lits[0], lits[-1]
     opening, fixed = first.strip(), ''.join(lits)
-    anywhere = bool(opening and (re.search(r'[^\w\s]', opening) or (_words(opening) >= 1 and _words(fixed) >= 2))) or (len(fixed.strip()) >= 20 and _words(fixed) >= 3)
+    anywhere = bool(opening and (re.search(r'[^\w\s]', opening) or (_words(opening) >= 1 and _words(fixed) >= 2))) or (len(fixed.strip()) >= 14 and _words(fixed) >= 3)
     if opening or len(last.strip()) >= 2:
         reach = 'anywhere' if anywhere else 'aria'
     else:
