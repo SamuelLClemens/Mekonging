@@ -7529,7 +7529,11 @@
   {"lang": "vi", "key": "No microphone found on this device.", "machine": true, "date": "2026-11-10", "group": "talk"},
   {"lang": "vi", "key": "Voice input needs a connection on this device.", "machine": true, "date": "2026-11-10", "group": "talk"},
   {"lang": "vi", "key": "No speech heard. Tap the microphone and try again.", "machine": true, "date": "2026-11-10", "group": "talk"},
-  {"lang": "vi", "key": "This device cannot take voice input in that language.", "machine": true, "date": "2026-11-10", "group": "talk"}
+  {"lang": "vi", "key": "This device cannot take voice input in that language.", "machine": true, "date": "2026-11-10", "group": "talk"},
+  {"lang": "km", "key": "Refresh to use face to face", "machine": true, "date": "2026-11-10", "group": "talk"},
+  {"lang": "lo", "key": "Refresh to use face to face", "machine": true, "date": "2026-11-10", "group": "talk"},
+  {"lang": "th", "key": "Refresh to use face to face", "machine": true, "date": "2026-11-10", "group": "talk"},
+  {"lang": "vi", "key": "Refresh to use face to face", "machine": true, "date": "2026-11-10", "group": "talk"}
  ],
  "backTranslation": [
   {"lang": "th", "key": "Insurer, policy 12345", "back": "Insurance company, policy 12345", "verdict": "same", "note": "", "date": "2026-10-28"},

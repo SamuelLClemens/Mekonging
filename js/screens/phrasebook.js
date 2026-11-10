@@ -55,7 +55,7 @@ const { DIET_LABEL, joinList } = Diet;
 // same GPS-first/focus-second/activeCountry-last resolver places.js's map uses to pick a
 // city — reused here so "what language/country am I in" agrees with "what city is my map on"
 // instead of reading the (possibly stale, pre-GPS) activeCountry state directly).
-import { go, mount, topbar, langForCountry, contextNow, inferPhase, focusSpot, render, dictionaryName, dictionaryTitle } from '../main.js';
+import { go, mount, topbar, langForCountry, contextNow, inferPhase, focusSpot, render, dictionaryName, dictionaryTitle, APP_VERSION } from '../main.js';
 
 // Re-exported for the modules that historically imported them from here; new callers
 // should import from ../phrase-ui.js directly.
@@ -1366,7 +1366,22 @@ function liveTranslateBox(code, label, locale, onChange) {
     box.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#signtranslate-${code}`) },
       `📷 Point & translate a ${label} sign`));
   }
-  box.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#facetalk-${code}`) },
-    '🗣 Face to face on this phone'));
+  box.append(faceTalkLauncher(code));
   return box;
+}
+
+// L1's #facetalk route lives in main.js (eager) and its button lives here (lazy). An installed app
+// that stays resident across a release keeps the PREVIOUS main.js, whose router sends an unknown
+// route to Home, while this file arrives fresh: the button then led to Home and nowhere else (iPhone
+// Home Screen app, 2026-11-10). Offer the route only where the running main.js knows it; otherwise
+// the way forward is a reload, which takes the app onto the new main.js. APP_VERSION is `mk-v0.<n>.0`.
+const FACETALK_SINCE = 662;
+function runningRelease() { const m = /^mk-v\d+\.(\d+)\./.exec(APP_VERSION || ''); return m ? Number(m[1]) : 0; }
+function faceTalkLauncher(code) {
+  if (runningRelease() >= FACETALK_SINCE) {
+    return h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#facetalk-${code}`) },
+      '🗣 Face to face on this phone');
+  }
+  return h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => location.reload() },
+    '🔄 Refresh to use face to face');
 }
