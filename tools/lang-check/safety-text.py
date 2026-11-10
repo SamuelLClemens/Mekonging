@@ -48,7 +48,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 WORK = os.path.expanduser(os.environ.get('LC_WORK', '~/Library/Caches/mk-f5b/safety'))
 REGISTER = os.path.join(ROOT, 'scripts', 'ui-strings-review.json')
 JSC = '/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc'
-HOST = ['th', 'vi', 'km', 'lo']
+HOST = os.environ.get('LC_HOST', 'th,vi,km,lo').split(',')   # L2: the batch's columns, in order (env LC_HOST=he,ar,fa,ur)
 PRIORITY = ['emergency', 'firstaid', 'medical', 'danger', 'crossings', 'etiquette']
 LEAD = re.compile(r'^[\U0001F000-\U0001FAFF←-⇿⌀-➿⬀-⯿️‍⃣]+\s+')
 PAIR = re.compile(r"^\s*'((?:[^'\\]|\\.)*)':\s*(?:'((?:[^'\\]|\\.)*)'|(null)),?\s*$", re.M)
@@ -71,7 +71,7 @@ HEAD_DATA = """// Safety data text — %s (%s). The data text of #danger, #cross
 
 export const SAFETY_DATA_STRINGS = {
 """
-NAMES = {'th': 'Thai', 'vi': 'Vietnamese', 'km': 'Khmer', 'lo': 'Lao'}
+NAMES = {'th': 'Thai', 'vi': 'Vietnamese', 'km': 'Khmer', 'lo': 'Lao', 'he': 'Hebrew', 'ar': 'Arabic', 'fa': 'Persian', 'ur': 'Urdu'}
 
 
 def esc(s):

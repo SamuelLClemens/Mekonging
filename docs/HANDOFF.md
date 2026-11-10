@@ -1,3 +1,10 @@
+# L2a in progress (2026-11-10), branch `feat/l2-languages`, NOT shippable yet: `check-ui-strings` fails until he, ar, fa, ur hold all 1,620 keys
+
+Owner rulings this session: L2 is split. **L2a** = Hebrew, Arabic, Persian, Urdu (this branch); **L2b** = es, fr, de, pt, it, ru, in that order. Decision 32 closed as "lazy per language": it already is (`js/i18n.js` `ensureUiStrings` imports one `ui-strings.<code>.js`), so no loader change was needed.
+- Done: `LC_HOST=he,ar,fa,ur` makes `apply-strings.py` and `safety-text.py` write those four columns (default stays th,vi,km,lo); `SAFETY_LANGS` in `js/i18n.js` and `UI_STRING_MACHINE` list the four; harvest run `~/Library/Caches/mk-l2/run1/strings.json` (976 distinct interface strings, in review order); batch 0 to 149 applied (safety screens, first aid, medical, Emergency card: 600 register entries).
+- To do: keys 150 to 975 (`apply-strings.py --keys <strings.json> --show 150:300`); then the other keys the host files hold that no route showed, so parity holds (null or machine value); `safety-text.py` keys (374) and `--set data` keys (271) for the four languages, which need `js/data/safety-text.<code>.js` and `safety-data.<code>.js` for each; `backtranslate.py` samples; RTL fixes from the `rtl` column (rerun `lang-check.py --lang he,ar,fa,ur`); 375 px screenshots; version bump (`APP_VERSION`, `CACHE_VERSION`, manifest) and every guard; PR.
+- Batch format: `n<TAB>first characters of the key<TAB>he<TAB>ar<TAB>fa<TAB>ur`, written to a file and run with `LC_HOST=he,ar,fa,ur`. Each batch of 150 is about 35k tokens of output: plan 6 more for the interface strings, so start a fresh session per two or three batches.
+
 # Handoff, 2026-11-10 (L1 built; L2 is next)
 
 The previous handoff (F5e) is `git show 9b5b6ef:docs/HANDOFF.md`. Every open item lives in `docs/PROGRAM.md` section 4.
