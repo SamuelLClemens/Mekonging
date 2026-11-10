@@ -6,6 +6,17 @@
     python3 tools/lang-check/safety-text.py apply BATCH.tsv [--date 2026-10-29] [--dry]
     python3 tools/lang-check/safety-text.py status                  # how many keys each language holds
 
+F5d adds a second set, `--set data`: the data text of #danger, #crossings and #etiquette-<cc>, in `js/data/safety-data.<code>.js`
+(`export const SAFETY_DATA_STRINGS`, register `source: safety-data`). Its keys come from a language-check run, not from the data files:
+
+    python3 tools/lang-check/lang-check.py --lang th --route '#danger,#crossings,#etiquette-th,#etiquette-vi,#etiquette-km,#etiquette-lo' --data
+    python3 tools/lang-check/safety-text.py --set data data-keys RUN_DIR/data-strings.json   # keys to translate + keys kept in English, with reasons
+    python3 tools/lang-check/safety-text.py --set data show 0:40
+    python3 tools/lang-check/safety-text.py --set data apply BATCH.tsv
+
+A value the data already holds (`CURATED`, a JSON file beside the keys: {lang: {key: "js/data/nature.js names"}}) is registered
+with `machine: false` and `from`, not as machine-made.
+
 The keys are every string `js/data/emergency.js` (the situation guides, the embassy lists, the hospital tags) and `js/data/firstaid.js`
 (section titles and topics) put on a screen, as the screen renders them (a leading emoji is left off: `js/i18n.js` puts it back).
 BATCH.tsv rows are `n<TAB>first characters of the key<TAB>th<TAB>vi<TAB>km<TAB>lo`; the prefix proves the number. An empty cell leaves that
@@ -22,14 +33,25 @@ import sys
 import tempfile
 import time
 
+SETS = {
+    'text': {'stem': 'safety-text', 'export': 'SAFETY_STRINGS', 'keys': 'safety-keys.json'},
+    'data': {'stem': 'safety-data', 'export': 'SAFETY_DATA_STRINGS', 'keys': 'safety-data-keys.json'},
+}
+_SET = 'text'
+if '--set' in sys.argv:
+    _i = sys.argv.index('--set')
+    _SET = sys.argv[_i + 1]
+    del sys.argv[_i:_i + 2]
+SET = SETS[_SET]
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WORK = os.path.expanduser(os.environ.get('LC_WORK', '~/Library/Caches/mk-f5b/safety'))
 REGISTER = os.path.join(ROOT, 'scripts', 'ui-strings-review.json')
 JSC = '/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc'
 HOST = ['th', 'vi', 'km', 'lo']
-PRIORITY = ['emergency', 'firstaid', 'medical']
+PRIORITY = ['emergency', 'firstaid', 'medical', 'danger', 'crossings', 'etiquette']
 LEAD = re.compile(r'^[\U0001F000-\U0001FAFF←-⇿⌀-➿⬀-⯿️‍⃣]+\s+')
-PAIR = re.compile(r"^\s*'((?:[^'\\]|\\.)*)':\s*'((?:[^'\\]|\\.)*)',?\s*$", re.M)
+PAIR = re.compile(r"^\s*'((?:[^'\\]|\\.)*)':\s*(?:'((?:[^'\\]|\\.)*)'|(null)),?\s*$", re.M)
 HEAD = """// Safety text — %s (%s). The Emergency situation guides and the first-aid steps, which are data (js/data/emergency.js, firstaid.js).
 //
 // Lazy: js/i18n.js ensureSafetyText() imports this file only when #sos, #firstaid or #hospital opens in this language, and merges the entries
@@ -38,6 +60,16 @@ HEAD = """// Safety text — %s (%s). The Emergency situation guides and the fir
 // for a native review; written by tools/lang-check/safety-text.py. A string with no entry shows English.
 
 export const SAFETY_STRINGS = {
+"""
+HEAD_DATA = """// Safety data text — %s (%s). The data text of #danger, #crossings and #etiquette-<cc> (js/data/nature.js, borders.js, etiquette.js).
+//
+// Lazy: js/i18n.js ensureSafetyData() imports this file only when one of those screens opens in this language, and merges the entries
+// into the active dictionary, so the DOM pass finds them by exact English text (the same keys as js/data/ui-strings.%s.js, a leading
+// emoji left off). Never import it from an eager module. Every entry is listed in scripts/ui-strings-review.json (source: safety-data)
+// for a native review: machine-made, except the species names the data already holds in js/data/nature.js (`from`). Written by
+// tools/lang-check/safety-text.py --set data. A string with no entry shows English: Latin species names and crossing names stay English on purpose.
+
+export const SAFETY_DATA_STRINGS = {
 """
 NAMES = {'th': 'Thai', 'vi': 'Vietnamese', 'km': 'Khmer', 'lo': 'Lao'}
 
@@ -63,6 +95,15 @@ def dump():
             "print(JSON.stringify({FIRSTAID_SECTIONS, FIRSTAID_TOPICS, EMERGENCIES, EMBASSY, HOSP_TAG}));\n" % (ROOT, ROOT))
         out = subprocess.run([JSC, '-m', p], capture_output=True, text=True, check=True).stdout
     return json.loads(out)
+
+
+def species_names():
+    """The scientific names in js/data/nature.js: they stay in Latin in every language (F5d)."""
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, 'dump.mjs')
+        open(p, 'w').write("import { NATURE } from '%s/js/data/nature.js';\nprint(JSON.stringify(NATURE.map((s) => s.sciName)));\n" % ROOT)
+        out = subprocess.run([JSC, '-m', p], capture_output=True, text=True, check=True).stdout
+    return set(json.loads(out))
 
 
 def keys():
@@ -102,14 +143,14 @@ def keys():
 
 
 def load_keys():
-    p = os.path.join(WORK, 'safety-keys.json')
+    p = os.path.join(WORK, SET['keys'])
     if not os.path.exists(p):
         sys.exit('run `keys` first')
     return json.load(open(p, encoding='utf-8'))
 
 
 def mod_path(code):
-    return os.path.join(ROOT, 'js', 'data', 'safety-text.%s.js' % code)
+    return os.path.join(ROOT, 'js', 'data', '%s.%s.js' % (SET['stem'], code))
 
 
 def read_mod(code):
@@ -117,15 +158,15 @@ def read_mod(code):
     if not os.path.exists(p):
         return []
     src = open(p, encoding='utf-8').read()
-    body = src[src.index('export const SAFETY_STRINGS = {'):]
-    return [(unesc(k), unesc(v)) for k, v in PAIR.findall(body)]
+    body = src[src.index('export const %s = {' % SET['export']):]
+    return [(unesc(k), None if n else unesc(v)) for k, v, n in PAIR.findall(body)]
 
 
 def write_mod(code, pairs):
     with open(mod_path(code), 'w', encoding='utf-8') as fh:
-        fh.write(HEAD % (NAMES[code], code, code))
+        fh.write((HEAD_DATA if SET['stem'] == 'safety-data' else HEAD) % (NAMES[code], code, code))
         for k, v in pairs:
-            fh.write("  '%s': '%s',\n" % (esc(k), esc(v)))
+            fh.write("  '%s': null,\n" % esc(k) if v is None else "  '%s': '%s',\n" % (esc(k), esc(v)))
         fh.write('};\n')
 
 
@@ -148,6 +189,27 @@ def main():
         json.dump(ks, open(os.path.join(WORK, 'safety-keys.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
         from collections import Counter
         print('%d keys %s -> %s' % (len(ks), dict(Counter(k['group'] for k in ks)), os.path.join(WORK, 'safety-keys.json')))
+    elif cmd == 'data-keys':
+        raw = json.load(open(os.path.expanduser(sys.argv[2]), encoding='utf-8'))
+        sci = species_names()
+        pair_side = {'Thailand', 'Laos', 'Cambodia', 'Vietnam', 'China', 'Malaysia', 'Myanmar'}
+        todo, keep = [], []
+        for r in raw:
+            k, g = r['key'], r['group']
+            words = len(k.split())
+            if k in sci:
+                keep.append({'key': k, 'group': g, 'why': 'scientific name'})
+            elif g == 'crossings' and (words < 8 or '(' in k) and not k.endswith('.') and re.search(r' [\u2013\u2194] ', k) and not (
+                    ' \u2194 ' in k and all(x.strip() in pair_side for x in k.split(' \u2194 '))):
+                keep.append({'key': k, 'group': g, 'why': 'place name'})
+            elif g == 'crossings' and re.fullmatch(r'Friendship Bridge [IVX]+', k):
+                keep.append({'key': k, 'group': g, 'why': 'place name'})
+            else:
+                todo.append({'key': k, 'group': g, 'routes': r['routes']})
+        json.dump(todo, open(os.path.join(WORK, SETS['data']['keys']), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+        json.dump(keep, open(os.path.join(WORK, 'safety-data-keep.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+        from collections import Counter
+        print('%d keys to translate %s; %d kept in English %s' % (len(todo), dict(Counter(x['group'] for x in todo)), len(keep), dict(Counter(x['why'] for x in keep))))
     elif cmd == 'show':
         lo, hi = (int(x) if x else None for x in sys.argv[2].split(':'))
         for i, k in list(enumerate(load_keys()))[lo:hi]:
@@ -155,8 +217,8 @@ def main():
     elif cmd == 'status':
         ks = load_keys()
         for c in HOST:
-            have = {k for k, _ in read_mod(c)}
-            print('%s: %d of %d' % (c, sum(1 for k in ks if k['key'] in have), len(ks)))
+            mod = dict(read_mod(c))
+            print('%s: %d of %d (%d null)' % (c, sum(1 for k in ks if mod.get(k['key'])), len(ks), sum(1 for k in ks if k['key'] in mod and mod[k['key']] is None)))
     elif cmd == 'apply':
         batch = sys.argv[2]
         date = sys.argv[sys.argv.index('--date') + 1] if '--date' in sys.argv else time.strftime('%Y-%m-%d')
@@ -175,6 +237,8 @@ def main():
             rows.append((key, ks[n]['group'], dict(zip(HOST, vals))))
         reg = json.load(open(REGISTER, encoding='utf-8'))
         have = {(e['lang'], e['key'], e.get('source')) for e in reg['entries']}
+        cur_path = os.path.join(WORK, SET['stem'] + '-curated.json')
+        curated = json.load(open(cur_path, encoding='utf-8')) if os.path.exists(cur_path) else {}
         added = {c: 0 for c in HOST}
         for c in HOST:
             pairs = read_mod(c)
@@ -182,6 +246,9 @@ def main():
             for key, group, vals in rows:
                 v = vals.get(c)
                 if not v:
+                    if SET['stem'] == 'safety-data' and key not in idx:   # F5d: no value is an explicit null, English shows (counted by the guard)
+                        pairs.append((key, None))
+                        idx[key] = len(pairs) - 1
                     continue
                 if key in idx:
                     pairs[idx[key]] = (key, v)
@@ -189,9 +256,13 @@ def main():
                     pairs.append((key, v))
                     idx[key] = len(pairs) - 1
                 added[c] += 1
-                if (c, key, 'safety-text') not in have:
-                    reg['entries'].append({'lang': c, 'key': key, 'machine': True, 'date': date, 'group': group, 'source': 'safety-text'})
-                    have.add((c, key, 'safety-text'))
+                if (c, key, SET['stem']) not in have:
+                    src_from = (curated.get(c) or {}).get(key)
+                    entry = {'lang': c, 'key': key, 'machine': not src_from, 'date': date, 'group': group, 'source': SET['stem']}
+                    if src_from:
+                        entry['from'] = src_from
+                    reg['entries'].append(entry)
+                    have.add((c, key, SET['stem']))
             if not dry:
                 write_mod(c, pairs)
         if not dry:

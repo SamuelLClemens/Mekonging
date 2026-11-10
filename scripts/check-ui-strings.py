@@ -34,7 +34,10 @@ Checks performed:
   7. The safety text (js/data/safety-text.<code>.js, F5b: the Emergency guides and first-aid steps, which are data): the four host
      files hold the same keys, no empty value, no value identical to its key, every key still occurs in js/data/emergency.js
      or js/data/firstaid.js (a key edited in the data would otherwise show English with no signal), and the register's
-     `source: safety-text` entries and the files agree both ways.
+     `source: safety-text` entries and the files agree both ways. F5d adds a second family, js/data/safety-data.<code>.js (the data
+     text of #danger, #crossings and #etiquette-<cc>), held to the same rules against js/data/nature.js, borders.js and etiquette.js,
+     with `source: safety-data` entries; an entry for a value the data already holds (the species' own native names) is
+     `machine: false` with `from`, and counts as listed for review, not as machine-made.
   8. Composed strings (F5c): a key with numbered slots (`Sources ({0})`, `{0} nights · {1} stops`) is a pattern that js/i18n.js
      matches after an exact key fails. The value must hold the same slots as the key; no slot twice; a pattern that begins and ends with
      a slot needs 20 characters and three words of fixed text (it is found by them); each word of the key must still occur in the code;
@@ -80,8 +83,11 @@ def pairs(body):
 
 
 REGISTER = 'scripts/ui-strings-review.json'
-SAFETY_GLOB = 'js/data/safety-text.*.js'
-SAFETY_SOURCES = ('js/data/emergency.js', 'js/data/firstaid.js')
+# The lazy safety modules: (register source tag, file glob, export name, the data files the keys come from).
+SAFETY_SETS = (
+    ('safety-text', 'js/data/safety-text.*.js', 'SAFETY_STRINGS', ('js/data/emergency.js', 'js/data/firstaid.js')),
+    ('safety-data', 'js/data/safety-data.*.js', 'SAFETY_DATA_STRINGS', ('js/data/nature.js', 'js/data/borders.js', 'js/data/etiquette.js', 'js/screens/etiquette.js')),
+)
 
 
 def _plain(s):
@@ -89,37 +95,41 @@ def _plain(s):
     return re.sub(r'\s+', ' ', re.sub(r"\\(['\"])", r'\1', s))
 
 
-def safety_text(problems):
-    """{lang: {key: value}} for js/data/safety-text.<code>.js (item 7 in the docstring); appends what is wrong to `problems`."""
+def safety_set(problems, tag, pattern, export, sources):
+    """{lang: {key: value}} for one family of lazy safety modules (item 7 in the docstring); appends what is wrong to `problems`."""
     out = {}
-    for path in sorted(glob.glob(SAFETY_GLOB)):
-        code = os.path.basename(path)[len('safety-text.'):-len('.js')]
+    prefix = os.path.basename(pattern).split('*')[0]
+    for path in sorted(glob.glob(pattern)):
+        code = os.path.basename(path)[len(prefix):-len('.js')]
         body = open(path, encoding='utf-8').read()
-        if 'export const SAFETY_STRINGS = {' not in body:
-            problems.append(f'{path}: no SAFETY_STRINGS export')
+        if f'export const {export} = {{' not in body:
+            problems.append(f'{path}: no {export} export')
             continue
-        kv = pairs(body[body.index('export const SAFETY_STRINGS = {'):])
+        kv = pairs(body[body.index(f'export const {export} = {{'):])
         keys = [k for k, _ in kv]
         for k in sorted({k for k in keys if keys.count(k) > 1}):
-            problems.append(f'safety text {code}: duplicate key {k[:60]!r}')
+            problems.append(f'{tag} {code}: duplicate key {k[:60]!r}')
         out[code] = dict(kv)
     if not out:
         return out
-    source = ' '.join(_plain(open(p, encoding='utf-8').read()) for p in SAFETY_SOURCES if os.path.exists(p))
+    source = ' '.join(_plain(open(p, encoding='utf-8').read()) for p in sources if os.path.exists(p))
     canon = set().union(*(set(v) for v in out.values()))
     for code, kv in sorted(out.items()):
         gap = canon - set(kv)
         if gap:
-            problems.append(f'safety text {code}: missing {len(gap)} key(s) another host language holds, e.g. {sorted(gap)[0][:60]!r}')
+            problems.append(f'{tag} {code}: missing {len(gap)} key(s) another host language holds, e.g. {sorted(gap)[0][:60]!r}')
         for k, v in kv.items():
+            if v is None and tag == 'safety-data':
+                continue   # F5d: a null is a gap, English shows (the ruling of 2026-10-24 for the dictionaries); counted below
             if v is None or not v.strip():
-                problems.append(f'safety text {code}: empty value for {k[:60]!r}')
+                problems.append(f'{tag} {code}: empty value for {k[:60]!r}')
             elif v == k:
-                problems.append(f'safety text {code}: {k[:60]!r} is identical to the English')
+                problems.append(f'{tag} {code}: {k[:60]!r} is identical to the English')
     for k in sorted(canon):
         if _plain(k) not in source:
-            problems.append(f'safety text: {k[:60]!r} no longer occurs in js/data/emergency.js or firstaid.js (the data changed: update the key)')
-    print(f'safety text: {len(out)} language(s), {len(canon)} keys each')
+            problems.append(f'{tag}: {k[:60]!r} no longer occurs in {" or ".join(sources)} (the data changed: update the key)')
+    nulls = {code: sum(1 for v in kv.values() if v is None) for code, kv in sorted(out.items())}
+    print(f'{tag}: {len(out)} language(s), {len(canon)} keys each' + (f', nulls {nulls}' if any(nulls.values()) else ''))
     return out
 
 
@@ -346,7 +356,7 @@ def main():
     composed_strings(dicts, harvest, problems)
 
     # 6. the machine-translation register
-    safety = safety_text(problems)
+    safety = {tag: safety_set(problems, tag, pattern, export, sources) for tag, pattern, export, sources in SAFETY_SETS}
     if os.path.exists(REGISTER):
         reg = json.load(open(REGISTER, encoding='utf-8'))
         seen = {}
@@ -356,23 +366,27 @@ def main():
             src = e.get('source') or 'ui-strings'
             if lang not in dicts:
                 problems.append(f'review register: unknown language {lang!r}')
-            elif src == 'safety-text':
+            elif src in safety:
                 n_safety += 1
-                if key not in safety.get(lang, {}):
-                    problems.append(f'review register: {lang} names a safety-text key the file does not hold: {key[:60]!r}')
+                if safety[src].get(lang, {}).get(key) is None:
+                    problems.append(f'review register: {lang} names a {src} key the file does not hold: {key[:60]!r}')
             elif key not in dicts[lang]:
                 problems.append(f'review register: {lang} names a key the dictionary does not hold: {key!r}')
             elif dicts[lang][key] is None:
                 problems.append(f'review register: {lang} {key!r} is null in the dictionary but registered as machine-made')
-            if not e.get('machine') or not e.get('date'):
+            # A value the app's own data already holds (F5d: the species names in js/data/nature.js) is listed with
+            # `machine: false` and `from: <the data file>`: it is not machine-made, but it is not yet read by a native speaker either.
+            curated = e.get('machine') is False and bool(e.get('from'))
+            if not (e.get('machine') or curated) or not e.get('date'):
                 problems.append(f'review register: {lang} {key!r} lacks machine/date')
             if (lang, key, src) in seen:
                 problems.append(f'review register: duplicate entry {lang} {key!r}')
             seen[(lang, key, src)] = 1
-        for lang, kv in safety.items():
-            for key in kv:
-                if (lang, key, 'safety-text') not in seen:
-                    problems.append(f'review register: {lang} safety text {key[:60]!r} has no register entry')
+        for tag, per_lang in safety.items():
+            for lang, kv in per_lang.items():
+                for key, val in kv.items():
+                    if val is not None and (lang, key, tag) not in seen:
+                        problems.append(f'review register: {lang} {tag} {key[:60]!r} has no register entry')
         reg_langs = {e.get('lang') for e in reg.get('entries', [])}
         for code in sorted(reg_langs - machine):
             problems.append(f'{code}: has machine-made entries in the register but is not in UI_STRING_MACHINE')

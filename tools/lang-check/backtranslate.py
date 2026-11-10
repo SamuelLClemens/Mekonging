@@ -19,7 +19,8 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WORK = os.path.expanduser(os.environ.get('LC_WORK', '~/Library/Caches/mk-lang-check/harvest'))
 REG = os.path.join(ROOT, 'scripts', 'ui-strings-review.json')
-SAFE = {'emergency', 'firstaid', 'medical', 'safety'}
+SAFE = {'emergency', 'firstaid', 'medical', 'safety', 'danger', 'crossings', 'etiquette'}   # F5d adds the three data-text groups
+SAFETY_SOURCES = ('safety-text', 'safety-data')
 PAIR = re.compile(r"'((?:[^'\\]|\\.)*)':\s*(?:'((?:[^'\\]|\\.)*)'|(null)\b)")
 
 
@@ -32,10 +33,11 @@ def values(lang):
     out = {}
     src = open(os.path.join(ROOT, 'js', 'data', 'ui-strings.%s.js' % lang), encoding='utf-8').read()
     out.update({('ui-strings', unesc(k)): unesc(v) for k, v, n in PAIR.findall(src) if not n})
-    p = os.path.join(ROOT, 'js', 'data', 'safety-text.%s.js' % lang)
-    if os.path.exists(p):
-        src = open(p, encoding='utf-8').read()
-        out.update({('safety-text', unesc(k)): unesc(v) for k, v in re.findall(r"^\s*'((?:[^'\\]|\\.)*)':\s*'((?:[^'\\]|\\.)*)',?\s*$", src, re.M)})
+    for stem in SAFETY_SOURCES:
+        p = os.path.join(ROOT, 'js', 'data', '%s.%s.js' % (stem, lang))
+        if os.path.exists(p):
+            src = open(p, encoding='utf-8').read()
+            out.update({(stem, unesc(k)): unesc(v) for k, v in re.findall(r"^\s*'((?:[^'\\]|\\.)*)':\s*'((?:[^'\\]|\\.)*)',?\s*$", src, re.M)})
     return out
 
 
@@ -51,11 +53,14 @@ def main():
         seed = int(sys.argv[4]) if len(sys.argv) > 4 else 7
         vals = values(lang)
         since = os.environ.get('BT_SINCE', '')   # F5b: only the entries added since this date (F5's 200 samples are already in the register)
-        pool = [e for e in reg['entries'] if e['lang'] == lang and len(e['key']) <= 160 and (e.get('source') or 'ui-strings', e['key']) in vals and e.get('date', '') >= since]
+        pool = [e for e in reg['entries'] if e['lang'] == lang and len(e['key']) <= int(os.environ.get('BT_MAX', '160')) and e.get('machine', True) and (e.get('source') or 'ui-strings', e['key']) in vals and e.get('date', '') >= since]
         safe = [e for e in pool if e.get('group') in SAFE]
         rest = [e for e in pool if e.get('group') not in SAFE]
         rnd = random.Random(seed)
-        pick = rnd.sample(safe, min(len(safe), int(n * 0.6))) + rnd.sample(rest, min(len(rest), n - int(n * 0.6)))
+        k_safe = min(len(safe), int(n * 0.6))
+        k_rest = min(len(rest), n - k_safe)
+        k_safe = min(len(safe), n - k_rest)          # F5d: every group is a safety group, so the rest may be empty
+        pick = rnd.sample(safe, k_safe) + rnd.sample(rest, k_rest)
         rnd.shuffle(pick)
         json.dump([{'key': e['key'], 'group': e.get('group'), 'source': e.get('source') or 'ui-strings'} for e in pick], open(os.path.join(WORK, 'bt-%s.keys.json' % lang), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
         with open(os.path.join(WORK, 'bt-%s.txt' % lang), 'w', encoding='utf-8') as fh:
@@ -84,7 +89,7 @@ def main():
         new = []
         for i in sorted(backs):
             v, note = verdicts.get(i, ('same', ''))
-            new.append({'lang': lang, 'key': keys[i]['key'], 'back': backs[i], 'verdict': v, 'note': note, 'date': date, **({'source': keys[i]['source']} if keys[i].get('source') == 'safety-text' else {})})
+            new.append({'lang': lang, 'key': keys[i]['key'], 'back': backs[i], 'verdict': v, 'note': note, 'date': date, **({'source': keys[i]['source']} if keys[i].get('source') in SAFETY_SOURCES else {})})
         # a record adds to the register; it replaces only this language's samples of the same date (a rerun), never an earlier slice's
         reg['backTranslation'] = [e for e in reg.get('backTranslation', []) if not (e['lang'] == lang and e.get('date') == date)] + new
         with open(REG, 'w', encoding='utf-8') as fh:
