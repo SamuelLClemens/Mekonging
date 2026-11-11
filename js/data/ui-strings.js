@@ -88,4 +88,8 @@ export const UI_STRING_MACHINE = [
   'vi',
   'km',
   'lo',
+  'he',
+  'ar',
+  'fa',
+  'ur',
 ];

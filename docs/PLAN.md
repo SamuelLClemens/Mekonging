@@ -166,7 +166,7 @@ The owner listed five fixes "we need to make for sure", then widened the languag
   - It needs a connection. Offline, it says so and offers the phrasebook. Where a phone has no speech recognition for a language, that half offers typing only, and says so.
 - **Done when.** In Safari, and on the owner's iPhone, a four-turn exchange between English and Thai works both ways by typing, and by voice where the phone supports it. Both halves are readable at 375 px in portrait. 0 console errors. All guards pass.
 
-### L2: the other 25 interface languages filled
+### L2: the other 25 interface languages filled (L2a he ar fa ur built, PR 155; L2b es fr de pt it ru next)
 - **Scope.** Drive F5's `null` entries to 0 for the other 25 languages, in the same way: machine-made, recorded in the review register, with the safety screens first. Check right-to-left layout for Hebrew, Arabic, Persian and Urdu. Split by language group if one session cannot finish.
 - **Done when.** The F5 check shows 0 untranslated interface strings in every language on every route, with no clipping, overflow or missing glyphs. All guards pass.
 

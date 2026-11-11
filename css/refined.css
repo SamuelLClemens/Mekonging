@@ -235,7 +235,7 @@ html[data-reduced-motion="on"] [data-refined] *::after {
 .rc-table { margin-top: var(--sp-3); }
 .rc-table > summary { display: flex; align-items: center; min-height: var(--hit); color: var(--ink); font-size: var(--fs-sm); cursor: pointer; }
 .rc-table table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
-.rc-table th, .rc-table td { padding: var(--sp-1) var(--sp-2); border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); text-align: left; }
+.rc-table th, .rc-table td { padding: var(--sp-1) var(--sp-2); border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); text-align: start; }
 .rc-table td:nth-child(2) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .rc-table .rc-split { color: var(--ink-soft); overflow-wrap: anywhere; }
 /* The shared fold summary and info icon are 30 and 24 px tall; on this screen both meet the 44 px target (Q3 to Q5 do the rest). */

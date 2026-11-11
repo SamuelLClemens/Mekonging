@@ -380,7 +380,7 @@ export function whereNextSection(argCc, fromCity, onChange) {
     body.append(h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-1h)' },
       _nextChain.length ? `Next, from ${tail}:` : 'Tap a city to start building your next few stops:'));
     body.append(h('div', { class: 'grid' }, candidates.map((r) => h('button', {
-      class: 'card', style: 'text-align:left', onclick: () => { _nextChain.push(r.name); rerender(); },
+      class: 'card', style: 'text-align:start', onclick: () => { _nextChain.push(r.name); rerender(); },
     }, [
       h('strong', {}, r.name),
       h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 0' },

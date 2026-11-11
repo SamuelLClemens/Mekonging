@@ -694,7 +694,7 @@ export function weatherScreen(country) {
             detail.append(h('div', { class: 'row-between', style: 'padding: var(--sp-1) 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
               h('span', { style: 'min-width:78px;font-weight:600' }, s.label),
               h('span', { style: 'font-size:18px' }, se),
-              h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2);text-align:left' }, `${sl}${rainLine(s.pp, s.precip, s.snow)}${s.hum != null ? ` · Humidity ${s.hum}%` : ''}`),
+              h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2);text-align:start' }, `${sl}${rainLine(s.pp, s.precip, s.snow)}${s.hum != null ? ` · Humidity ${s.hum}%` : ''}`),
               h('span', {}, `${fmtTemp(s.tmin)}/${fmtTemp(s.tmax)}`),
             ]));
           });
@@ -702,7 +702,7 @@ export function weatherScreen(country) {
           detail.append(h('p', { class: 'muted' }, 'Hourly breakdown unavailable — tap Refresh while online.'));
         }
         const head = h('button', {
-          style: 'display:block;width:100%;background:none;border:none;padding: var(--sp-1h) 0;text-align:left;cursor:pointer;font:inherit;color:inherit;border-top:1px solid rgba(0,0,0,0.07)',
+          style: 'display:block;width:100%;background:none;border:none;padding: var(--sp-1h) 0;text-align:start;cursor:pointer;font:inherit;color:inherit;border-top:1px solid rgba(0,0,0,0.07)',
           'aria-expanded': isOpen ? 'true' : 'false',
           onclick: () => {
             const open = detail.style.display === 'none';

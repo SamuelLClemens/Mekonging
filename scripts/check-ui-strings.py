@@ -65,6 +65,7 @@ ALLOWED_IDENTICAL = {
     'tl': {'Home', 'Online', 'Offline', 'Emergency', 'Accessibility', 'Thailand', 'Vietnam',
            'Cambodia', 'Laos', 'Tourist Police', 'Budget'},
     'vi': {'Khmer'},   # the language's own name for the Khmer language and people (F5c)
+    'he': {'SIM / e-SIM'}, 'ar': {'SIM / e-SIM'}, 'ur': {'SIM / e-SIM'},   # a brand term, kept in Latin (L2a)
 }
 
 

@@ -29,7 +29,7 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA = os.path.join(ROOT, 'js', 'data')
 REGISTER = os.path.join(ROOT, 'scripts', 'ui-strings-review.json')
-HOST = ['th', 'vi', 'km', 'lo']
+HOST = os.environ.get('LC_HOST', 'th,vi,km,lo').split(',')   # L2: the batch's columns, in order (env LC_HOST=he,ar,fa,ur)
 PRIORITY = ['emergency', 'firstaid', 'medical']
 BEGIN = '    // ---- F5 harvest (tools/lang-check/apply-strings.py; null = show English) ----'
 END = '    // ---- end F5 harvest ----'

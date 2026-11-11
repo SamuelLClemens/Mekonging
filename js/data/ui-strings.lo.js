@@ -1054,6 +1054,9 @@ export const STRINGS = {
     'Voice input needs a connection on this device.': 'ການປ້ອນສຽງໃນອຸປະກອນນີ້ຕ້ອງມີອິນເຕີເນັດ.',
     'No speech heard. Tap the microphone and try again.': 'ບໍ່ໄດ້ຍິນສຽງເວົ້າ. ແຕະໄມໂຄຣໂຟນແລ້ວລອງໃໝ່.',
     'This device cannot take voice input in that language.': 'ອຸປະກອນນີ້ບໍ່ຮອງຮັບການປ້ອນສຽງເປັນພາສານັ້ນ.',
+    'Good tonight': 'ເໝາະກັບຄືນນີ້', 'Near Bangkok': 'ໃກ້ກຸງເທບ', 'Sources (3)': 'ແຫຼ່ງທີ່ມາ (3)',
+    'What is rude, what is polite, and what is against the law — before you do it rather than after. Ordered by how much it costs you to get wrong.': 'ຫຍັງທີ່ບໍ່ສຸພາບ ຫຍັງທີ່ສຸພາບ ແລະ ຫຍັງທີ່ຜິດກົດໝາຍ — ຮູ້ກ່ອນເຮັດ ບໍ່ແມ່ນຮູ້ຫຼັງເຮັດ. ຈັດລຽງຕາມຄວາມເສຍຫາຍທີ່ທ່ານຈະໄດ້ຮັບຖ້າເຮັດຜິດ.',
+    'clubs': 'ຄລັບກາງຄືນ', 'hostel': 'ໂຮສເຕວ', 'live-music': 'ດົນຕີສົດ', 'read this one': 'ອ່ານຂໍ້ນີ້',
     'Refresh to use face to face': 'ໂຫຼດຄືນເພື່ອໃຊ້ການລົມກັນຕໍ່ໜ້າ', 'Updating…': 'ກຳລັງອັບເດດ…',
     // ---- end F5 harvest ----
 };

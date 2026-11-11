@@ -1073,6 +1073,9 @@ export const STRINGS = {
     'Voice input needs a connection on this device.': 'Nhập giọng nói trên thiết bị này cần có kết nối.',
     'No speech heard. Tap the microphone and try again.': 'Không nghe thấy giọng nói. Chạm vào micrô và thử lại.',
     'This device cannot take voice input in that language.': 'Thiết bị này không hỗ trợ nhập giọng nói bằng ngôn ngữ đó.',
+    'Good tonight': 'Hợp cho tối nay', 'Near Bangkok': 'Gần Bangkok', 'Sources (3)': 'Nguồn (3)',
+    'What is rude, what is polite, and what is against the law — before you do it rather than after. Ordered by how much it costs you to get wrong.': 'Điều gì bất lịch sự, điều gì lịch sự và điều gì vi phạm pháp luật — biết trước khi làm chứ không phải sau. Sắp xếp theo mức thiệt hại bạn phải chịu nếu làm sai.',
+    'clubs': 'câu lạc bộ đêm', 'hostel': 'nhà trọ tập thể', 'live-music': 'nhạc sống', 'read this one': 'đọc mục này',
     'Refresh to use face to face': 'Làm mới để dùng nói chuyện trực tiếp', 'Updating…': 'Đang cập nhật…',
     // ---- end F5 harvest ----
 };

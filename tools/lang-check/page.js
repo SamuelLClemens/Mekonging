@@ -303,7 +303,7 @@
       const bar = document.querySelector('.tabbar');
       const kids = bar ? [...bar.children].filter(hasInk) : [];
       const tabOrder = kids.length > 1 ? (kids[0].getBoundingClientRect().left > kids[kids.length - 1].getBoundingClientRect().left ? 'rtl' : 'ltr') : '';
-      const back = document.querySelector('.topbar button, .topbar a');
+      const back = document.querySelector('.topbar .back');
       out.rtl = { pinnedLeft: pinned, wrongDir, tabOrder, backSide: back ? (back.getBoundingClientRect().left > W / 2 ? 'right' : 'left') : '', ex };
     }
     return out;
