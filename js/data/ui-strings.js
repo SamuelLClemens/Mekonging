@@ -98,4 +98,6 @@ export const UI_STRING_MACHINE = [
   'pt',
   'it',
   'ru',
+  'bn',
+  'hi',
 ];
