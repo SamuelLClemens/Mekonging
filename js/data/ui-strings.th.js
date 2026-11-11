@@ -1060,5 +1060,6 @@ export const STRINGS = {
     'Good tonight': 'เหมาะกับคืนนี้', 'Near Bangkok': 'ใกล้กรุงเทพฯ', 'Sources (3)': 'แหล่งที่มา (3)',
     'What is rude, what is polite, and what is against the law — before you do it rather than after. Ordered by how much it costs you to get wrong.': 'อะไรที่เสียมารยาท อะไรที่สุภาพ และอะไรที่ผิดกฎหมาย — รู้ก่อนทำ ไม่ใช่รู้หลังทำ เรียงตามความเสียหายที่คุณจะได้รับหากพลาด',
     'clubs': 'ไนต์คลับ', 'hostel': 'โฮสเทล', 'live-music': 'ดนตรีสด', 'read this one': 'อ่านข้อนี้',
+    'Refresh to use face to face': 'รีเฟรชเพื่อใช้การคุยต่อหน้ากัน', 'Updating…': 'กำลังอัปเดต…',
     // ---- end F5 harvest ----
 };

@@ -1081,5 +1081,6 @@ export const STRINGS = {
     'What is rude, what is polite, and what is against the law — before you do it rather than after. Ordered by how much it costs you to get wrong.': 'អ្វីដែលមិនគួរសម អ្វីដែលគួរសម និងអ្វីដែលខុសច្បាប់ — ដឹងមុនពេលធ្វើ មិនមែនក្រោយពេលធ្វើទេ។ រៀបតាមតម្លៃដែលអ្នកត្រូវបង់ប្រសិនបើធ្វើខុស។',
     'clubs': 'ក្លឹបរាត្រី', 'hostel': 'ផ្ទះសំណាក់ក្រុម', 'live-music': 'តន្ត្រីផ្ទាល់',
     'read this one': 'សូមអានចំណុចនេះ',
+    'Refresh to use face to face': 'ធ្វើឱ្យថ្មីដើម្បីប្រើការនិយាយផ្ទាល់មុខ', 'Updating…': 'កំពុងធ្វើបច្ចុប្បន្នភាព…',
     // ---- end F5 harvest ----
 };

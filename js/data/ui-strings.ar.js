@@ -1045,5 +1045,6 @@ export const STRINGS = {
     'Voice input needs a connection on this device.': 'الإدخال الصوتي يتطلب اتصالًا على هذا الجهاز.',
     'No speech heard. Tap the microphone and try again.': 'لم يُسمع كلام. اضغطوا على الميكروفون وحاولوا مرة أخرى.',
     'This device cannot take voice input in that language.': 'لا يستطيع هذا الجهاز استقبال إدخال صوتي بهذه اللغة.',
+    'Refresh to use face to face': 'حدّثوا الصفحة لاستخدام المحادثة وجهاً لوجه', 'Updating…': 'جارٍ التحديث…',
     // ---- end F5 harvest ----
 };

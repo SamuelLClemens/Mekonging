@@ -1059,5 +1059,6 @@ export const STRINGS = {
     'Voice input needs a connection on this device.': 'اس ڈیوائس پر آواز کے اِن پُٹ کے لیے کنکشن درکار ہے۔',
     'No speech heard. Tap the microphone and try again.': 'کوئی آواز نہیں سنائی دی۔ مائیکروفون دبائیں اور دوبارہ کوشش کریں۔',
     'This device cannot take voice input in that language.': 'یہ ڈیوائس اس زبان میں آواز کا اِن پُٹ نہیں لے سکتی۔',
+    'Refresh to use face to face': 'آمنے سامنے بات چیت کے لیے ریفریش کریں', 'Updating…': 'اپ ڈیٹ ہو رہا ہے…',
     // ---- end F5 harvest ----
 };

@@ -39,6 +39,7 @@ import { audioPacksCard } from '../audio-packs.js';
 import { translate, TranslateAborted } from '../translate.js';
 import { startTask, stopTask, stopPlayback } from '../audio-control.js';
 import { joinSpeechResults } from '../speech-input.js';
+import { refreshApp } from '../refresh-app.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../lazy-data.js';
 import { ALLERGENS } from '../data/allergens.js';
@@ -55,7 +56,7 @@ const { DIET_LABEL, joinList } = Diet;
 // same GPS-first/focus-second/activeCountry-last resolver places.js's map uses to pick a
 // city — reused here so "what language/country am I in" agrees with "what city is my map on"
 // instead of reading the (possibly stale, pre-GPS) activeCountry state directly).
-import { go, mount, topbar, langForCountry, contextNow, inferPhase, focusSpot, render, dictionaryName, dictionaryTitle } from '../main.js';
+import { go, mount, topbar, langForCountry, contextNow, inferPhase, focusSpot, render, dictionaryName, dictionaryTitle, APP_VERSION } from '../main.js';
 
 // Re-exported for the modules that historically imported them from here; new callers
 // should import from ../phrase-ui.js directly.
@@ -1366,7 +1367,31 @@ function liveTranslateBox(code, label, locale, onChange) {
     box.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#signtranslate-${code}`) },
       `📷 Point & translate a ${label} sign`));
   }
-  box.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#facetalk-${code}`) },
-    '🗣 Face to face on this phone'));
+  box.append(faceTalkLauncher(code));
   return box;
+}
+
+// L1's #facetalk route lives in main.js (eager) and its button lives here (lazy). An installed app
+// that stays resident across a release keeps the PREVIOUS main.js, whose router sends an unknown
+// route to Home, while this file arrives fresh: the button then led to Home and nowhere else (iPhone
+// Home Screen app, 2026-11-10). Offer the route only where the running main.js knows it; otherwise
+// the way forward is a reload, which takes the app onto the new main.js. APP_VERSION is `mk-v0.<n>.0`.
+const FACETALK_SINCE = 662;
+function runningRelease() { const m = /^mk-v\d+\.(\d+)\./.exec(APP_VERSION || ''); return m ? Number(m[1]) : 0; }
+function faceTalkLauncher(code) {
+  if (runningRelease() >= FACETALK_SINCE) {
+    return h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#facetalk-${code}`) },
+      '🗣 Face to face on this phone');
+  }
+  // A bare reload can bring the same old main.js back (the worker serves it cache-first until the new worker
+  // activates), so the button updates the worker first (js/refresh-app.js). A second tap after a reload that
+  // changed nothing removes the worker and its shell cache and loads from the network.
+  const btn = h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => {
+    let tried = false;
+    try { tried = sessionStorage.getItem('mk-refresh-tried') === '1'; sessionStorage.setItem('mk-refresh-tried', '1'); } catch { /* private mode */ }
+    btn.disabled = true;
+    btn.textContent = 'Updating…';
+    refreshApp({ hard: tried });
+  } }, '🔄 Refresh to use face to face');
+  return btn;
 }

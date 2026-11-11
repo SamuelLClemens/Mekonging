@@ -56,7 +56,7 @@ relevant section of the docs below, not the whole repo.
 - A stale manifest ships nothing to returning users, silently. Never hand-edit the generated MANIFEST block.
 - Adding a photo or pack content: run `python3 scripts/build-pack-sizes.py --write`.
 - Lazy data modules: put new exports in a NEW file. An open app keeps old eager modules after a deploy, and a new
-  export imported by an old lazy module spins forever.
+  export imported by an old lazy module spins forever. The reverse bites too: a lazy file that links to a NEW route must check `APP_VERSION` (`faceTalkLauncher`, phrasebook.js), since a resident main.js sends an unknown route to Home. A bare `location.reload()` does not cure it (the worker serves the old main.js until the new worker activates): use `refreshApp()` (`js/refresh-app.js`).
 
 ## Guards (run before every commit; CI runs the same list)
 ```bash
