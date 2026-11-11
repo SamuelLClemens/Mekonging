@@ -238,7 +238,7 @@ export function meHubScreen() {
   // worth protecting") and same dismiss behaviour; only the visual weight and position changed.
   if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
     wrap.append(h('div', { class: 'row-between backup-line', style: 'margin-top: var(--sp-4)' }, [
-      h('button', { class: 'btn ghost', style: 'flex:1;text-align:left', onclick: () => go('#settings') }, '⬇️ Back up your journal & budget'),
+      h('button', { class: 'btn ghost', style: 'flex:1;text-align:start', onclick: () => go('#settings') }, '⬇️ Back up your journal & budget'),
       h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.dataBackupDone = true; save(); render(); } }, 'Dismiss'),
     ]));
   }

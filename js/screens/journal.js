@@ -814,7 +814,7 @@ export function journeyScreen() {
     legsCard.append(h('p', { class: 'muted tiny', style: 'margin: 0 0 var(--sp-1h)' }, 'Guessed from the distance and the days between stops. Tap one to change it.'));
     legs.forEach((leg) => {
       const a = stops[leg.i], dest = stops[leg.i + 1];
-      legsCard.append(h('button', { class: 'btn ghost block btn-spaced', style: 'text-align:left',
+      legsCard.append(h('button', { class: 'btn ghost block btn-spaced', style: 'text-align:start',
         'aria-label': `${a.label || 'Stop'} to ${dest.label || 'next stop'}: ${MODE_LABELS[leg.mode]}. Change how you travelled.`,
         onclick: () => pickModeSheet().then((picked) => { if (picked === null) return; setLegMode(dest, picked); render(); }) },
       `${MODE_GLYPHS[leg.mode]}  ${a.label || 'Stop ' + (leg.i + 1)} → ${dest.label || 'Stop ' + (leg.i + 2)} · ${MODE_LABELS[leg.mode]}`));
@@ -898,7 +898,7 @@ export function journeyScreen() {
 
     if (s.entries.length) {
       card.append(h('h3', { style: 'margin: var(--sp-3) 0 var(--sp-0h)' }, `📔 Your journal here · ${s.entries.length}`));
-      s.entries.forEach((e) => card.append(h('button', { class: 'btn ghost block btn-spaced', style: 'text-align:left',
+      s.entries.forEach((e) => card.append(h('button', { class: 'btn ghost block btn-spaced', style: 'text-align:start',
         onclick: () => go(`#journal-entry-${e.id}`) }, `${e.date || ''} — ${e.title || 'Untitled entry'}`)));
     }
     if (s.places.length) {

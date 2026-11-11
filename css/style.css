@@ -570,7 +570,7 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
 .place-cat-body { padding: var(--sp-2) var(--sp-2) var(--sp-4); }
 .closest-card { border-left-color: #0F9D8C; }
 .city-pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--sp-2); }
-.city-pick { display: flex; flex-direction: column; text-align: left; padding: 0; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--card); cursor: pointer; color: var(--ink); }
+.city-pick { display: flex; flex-direction: column; text-align: start; padding: 0; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--card); cursor: pointer; color: var(--ink); }
 .city-pick:hover { filter: brightness(0.98); }
 .city-pick-thumb { width: 100%; height: 84px; object-fit: cover; display: block; background: var(--line); }
 .city-pick-thumb.ph { display: flex; align-items: center; justify-content: center; font-size: 30px; }
@@ -580,7 +580,7 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
 /* Explore tab: large country cards, each in its own accent colour (--ec). */
 .explore-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--sp-2); }
 .explore-card {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: start;
   padding: var(--sp-3); border: 1px solid var(--line); border-left: 5px solid var(--ec, var(--teal));
   border-radius: var(--r-lg); background: var(--card); cursor: pointer; color: var(--ink);
   transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
@@ -629,7 +629,7 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
 /* The region chooser: one tappable row per region, carrying its tagline and live counts. */
 .zone-list { display: flex; flex-direction: column; gap: var(--sp-2); margin: var(--sp-3) 0; }
 .zone-row {
-  display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left;
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: start;
   padding: var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-lg);
   background: var(--card); color: inherit; font: inherit; cursor: pointer;
   transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
@@ -674,7 +674,7 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
   margin: var(--sp-2) 0; padding: var(--sp-2) var(--sp-3);
   border: 1px dashed var(--line); border-radius: var(--r-pill);
   background: transparent; color: inherit; font: inherit; font-size: var(--fs-sm);
-  text-align: left; cursor: pointer;
+  text-align: start; cursor: pointer;
 }
 .travas:hover, .travas:focus-visible { border-color: var(--teal); border-style: solid; }
 .travas.unset { border-color: var(--orange); color: var(--orange); }
@@ -696,7 +696,7 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
 .sight-card { position: relative; display: block; width: 158px; height: 200px; border-radius: 16px; overflow: hidden; border: none; padding: 0; cursor: pointer; background: var(--line); }
 .sight-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sight-grad { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.74) 0%, rgba(0,0,0,.18) 46%, rgba(0,0,0,0) 72%); }
-.sight-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 10px; text-align: left; display: flex; flex-direction: column; gap: 1px; }
+.sight-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 10px; text-align: start; display: flex; flex-direction: column; gap: 1px; }
 .sight-name { color: #fff; font-weight: 800; font-size: 0.95rem; line-height: 1.15; text-shadow: 0 1px 3px rgba(0,0,0,.55); }
 .sight-city { color: rgba(255,255,255,.92); font-size: 0.78rem; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
 .sight-save {
@@ -719,7 +719,7 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
 @media (prefers-reduced-motion: reduce) { .filter-sheet { animation: none; } }
 
 /* Search place results — photo/emoji thumbnail beside the name, so search reads like a guide. */
-.srch-place { display: flex; align-items: center; gap: var(--sp-3); text-align: left; }
+.srch-place { display: flex; align-items: center; gap: var(--sp-3); text-align: start; }
 .srch-place-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .srch-place-name { font-weight: 700; }
 .srch-place-sub { font-size: var(--fs-sm); }
@@ -796,7 +796,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
   display: flex; align-items: center; gap: var(--sp-2); cursor: pointer; font-family: inherit;
   border: 1px solid var(--line); background: var(--card); color: var(--ink);
   border-radius: var(--r-2); padding: var(--sp-3); font-weight: 800; font-size: var(--fs-sm);
-  min-height: 56px; text-align: left; transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  min-height: 56px; text-align: start; transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 .phase-btn .phase-emoji { font-size: 1.4rem; line-height: 1; flex: none; }
 .phase-btn .phase-lbl { line-height: 1.15; }
@@ -841,7 +841,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 }
 
 .hub-row {
-  display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left;
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: start;
   background: var(--card); color: var(--ink); font-family: inherit; cursor: pointer;
   border: 1px solid var(--line); border-inline-start: 4px solid var(--tile-accent, var(--line));
   border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); margin-top: var(--sp-2);
@@ -870,7 +870,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .scrap-h { margin: 0 0 var(--sp-2); }
 .scrap-row { display: flex; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-2) 0; border-bottom: 1px dashed var(--line); }
 .scrap-row:last-child { border-bottom: none; }
-.scrap-row.scrap-link { width: 100%; background: none; border-left: none; border-right: none; border-top: none; cursor: pointer; font: inherit; text-align: left; color: var(--ink); }
+.scrap-row.scrap-link { width: 100%; background: none; border-left: none; border-right: none; border-top: none; cursor: pointer; font: inherit; text-align: start; color: var(--ink); }
 .scrap-entry .scrap-date { font-size: var(--fs-sm); color: var(--ink-soft); }
 .scrap-photo { width: 100%; border-radius: var(--r-2); margin: var(--sp-2) 0; display: block; }
 .scrap-text p { margin: var(--sp-1) 0; }
@@ -883,7 +883,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 .tile {
-  display: flex; flex-direction: column; gap: var(--sp-1); text-align: left; cursor: pointer;
+  display: flex; flex-direction: column; gap: var(--sp-1); text-align: start; cursor: pointer;
   background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: var(--sp-4); box-shadow: var(--shadow-soft); font-family: inherit; color: var(--ink);
   transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
@@ -976,7 +976,7 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 
 /* At-a-glance status band: four one-tap chips (trip · next plan · spend · offline). */
 .home-status { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; margin: 0 0 var(--sp-3); }
-.status-chip { display: flex; align-items: center; gap: 7px; min-width: 0; cursor: pointer; text-align: left;
+.status-chip { display: flex; align-items: center; gap: 7px; min-width: 0; cursor: pointer; text-align: start;
   font-family: inherit; font-weight: 700; font-size: var(--fs-sm); color: var(--ink);
   background: color-mix(in srgb, var(--ink) 6%, transparent); border: 1px solid var(--line);
   border-radius: var(--r-2, 12px); padding: 8px 10px; transition: transform var(--dur-fast) var(--ease); }
@@ -1033,7 +1033,7 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
    again from Settings, so it is never a one-tap accidental loss. */
 .just-arrived-chip { display: flex; align-items: stretch; gap: 6px; margin: 0 0 var(--sp-3); }
 .just-arrived-chip .ja-main { flex: 1 1 auto; display: flex; align-items: center; gap: 7px; min-width: 0;
-  cursor: pointer; text-align: left; font-family: inherit; font-weight: 700; font-size: var(--fs-sm); color: var(--ink);
+  cursor: pointer; text-align: start; font-family: inherit; font-weight: 700; font-size: var(--fs-sm); color: var(--ink);
   background: color-mix(in srgb, var(--orange) 12%, transparent); border: 1px solid var(--orange);
   border-radius: var(--r-2, 12px); padding: 8px 10px; transition: transform var(--dur-fast) var(--ease); }
 .just-arrived-chip .ja-main:active { transform: scale(0.97); }
@@ -1046,7 +1046,7 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
    names sit on the single <button>, so these rules repeat the pill rather than relying on the
    descendant selector above, which only matches a .ja-main nested inside a .just-arrived-chip. */
 .nsn-btn { width: 100%; display: flex; align-items: center; gap: 7px; min-width: 0;
-  cursor: pointer; text-align: left; font-family: inherit; font-weight: 700;
+  cursor: pointer; text-align: start; font-family: inherit; font-weight: 700;
   font-size: var(--fs-sm); color: var(--ink);
   background: color-mix(in srgb, var(--orange) 12%, transparent); border: 1px solid var(--orange);
   border-radius: var(--r-2, 12px); padding: 8px 10px; margin: 0 0 var(--sp-3);
@@ -1060,7 +1060,7 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 .nsn-btn .status-go { margin-left: auto; opacity: 0.75; }
 
 /* Merged Right-now card extras: the phase checklist nudge and the one-tap spend row. */
-.right-now .now-line { margin: 4px 0 2px; text-align: left; }
+.right-now .now-line { margin: 4px 0 2px; text-align: start; }
 .right-now .now-spend { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
 /* Budget is now its own home-group-d foldable (see homeFold, js/main.js) rather than nested
    at the foot of the Right-now card — .now-spend sits directly under its <summary> with
@@ -1382,7 +1382,7 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 .color-key .cat-tag { text-transform: none; }
 /* "Things to do" — a list-first screen: compact header, then reachable picks in cards
    that carry a recognition thumbnail and short "why now" reason chips. */
-.todo-card { text-align: left; width: 100%; display: flex; gap: 10px; align-items: stretch; }
+.todo-card { text-align: start; width: 100%; display: flex; gap: 10px; align-items: stretch; }
 .todo-body { flex: 1 1 auto; min-width: 0; }
 .todo-thumb { flex: 0 0 auto; width: 64px; height: 64px; border-radius: 10px; object-fit: cover; align-self: center; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
 .todo-thumb-ph { display: flex; align-items: center; justify-content: center; font-size: 1.6rem; line-height: 1; }
@@ -1597,7 +1597,7 @@ html[data-theme="dark"] .rn-filter-fold.is-on > summary .rn-filter-state { color
    pick now, instead of two stacked rows — five picks, five fewer rows of height. */
 .rn-tagrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) 6px; margin: 3px 0; }
 .rn-item { display: flex; align-items: stretch; gap: var(--sp-2); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; border-left: 4px solid var(--cat, var(--line)); }
-.rn-open { flex: 1; min-width: 0; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); background: none; border: none; padding: var(--sp-2) var(--sp-3); }
+.rn-open { flex: 1; min-width: 0; text-align: start; cursor: pointer; font-family: inherit; color: var(--ink); background: none; border: none; padding: var(--sp-2) var(--sp-3); }
 .rn-open:active { transform: scale(0.99); }
 /* Small recognition thumbnail on "near me" rows (arrival hub + Home right-now). */
 .rn-open.has-thumb { display: flex; align-items: center; gap: 10px; }
@@ -1681,7 +1681,7 @@ html[data-theme="dark"] .rn-filter-fold.is-on > summary .rn-filter-state { color
 :root[data-theme="dark"] .attr-tag.at-info { background: #2b7a72; }
 :root[data-theme="dark"] .attr-tag.at-closed { background: #4b5563; }
 /* Street-food "rate the classics" rows: thumbnail + name/city, tap to open. */
-.sf-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; cursor: pointer; font-family: inherit; color: var(--ink); padding: 6px 0; }
+.sf-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: start; background: none; border: none; cursor: pointer; font-family: inherit; color: var(--ink); padding: 6px 0; }
 .sf-text { min-width: 0; }
 .sf-name { font-weight: 700; }
 .rn-actions { flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
@@ -1695,7 +1695,7 @@ html[data-theme="dark"] .rn-filter-fold.is-on > summary .rn-filter-state { color
 .rn-tag { flex: none; font-size: var(--fs-label); font-weight: 800; color: #fff; background: var(--teal-deep); border-radius: var(--r-pill); padding: 2px 8px; }
 .rn-meta { font-size: var(--fs-sm); margin-top: 2px; }
 .rn-events { display: flex; flex-direction: column; gap: var(--sp-2); margin: var(--sp-2) 0; }
-.rn-event { width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); background: linear-gradient(135deg, rgba(242,169,59,0.16), rgba(214,51,108,0.10)); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); }
+.rn-event { width: 100%; text-align: start; cursor: pointer; font-family: inherit; color: var(--ink); background: linear-gradient(135deg, rgba(242,169,59,0.16), rgba(214,51,108,0.10)); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); }
 .rn-event-when { font-weight: 800; color: var(--magenta-deep); }
 /* --- history & orientation --- */
 .history-card { border-left: 4px solid var(--gold, var(--orange)); }
@@ -1767,7 +1767,7 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .page-title { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #5A3A18; }
 .toc { margin: 0; padding-left: var(--sp-5); }
 .toc li { margin: var(--sp-2) 0; }
-.toc-link { border: none; background: none; cursor: pointer; font-family: inherit; color: #5A3A18; text-align: left; font-size: var(--fs-body); padding: 0; }
+.toc-link { border: none; background: none; cursor: pointer; font-family: inherit; color: #5A3A18; text-align: start; font-size: var(--fs-body); padding: 0; }
 .toc-link:hover { text-decoration: underline; }
 .toc-date { font-size: var(--fs-label); color: #8A5A2A; }
 .stamp { display: flex; flex-wrap: wrap; gap: var(--sp-3); font-size: var(--fs-sm); color: #8A5A2A; border-bottom: 1px dashed rgba(120,90,50,0.4); padding-bottom: var(--sp-2); margin-bottom: var(--sp-3); letter-spacing: 0.02em; }
@@ -1812,7 +1812,7 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
   background: none; cursor: pointer; line-height: 0; }
 .jr-photo { width: 88px; height: 88px; object-fit: cover; border-radius: var(--r-sm); display: block; }
 /* One stop in the ordered list. Same shape as a hub row so the app has one list idiom. */
-.jr-row { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left;
+.jr-row { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: start;
   background: none; border: none; border-top: 1px solid var(--line); padding: var(--sp-2) 0;
   cursor: pointer; font-family: inherit; color: var(--ink); min-height: 52px; }
 .jr-row:first-of-type { border-top: none; }
@@ -1862,7 +1862,7 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .src-link { color: var(--teal-deep); text-decoration: underline; font-style: normal; }
 
 /* --- nature field guide --- */
-.species-card { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); }
+.species-card { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: start; cursor: pointer; font-family: inherit; color: var(--ink); }
 .species-emoji { font-size: 1.9rem; line-height: 1; flex: none; }
 .species-emoji.big { font-size: 2.6rem; }
 /* Recognition photo (dishes / produce / wildlife list rows) — same footprint as the emoji. */
@@ -2137,7 +2137,7 @@ html[data-theme="dark"] { --key-dot-ring: rgba(255, 255, 255, 0.45); }
 .home-actions .btn { flex: 1; justify-content: center; }
 
 /* global search results */
-.srch { justify-content: flex-start; text-align: left; margin-bottom: var(--sp-2); }
+.srch { justify-content: flex-start; text-align: start; margin-bottom: var(--sp-2); }
 
 /* emergency / SOS */
 .sos-card { border-color: var(--coral); }
@@ -2166,7 +2166,7 @@ html[data-theme="dark"] .countdown-num b { color: var(--teal); }
 .companion-todo { padding: 3px 0; color: var(--ink-soft); }
 /* Gamification level badge on the Welcome-back recap — links through to the full
    Your-contributions breakdown, same level system used there. */
-.recap-level { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+.recap-level { display: flex; align-items: center; gap: 8px; width: 100%; text-align: start;
   margin: 6px 0 4px; padding: 8px 10px; border-radius: var(--r-2, 10px);
   border: 1px solid var(--line, rgba(0,0,0,.12)); background: rgba(0,0,0,0.035);
   font: inherit; color: inherit; cursor: pointer; }
@@ -2177,7 +2177,7 @@ html[data-theme="dark"] .recap-level { background: rgba(255,255,255,0.06); }
 .recap-stat b { font-size: 1.3em; color: var(--ink); }
 
 /* trip planner + journal photo */
-.bestof-card { width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); }
+.bestof-card { width: 100%; text-align: start; cursor: pointer; font-family: inherit; color: var(--ink); }
 .trip-stop { padding: var(--sp-2) 0; border-bottom: 1px dashed var(--line); }
 /* Arrive/leave date range for a stop: the two pickers sit side by side and each keeps a small
    caption, wrapping to a stacked layout on narrow phones. */
@@ -2424,7 +2424,7 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .places-map .maplibregl-ctrl-bottom-left, .places-map .maplibregl-ctrl-bottom-right { font-size: 10px; }
 
 /* Near-me: compact "name … distance" rows (scannable, low-scroll). */
-.near-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+.near-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: start; }
 .near-row .near-name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .near-row .dist-chip { flex: none; }
 /* Near-me directory rows reuse the suggestion-row shell (clickable body + action column). */
@@ -2643,7 +2643,7 @@ html[data-reduced-motion="on"] .spinner { animation: none; }
   transition: width var(--dur) var(--ease); }
 .contrib-row { padding: var(--sp-2) 0; border-bottom: 1px dashed var(--line); }
 .contrib-row:last-child { border-bottom: none; }
-.contrib-suggest { justify-content: space-between; text-align: left; }
+.contrib-suggest { justify-content: space-between; text-align: start; }
 
 /* ===== journal multi-photo thumbnails + scrapbook photo gallery ===== */
 .photo-thumbs { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-2); }
@@ -2657,7 +2657,7 @@ html[data-reduced-motion="on"] .spinner { animation: none; }
   overflow: hidden; cursor: pointer; background: rgba(128,128,128,0.08); aspect-ratio: 1 / 1; font: inherit; }
 .gallery-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gallery-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 6px; font-size: 0.7rem;
-  color: #fff; background: linear-gradient(transparent, rgba(0,0,0,0.6)); text-align: left;
+  color: #fff; background: linear-gradient(transparent, rgba(0,0,0,0.6)); text-align: start;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ===== update-ready + undo toast (mk-v0.168.0; undo mk-v0.274.0) ==== */
@@ -2700,9 +2700,9 @@ html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] {
 .give-back { border: 1px solid var(--magenta); }
 /* Daily-habit morning strip on Today's plan */
 .daily-strip { border: 1px solid var(--teal); }
-.daily-strip .strip-row { justify-content: flex-start; text-align: left; gap: 10px; margin-top: 6px; }
+.daily-strip .strip-row { justify-content: flex-start; text-align: start; gap: 10px; margin-top: 6px; }
 .daily-strip .strip-ic { font-size: 1.1rem; flex: none; }
-.daily-strip .strip-txt { text-align: left; min-width: 0; }
+.daily-strip .strip-txt { text-align: start; min-width: 0; }
 .strip-budget { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .strip-budget .strip-amt { width: 92px; flex: none; }
 .strip-budget .strip-note { flex: 1 1 120px; min-width: 100px; }
@@ -2725,7 +2725,7 @@ html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] {
 .transit-lines { margin: 4px 0 0; padding-left: 1.1rem; }
 .transit-lines li { margin: 1px 0; font-size: var(--fs-sm); }
 table.rent-price { border-collapse: collapse; width: 100%; margin: 6px 0 0; font-size: var(--fs-sm); }
-table.rent-price th, table.rent-price td { border: 1px solid var(--line, rgba(0,0,0,0.1)); padding: 5px 8px; text-align: left; }
+table.rent-price th, table.rent-price td { border: 1px solid var(--line, rgba(0,0,0,0.1)); padding: 5px 8px; text-align: start; }
 table.rent-price th { background: var(--bg); font-weight: 800; }
 
 /* Guided "walk-me" tour (TUT-1) overlay CSS removed along with the feature. */
@@ -2787,7 +2787,7 @@ table.rent-price th { background: var(--bg); font-weight: 800; }
 .fy-plan-title { margin: 0 0 var(--sp-2); }
 
 .fy-pick {
-  display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left;
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: start;
   background: none; border: 0; border-top: 1px solid var(--line); cursor: pointer;
   padding: var(--sp-2) 0; color: var(--ink); font-family: inherit; font-size: var(--fs-body);
   min-height: 56px;
@@ -2819,7 +2819,7 @@ table.rent-price th { background: var(--bg); font-weight: 800; }
 .id-pin-btn.on { background: var(--sun, #E0A21A); border-color: var(--sun-deep, #C98A12); color: #241a03; }
 .id-saved-row { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
 .id-saved-row:first-of-type { margin-top: 4px; }
-.id-saved-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left;
+.id-saved-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: start;
   background: rgba(0,0,0,0.03); border: 1px solid var(--line, rgba(0,0,0,.12)); border-radius: var(--r-2, 10px);
   padding: 9px 11px; cursor: pointer; font: inherit; color: inherit; }
 .id-saved-main:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
@@ -2834,7 +2834,7 @@ html[data-theme="dark"] .id-saved-main { background: rgba(255,255,255,0.05); }
    becomes a flex row: a transparent main button + the star, so both stay real buttons. */
 .id-cardrow { gap: 4px; flex-wrap: wrap; }
 .id-cardmain { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--sp-3, 12px);
-  text-align: left; background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; }
+  text-align: start; background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; }
 .id-cardmain:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: var(--r-2, 10px); }
 .id-star { flex: 0 0 auto; align-self: center; background: none; border: none; cursor: pointer;
   font-size: 20px; line-height: 1; padding: 6px 4px; color: var(--muted, #8A8F98); }
@@ -3486,7 +3486,7 @@ html[data-theme="dark"] .layer-pick.is-on > summary .layer-pick-state { color: v
 .stopwx-list { display: flex; flex-direction: column; gap: 2px; margin-top: var(--sp-2); }
 .stopwx-row {
   display: flex; align-items: center; gap: var(--sp-3); width: 100%;
-  min-height: 44px; padding: var(--sp-2) 0; text-align: left; cursor: pointer;
+  min-height: 44px; padding: var(--sp-2) 0; text-align: start; cursor: pointer;
   background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); font-family: inherit;
 }
 .stopwx-row:last-child { border-bottom: 0; }
