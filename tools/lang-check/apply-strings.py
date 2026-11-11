@@ -85,7 +85,8 @@ def read_batch(path, keys=None, groups=GROUPS):
                 sys.exit('row %d: the key is %r, which does not start with %r' % (n, key[:40], cells[1]))
             cells = [key] + cells[2:]
         key = re.sub(r'\s+', ' ', cells[0]).strip()
-        vals = [(c.strip() or None) for c in cells[1:5]] + [None] * (4 - len(cells[1:5]))
+        n_host = len(HOST)   # L2b: six columns (es,fr,de,pt,it,ru) need more than the original four
+        vals = [(c.strip() or None) for c in cells[1:1 + n_host]] + [None] * (n_host - len(cells[1:1 + n_host]))
         rows.append((key, dict(zip(HOST, vals))))
     return rows
 

@@ -92,4 +92,10 @@ export const UI_STRING_MACHINE = [
   'ar',
   'fa',
   'ur',
+  'es',
+  'fr',
+  'de',
+  'pt',
+  'it',
+  'ru',
 ];

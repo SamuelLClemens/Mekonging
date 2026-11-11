@@ -1077,5 +1077,6 @@ export const STRINGS = {
     'What is rude, what is polite, and what is against the law — before you do it rather than after. Ordered by how much it costs you to get wrong.': 'Điều gì bất lịch sự, điều gì lịch sự và điều gì vi phạm pháp luật — biết trước khi làm chứ không phải sau. Sắp xếp theo mức thiệt hại bạn phải chịu nếu làm sai.',
     'clubs': 'câu lạc bộ đêm', 'hostel': 'nhà trọ tập thể', 'live-music': 'nhạc sống', 'read this one': 'đọc mục này',
     'Refresh to use face to face': 'Làm mới để dùng nói chuyện trực tiếp', 'Updating…': 'Đang cập nhật…',
+    'Camera unavailable — allow camera access in your browser, or type the text in below yourself.': 'Không dùng được máy ảnh — hãy cho phép truy cập máy ảnh trong trình duyệt, hoặc tự nhập văn bản bên dưới.',
     // ---- end F5 harvest ----
 };
