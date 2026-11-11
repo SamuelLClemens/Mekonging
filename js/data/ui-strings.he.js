@@ -1023,5 +1023,6 @@ export const STRINGS = {
     'No speech heard. Tap the microphone and try again.': 'לא נשמע דיבור. הקישו על המיקרופון ונסו שוב.',
     'This device cannot take voice input in that language.': 'המכשיר הזה אינו יכול לקבל קלט קולי בשפה הזו.',
     'Refresh to use face to face': 'רעננו כדי להשתמש בשיחה פנים אל פנים', 'Updating…': 'מעדכן…',
+    'Camera unavailable — allow camera access in your browser, or type the text in below yourself.': 'המצלמה אינה זמינה — אפשרו גישה למצלמה בדפדפן, או הקלידו את הטקסט למטה בעצמכם.',
     // ---- end F5 harvest ----
 };

@@ -1057,6 +1057,8 @@ export const STRINGS = {
     'Voice input needs a connection on this device.': 'ورودی صوتی روی این دستگاه نیاز به اتصال دارد.',
     'No speech heard. Tap the microphone and try again.': 'صدایی شنیده نشد. روی میکروفون بزنید و دوباره امتحان کنید.',
     'This device cannot take voice input in that language.': 'این دستگاه نمی‌تواند ورودی صوتی به آن زبان بگیرد.',
-    'Refresh to use face to face': 'برای استفاده از گفتگوی رودررو، برنامه را تازه‌سازی کنید', 'Updating…': 'در حال به‌روزرسانی…',
+    'Refresh to use face to face': 'برای استفاده از گفتگوی رودررو، برنامه را تازه‌سازی کنید',
+    'Updating…': 'در حال به‌روزرسانی…',
+    'Camera unavailable — allow camera access in your browser, or type the text in below yourself.': 'دوربین در دسترس نیست — دسترسی به دوربین را در مرورگر خود مجاز کنید یا متن را در پایین خودتان بنویسید.',
     // ---- end F5 harvest ----
 };

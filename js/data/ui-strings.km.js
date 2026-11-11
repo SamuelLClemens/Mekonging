@@ -1080,7 +1080,8 @@ export const STRINGS = {
     'Good tonight': 'ល្អសម្រាប់យប់នេះ', 'Near Bangkok': 'ជិតទីក្រុងបាងកក', 'Sources (3)': 'ប្រភព (3)',
     'What is rude, what is polite, and what is against the law — before you do it rather than after. Ordered by how much it costs you to get wrong.': 'អ្វីដែលមិនគួរសម អ្វីដែលគួរសម និងអ្វីដែលខុសច្បាប់ — ដឹងមុនពេលធ្វើ មិនមែនក្រោយពេលធ្វើទេ។ រៀបតាមតម្លៃដែលអ្នកត្រូវបង់ប្រសិនបើធ្វើខុស។',
     'clubs': 'ក្លឹបរាត្រី', 'hostel': 'ផ្ទះសំណាក់ក្រុម', 'live-music': 'តន្ត្រីផ្ទាល់',
-    'read this one': 'សូមអានចំណុចនេះ',
-    'Refresh to use face to face': 'ធ្វើឱ្យថ្មីដើម្បីប្រើការនិយាយផ្ទាល់មុខ', 'Updating…': 'កំពុងធ្វើបច្ចុប្បន្នភាព…',
+    'read this one': 'សូមអានចំណុចនេះ', 'Refresh to use face to face': 'ធ្វើឱ្យថ្មីដើម្បីប្រើការនិយាយផ្ទាល់មុខ',
+    'Updating…': 'កំពុងធ្វើបច្ចុប្បន្នភាព…',
+    'Camera unavailable — allow camera access in your browser, or type the text in below yourself.': 'មិនអាចប្រើកាមេរ៉ាបានទេ — សូមអនុញ្ញាតឱ្យចូលប្រើកាមេរ៉ាក្នុងកម្មវិធីរុករក ឬវាយអត្ថបទខាងក្រោមដោយខ្លួនឯង។',
     // ---- end F5 harvest ----
 };

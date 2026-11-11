@@ -71,7 +71,7 @@ HEAD_DATA = """// Safety data text — %s (%s). The data text of #danger, #cross
 
 export const SAFETY_DATA_STRINGS = {
 """
-NAMES = {'th': 'Thai', 'vi': 'Vietnamese', 'km': 'Khmer', 'lo': 'Lao', 'he': 'Hebrew', 'ar': 'Arabic', 'fa': 'Persian', 'ur': 'Urdu'}
+NAMES = {'th': 'Thai', 'vi': 'Vietnamese', 'km': 'Khmer', 'lo': 'Lao', 'he': 'Hebrew', 'ar': 'Arabic', 'fa': 'Persian', 'ur': 'Urdu', 'es': 'Spanish', 'fr': 'French', 'de': 'German', 'pt': 'Portuguese', 'it': 'Italian', 'ru': 'Russian'}
 
 
 def esc(s):
@@ -233,7 +233,8 @@ def main():
             key = ks[n]['key']
             if not key.startswith(cells[1]):
                 sys.exit('row %d: the key is %r, which does not start with %r' % (n, key[:40], cells[1]))
-            vals = [(c.strip() or None) for c in cells[2:6]] + [None] * (4 - len(cells[2:6]))
+            n_host = len(HOST)   # L2b: six columns
+            vals = [(c.strip() or None) for c in cells[2:2 + n_host]] + [None] * (n_host - len(cells[2:2 + n_host]))
             rows.append((key, ks[n]['group'], dict(zip(HOST, vals))))
         reg = json.load(open(REGISTER, encoding='utf-8'))
         have = {(e['lang'], e['key'], e.get('source')) for e in reg['entries']}
