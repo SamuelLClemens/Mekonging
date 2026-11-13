@@ -71,7 +71,7 @@ HEAD_DATA = """// Safety data text — %s (%s). The data text of #danger, #cross
 
 export const SAFETY_DATA_STRINGS = {
 """
-NAMES = {'th': 'Thai', 'vi': 'Vietnamese', 'km': 'Khmer', 'lo': 'Lao', 'he': 'Hebrew', 'ar': 'Arabic', 'fa': 'Persian', 'ur': 'Urdu', 'es': 'Spanish', 'fr': 'French', 'de': 'German', 'pt': 'Portuguese', 'it': 'Italian', 'ru': 'Russian', 'bn': 'Bengali', 'hi': 'Hindi', 'ja': 'Japanese', 'ko': 'Korean', 'zh-CN': 'Chinese (Simplified)', 'zh-TW': 'Chinese (Traditional)'}
+NAMES = {'th': 'Thai', 'vi': 'Vietnamese', 'km': 'Khmer', 'lo': 'Lao', 'he': 'Hebrew', 'ar': 'Arabic', 'fa': 'Persian', 'ur': 'Urdu', 'es': 'Spanish', 'fr': 'French', 'de': 'German', 'pt': 'Portuguese', 'it': 'Italian', 'ru': 'Russian', 'bn': 'Bengali', 'hi': 'Hindi', 'ja': 'Japanese', 'ko': 'Korean', 'zh-CN': 'Chinese (Simplified)', 'zh-TW': 'Chinese (Traditional)', 'cs': 'Czech', 'id': 'Indonesian', 'ms': 'Malay', 'nl': 'Dutch', 'pl': 'Polish', 'sv': 'Swedish', 'tl': 'Filipino (Tagalog)', 'tr': 'Turkish', 'uk': 'Ukrainian'}
 
 
 def esc(s):
