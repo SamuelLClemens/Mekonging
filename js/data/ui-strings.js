@@ -102,4 +102,6 @@ export const UI_STRING_MACHINE = [
   'hi',
   'ja',
   'ko',
+  'zh-CN',
+  'zh-TW',
 ];
