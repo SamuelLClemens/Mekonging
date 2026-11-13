@@ -120,7 +120,12 @@ def run_langs(args, langs, routes, outdir, slot):
                             rec['mt'] = pg.call('__lc.mtPass()', 120)
                             pg.call('__lc.setLang(%s, false)' % json.dumps(lang))
                     rec['ms'] = int((time.time() - t0) * 1000)
-                    fh.write(json.dumps(rec, ensure_ascii=False) + '\n')
+                    try:
+                        line = json.dumps(rec, ensure_ascii=False)
+                        line.encode('utf-8')
+                    except UnicodeEncodeError:   # L2c-2b: a text cut inside an emoji leaves a lone surrogate; escape it instead of dying
+                        line = json.dumps(rec)
+                    fh.write(line + '\n')
                     fh.flush()
             print('done %s' % lang, flush=True)
     finally:
