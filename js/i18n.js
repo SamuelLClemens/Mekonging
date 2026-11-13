@@ -275,7 +275,7 @@ export function ensureUiStrings(code) {
 // router fetches only when a safety screen opens in that language (js/main.js render(), ensureSafetyText). The
 // entries are merged into the active dictionary, so the DOM pass and t() find them with no change to a screen.
 // A file that cannot be fetched leaves English, the same fallback as a missing dictionary key.
-const SAFETY_LANGS = new Set(['th', 'vi', 'km', 'lo', 'he', 'ar', 'fa', 'ur', 'es', 'fr', 'de', 'pt', 'it', 'ru', 'bn', 'hi']);
+const SAFETY_LANGS = new Set(['th', 'vi', 'km', 'lo', 'he', 'ar', 'fa', 'ur', 'es', 'fr', 'de', 'pt', 'it', 'ru', 'bn', 'hi', 'ja', 'ko']);
 const SAFETY_DONE = new Set();
 const SAFETY_PENDING = Object.create(null);
 
