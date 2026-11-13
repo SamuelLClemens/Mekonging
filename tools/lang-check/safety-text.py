@@ -71,7 +71,7 @@ HEAD_DATA = """// Safety data text — %s (%s). The data text of #danger, #cross
 
 export const SAFETY_DATA_STRINGS = {
 """
-NAMES = {'th': 'Thai', 'vi': 'Vietnamese', 'km': 'Khmer', 'lo': 'Lao', 'he': 'Hebrew', 'ar': 'Arabic', 'fa': 'Persian', 'ur': 'Urdu', 'es': 'Spanish', 'fr': 'French', 'de': 'German', 'pt': 'Portuguese', 'it': 'Italian', 'ru': 'Russian', 'bn': 'Bengali', 'hi': 'Hindi'}
+NAMES = {'th': 'Thai', 'vi': 'Vietnamese', 'km': 'Khmer', 'lo': 'Lao', 'he': 'Hebrew', 'ar': 'Arabic', 'fa': 'Persian', 'ur': 'Urdu', 'es': 'Spanish', 'fr': 'French', 'de': 'German', 'pt': 'Portuguese', 'it': 'Italian', 'ru': 'Russian', 'bn': 'Bengali', 'hi': 'Hindi', 'ja': 'Japanese', 'ko': 'Korean'}
 
 
 def esc(s):
