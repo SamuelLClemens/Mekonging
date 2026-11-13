@@ -97,4 +97,4 @@ a language written in its own name). They are not counted in `ui`.
 - Composed strings (`tpl`) and data text need a different mechanism; see `docs/PROGRAM.md` 4.4 "Language".
 
 ## Not covered
-Right-to-left layout is measured, not fixed (L2a). `apply-strings.py` and `safety-text.py` take any number of language columns (`LC_HOST=es,fr,de,pt,it,ru`; L2b; `bn,hi` in L2c-1, `ja,ko` in L2c-2 and `zh-CN,zh-TW` in L2c-2b and `id,ms` in L2c-3a, which also needed their names added to `NAMES` in `safety-text.py`), not only four. Screens that need seeded data. Safari on an iPhone (the owner's checklist in `docs/HANDOFF.md`).
+Right-to-left layout is measured, not fixed (L2a). `apply-strings.py` and `safety-text.py` take any number of language columns (`LC_HOST=es,fr,de,pt,it,ru`; L2b; `bn,hi` in L2c-1, `ja,ko` in L2c-2 and `zh-CN,zh-TW` in L2c-2b and `id,ms` in L2c-3a and `cs,pl` in L2c-3b, which also needed their names added to `NAMES` in `safety-text.py`), not only four. Screens that need seeded data. Safari on an iPhone (the owner's checklist in `docs/HANDOFF.md`).
