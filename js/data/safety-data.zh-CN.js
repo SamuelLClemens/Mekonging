@@ -80,7 +80,7 @@ export const SAFETY_DATA_STRINGS = {
   'Check your government travel advisory before any Myanmar crossing; conditions change rapidly.': '前往缅甸的任何口岸之前，请查看您所在国家政府的旅行提示；情况变化很快。',
   'Connects the Plain of Jars region with Vinh.': '连接石缸平原地区与荣市。',
   'Convenient for the southern coast and Phu Quoc island.': '方便前往南部海岸和富国岛。',
-  'Cross early to catch the morning slow boat from Houayxay.': '请早点过境，以赶上会晒的早班慢船。',
+  'Cross early to catch the morning slow boat from Houayxay.': '请早点过境，以赶上从会晒出发的早班慢船。',
   'Daylight only, roughly 06:00–18:00': '仅限白天，大约 06:00–18:00',
   'Direct cross-border buses run between the two cities and handle the paperwork stops.': '两城之间有直达的跨境巴士，并负责办理停靠检查手续。',
   'Far less hassle than Poipet and scenic, but transport is sparse, so plan onward travel.': '比波贝省心得多，风景也好，但交通班次稀少，请提前规划后续行程。',
