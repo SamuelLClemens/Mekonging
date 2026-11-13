@@ -108,4 +108,6 @@ export const UI_STRING_MACHINE = [
   'ms',
   'cs',
   'pl',
+  'nl',
+  'sv',
 ];
