@@ -100,4 +100,6 @@ export const UI_STRING_MACHINE = [
   'ru',
   'bn',
   'hi',
+  'ja',
+  'ko',
 ];
