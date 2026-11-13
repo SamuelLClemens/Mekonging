@@ -52,7 +52,7 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, 'tools', 'style-digest'))
 import cdp  # noqa: E402
 
-CACHE = os.path.expanduser('~/Library/Caches/mk-lang-check')
+CACHE = os.path.expanduser(os.environ.get('LC_CACHE', '~/Library/Caches/mk-lang-check'))   # LC_CACHE: a folder of its own, so two sessions never share a Chrome profile (L2c-3b)
 PAGE_JS = open(os.path.join(HERE, 'page.js'), encoding='utf-8').read()
 LATIN = re.compile(r'[A-Za-z]{2}')
 EMOJI_LEAD = re.compile(r'^([\U0001F000-\U0001FFFF\u2190-\u2BFF\u2600-\u27BF\uFE0F\u200d\u20e3+＋\s]+)(.+)$', re.S)
