@@ -106,4 +106,6 @@ export const UI_STRING_MACHINE = [
   'zh-TW',
   'id',
   'ms',
+  'cs',
+  'pl',
 ];
