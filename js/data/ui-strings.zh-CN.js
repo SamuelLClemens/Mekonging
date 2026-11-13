@@ -694,7 +694,7 @@ export const STRINGS = {
     'At land borders': '在陆路边境',
     'Chiang Mai is the region’s biggest nomad hub, with many cafés and coworking spaces (for example Punspace and CAMP); Bangkok, Phuket and Koh Lanta also have coworking. Spending 180+ days in a tax year can make you a Thai tax resident — take advice.': '清迈是该地区最大的数字游民中心，有许多咖啡馆和共享办公空间（例如 Punspace 和 CAMP）；曼谷、普吉岛和兰达岛也有共享办公空间。在一个纳税年度内停留 180 天以上，可能使您成为泰国税务居民，请咨询专业意见。',
     'Common visa scams': '常见签证骗局', 'DTV — Destination Thailand Visa': 'DTV：泰国目的地签证',
-    'Higher income and asset thresholds with more documentation; includes tax benefits on foreign income and simpler re-entry.': '收入和资产门槛更高，需要更多文件；包括对境外收入的税收优惠，以及更简便的再入境。',
+    'Higher income and asset thresholds with more documentation; includes tax benefits on foreign income and simpler re-entry.': '收入和资产门槛更高，需要更多证明文件；包括对境外收入的税收优惠，以及更简便的再入境。',
     'LTR — Long-Term Resident': 'LTR：长期居留者', 'Long stay & remote work': '长期停留与远程工作', 'Nomad tip:': '数字游民提示：',
     'Official e-visa portal': '官方电子签证门户', 'Overstay': '逾期滞留',
     'Proof of funds around 500,000 THB; you may work only for foreign clients, not Thai employers. Application fee about 10,000 THB.': '需证明资金约 50 万泰铢；您只能为外国客户工作，不能受雇于泰国雇主。申请费约 1 万泰铢。',
