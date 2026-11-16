@@ -34,7 +34,7 @@ import shutil
 import sys
 import time
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdp'))
 from cdp import Chrome  # noqa: E402
 
 PROFILES = os.path.expanduser('~/Library/Caches/mk-s1-chrome')

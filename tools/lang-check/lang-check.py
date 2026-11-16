@@ -49,7 +49,7 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-sys.path.insert(0, os.path.join(ROOT, 'tools', 'style-digest'))
+sys.path.insert(0, os.path.join(ROOT, 'tools', 'cdp'))
 import cdp  # noqa: E402
 
 CACHE = os.path.expanduser(os.environ.get('LC_CACHE', '~/Library/Caches/mk-lang-check'))   # LC_CACHE: a folder of its own, so two sessions never share a Chrome profile (L2c-3b)
