@@ -78,7 +78,7 @@ There is no Node on the development machine. Run it locally under JavaScriptCore
 
 ## Sweeping every screen
 
-`route-sweep.js` visits all 73 real routes and reports what is broken. It needs a live DOM, so
+`route-sweep.js` visits all 78 real routes (the Market tab and its four chips are in its `EXTRA` table since Q2) and reports what is broken. It needs a live DOM, so
 it runs in the page rather than on the command line:
 
 ```bash
@@ -107,6 +107,12 @@ spends, so the default pass stays safe to run against real data.
 Read its header before trusting a result, it documents the traps that made earlier
 hand-written versions of this sweep report confident nonsense, including the one where a
 hidden page computes no layout at all and every width check silently inverts.
+
+For the rendered 375 px audit (tap size, contrast, overflow, covered controls and console errors, in both
+themes, on every route) run `python3 tools/audit-375/run.py`. It serves the tree, keeps the display awake,
+refuses a page that reports `document.hidden`, and prints the headline table and one table per route;
+`tools/audit-375/README.md` says how to read it and how to compare two runs. It imports this sweep for
+the route list and for the sweep's own flags.
 
 ## Generators
 
@@ -142,7 +148,9 @@ photos from each place's own Wikipedia article (plan slice D3), one country per 
 right ones in `place-photo-articles.json`, `--fetch` stages the lead images (openly licensed,
 about 800 px and 60 KB), `--sheet` makes contact sheets so every image is looked at, and
 `--install` writes the accepted ones to `img/places/` and `js/data/photos.js`. Then run
-`build-pack-sizes.py --write`. `--report` gives a country's coverage.
+`build-pack-sizes.py --write`. `--report` gives a country's coverage. `--suggest` and `--fetch` exit 1 if
+any lookup failed, because a failed lookup looks like "no article of its own" (Laos lost 68 of 163 on a
+first pass and the run exited 0); `--suggest` marks each such row with an `error` key. Rerun before reviewing.
 
 `fetch-local-names.py` fills a place's `localName` (plan slice D4). It starts from the English
 article already reviewed for the place (`place-photo-articles.json`, or a page the record cites,

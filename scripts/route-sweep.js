@@ -67,6 +67,11 @@ const EXTRA = [
   ['#search', 'the topbar magnifier'],
   ['#saved', 'the topbar star'],
   ['#sos', 'the topbar emergency control'],
+  ['#market', 'the Market tab'],
+  ['#market-items', 'a Market chip: Items'],
+  ['#market-rooms', 'a Market chip: Rooms'],
+  ['#market-rides', 'a Market chip: Rides'],
+  ['#market-cash', 'a Market chip: Cash'],
   ['#welcome', 'onboarding, reachable directly and easy to break unnoticed'],
 ];
 
@@ -235,6 +240,10 @@ async function controlAudit(root, haveLayout) {
       // still in the tab order and still clickable that happens to have no size.
       const cs = getComputedStyle(el);
       if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+      // The same holds when an ANCESTOR is display: none: the control has no layout box at all, and getClientRects() is empty.
+      // The Weather screen's 10-day forecast is a hand-rolled accordion (a button and a display:none panel per day), which
+      // openEveryFold cannot open because it opens <details>: its 170 unit toggles read 0 x 0 on every sweep until Q2.
+      if (!el.getClientRects().length) return false;
       const r = el.getBoundingClientRect();
       return r.width < 1 || r.height < 1;
     });
