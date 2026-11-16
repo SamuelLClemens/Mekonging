@@ -1,32 +1,35 @@
-# Handoff, 2026-11-13 (L2c-3c built; L2c-3d is next)
+# Handoff, 2026-11-16 (F8 built, draft PR 163; F6 is next)
 
-Every open item lives in `docs/PROGRAM.md` section 4. The previous handoff (L2c-3b) is `git show c650fa8:docs/HANDOFF.md`.
+Every open item lives in `docs/PROGRAM.md` section 4. The previous handoff (L2c-3c) is `git show d4132dd:docs/HANDOFF.md`; its L2c-3d prompt still stands after F6.
 
 ## Shipped
-- **L2c-3c**, Dutch (`nl`) and Swedish (`sv`): branch `feat/l2c3c-languages`, `mk-v0.672.0` (CACHE_VERSION and manifest bumped, 349 files), cut from the merged tip of PR 161 (`c650fa8`).
-  - nl and sv each hold 1,262 new interface values (975 harvested, 277 keys the harvest missed, 10 older `null` entries), 374 safety-text and 271 safety-data, all machine-made and registered (`source` core / safety-text / safety-data). **Nobody has read them.** Both are in `UI_STRING_MACHINE` and `SAFETY_LANGS`. Not precached.
-  - Written by hand in one pass, nl and sv side by side, from the L2c-3b key lists. Both use the informal "you" (`je`, `du`). Existing tab names were kept (nl Start/Praten/Jij/Plekken/Verkennen, sv Hem/Prata/JAG/Platser/Utforska). Singular and plural keys have their own wording. Species and skin names are best effort.
-  - Identical-to-English safety values reworded: nl `Shocktoestand`, `Cashewboom`, `Gaur (wilde rund)`; sv `Cashewträd`, `Gaur (vildoxe)`; the `Laos ↔ X` crossing titles use an en dash.
-  - Labels shortened after the F5 run clipped them at 375 px. nl: `Afdingen`, `Fruit & groente`, `Marktwaren`, `Volgende stop`, `Rittijden`, `Oplichting`, `Toegankelijk`, `Overleven`, `Dagboek, foto's, bewaard`. sv: `Pruta`, `Frukt och grönt`, `Torgvaror`, `Reseplan` (an older value), `Överlevnad`, `Vilken rätt, frukt eller fågel?`, `Inställningar, backup, hjälp`, `Dagbok, foton, sparade platser`. nl `entry` was `ingang` (a door) and is now `inreispunt`.
-  - Tooling: `tools/lang-check/lang-check.py` reads `LC_CACHE` (a folder of its own, so two sessions never share a Chrome profile). Batches are in `~/Library/Caches/mk-l2c3c` (outside the repo): `b/*.txt` (`n||nl||sv`), `conv_all.py` (to TSV), `fill_old.py`, `shorten.py`, `bt/`.
+- **F8**, the stale stored location: branch `feat/f8-stale-fix`, [PR 163](https://github.com/SamuelLClemens/Mekonging/pull/163), a **draft**, `mk-v0.673.0` (CACHE_VERSION and manifest bumped, 351 files), cut from the tip `d4132dd`. Commits `8b390c5` (code, 25 interface keys) and `21da95d` (docs).
+  - Owner rulings of 2026-11-16: a stored location is old after one hour; the wording "Old location"; the iPhone dialog only on a tap. The PR also records the owner's other rulings of that day (the order, T16, F9, Q2, the removed branches) in `docs/PROGRAM.md` and `docs/PLAN.md`.
+  - Past an hour, Emergency, the hospital screen, the survival guide, the outside-the-region screen and Home say the location is old and when it was taken, with an `Update my location` button. `js/fix-refresh.js` reads a position on return to the foreground and when those screens open, only where the Permissions API says `granted`. The watch's error callback records why. Settings, `Location status`, prints what the browser reports.
+  - Tools outside the repo, in `~/Library/Caches/mk-f8/`: `repro.py` (the defect), `verify.py` (the checks; its `Driver` seeds state and opens routes), `guards.sh`, `ed.py` (exact-match edits: Edit and Write are refused for Mekong paths from a Nomadic Almanac launch worktree), `f8-strings.tsv`.
 
 ## Verified
-- **F5 check** (`lang-check`, headless Chrome, 375 px, 96 routes each for en, nl, sv; `document.hidden` false on all; server started from this worktree on 8798, `/js/main.js` showed `mk-v0.672.0`): `ui` 0, `over` 0, `tight` 0, `CLIPS` 0, `glyph` 0 in nl and sv. `clip` on the full run: en 29, nl 43, sv 42; the extra boxes in nl and sv were headings or one-line descriptions (listed above). After shortening, those 17 routes re-measured alone: clip 0 for en, nl and sv. No box clips that English does not. `tpl` 453 nl / 518 sv, `data` about 4,700 each.
-- **Blind back-translation**, 40 strings per language (24 safety): nl 36 same, 4 close; sv 39 same, 1 close. The same model translated and read back: a consistency check only.
-- All guards in CLAUDE.md pass, including `check-cache-version` against `origin/feat/scaffold-bangkok-slice`, `jsc -m` on each edited JS file and `scripts/validate-jsc.mjs`. The shortened labels were re-measured on the affected routes only; the full F5 run was not repeated.
+- Headless Chrome at 375 px, `document.hidden` false on every row: 178 checks, 0 failed, 0 console errors, 0 elements past the viewport edges, 44 px tap targets. Before the change a Bangkok fix 3 and 40 days old at permission `prompt` made Emergency read "Showing Thailand, near Bangkok" and Home read "Bangkok", with no hint.
+- Covered: 59 minutes inside the limit, 61 past it; an unknown age; a fix outside the region (Singapore); a border fix; en, th, vi, km, lo with no slot unfilled; a refused tap; a held permission replacing a 3-day-old fix with no tap on cold start and on a return to the foreground (the watch stubbed out, so only the return can ask); the Settings readout.
+- Every guard in `CLAUDE.md` passes, including `check-undefined` (329 files) and `check-cache-version` against `origin/feat/scaffold-bangkok-slice`.
 
 ## Not done / known issues
-- No native reader has seen either language (decision 6). Check first: first-aid doses and technique lines, species names, and the shortened labels.
-- Composed strings and some labels still show English. Not checked in WebKit.
-- 3 languages still hold their `null` entries and these keys, shown as English: tl tr uk.
-
-## Remaining L2c-3 sub-slices (stacked, one per session)
-- L2c-3d: tr, uk (different scripts and morphology: check glyphs and expansion at 375 px)
-- L2c-3e: tl
+- **Unknown:** what the Permissions API answers on an iPhone Home Screen install (this Mac has no iOS Simulator). The owner reads it on the phone (steps below). If an install reports `prompt` at every launch, one tap per launch refreshes the location, by the owner's ruling; any other rule needs the owner.
+- Screens that only measure a distance from the stored fix (Nearby, Places, Search, Food, Exchange, Weather, Today, the walk bar, the map, the journal, `inferPhase`) still use an old fix without saying so: `docs/PROGRAM.md` 4.4, new row. Home's line shows on the road only (phase `traveling`), as the old hint did.
+- The 22 other machine languages show English for the 25 new keys (`null`). Since L2 `check-ui-strings` wants a new key in every language but tl, tr and uk (now in `CLAUDE.md`). L2c-3d and L2c-3e must regenerate their key lists: 1,656 keys, not 1,631. A top-up that translates the 25 keys in 22 languages is unplaced.
+- Not run in WebKit or on an iPhone: the date format and `visibilitychange` on a Home Screen app. The th, vi, km and lo strings are machine-made and unread.
 
 ## Open decisions (need the user)
-None open. Merging this PR is the owner's step once CI is green.
+1. Merge before the phone check? Only the production branch is served over HTTPS, so a draft cannot reach the phone. Recommended: mark PR 163 ready and merge once CI is green, then check on the live site; the change adds a notice and a refresh and never a dialog.
+2. Remove `feat/s1-tokens-machinery` and `fix/transport-leaving-reverse` (`docs/PROGRAM.md` 4.6)? Recommended: yes, the tip covers both.
+3. F6's first step is a question to the owner, asked by the F6 session: how long a hand-picked place holds.
+
+## The owner's iPhone check (once the release is live; one small step per message, each verified by the session; never ask for pasted text)
+1. Open the Home Screen app, then You, Settings, `Location status`. Read `Release:` (it must say mk-v0.673.0) and `Permission now:`.
+2. Close the app completely, reopen it, open the card again: does `Permission now` change?
+3. Tap `Check again`. Does a dialog appear? Does `Stored location` become a few minutes old?
+4. More than an hour after the last location, open Home or Emergency: the old-location line shows. Tap `Update my location`.
 
 ## Next session prompt
-> Read CLAUDE.md and docs/HANDOFF.md. Run /slice for L2c-3d: tr and uk, stacked on the merged tip of the L2c-3c PR (fetch `origin/feat/scaffold-bangkok-slice` first). Same method as L2c-3c: reuse the key lists in `~/Library/Caches/mk-l2c3b/keys` and the English lists in `b/*.en.tsv` and `safety/`; `apply-strings.py` and `safety-text.py` with `LC_HOST=tr,uk` and `LC_WORK` (names are already in `NAMES`); the 10 older `null` entries by hand (`fill_old.py` in `~/Library/Caches/mk-l2c3c`); back-translation sample; register in `UI_STRING_MACHINE` and `SAFETY_LANGS`; version bump; F5 run on a server started from the worktree with `LC_CACHE` set to a folder of its own.
-> Done when: F5 shows 0 untranslated interface strings, no clipping beyond English's 29, no overflow or missing glyphs on 96 routes, all guards pass. Out of scope: native review, local languages (L3, L4).
+> Read CLAUDE.md and docs/HANDOFF.md. `git fetch origin`. F6 stacks on the merged tip of PR 163 (it edits `focusSpot` and Home beside F8 and bumps the same version line), so if 163 is not merged, ask the owner. Run /slice for F6: a place picked by hand holds over a live fix (decision 29, ruled 2026-10-27: hold the pick). First step: one AskUserQuestion form to the owner on how long a pick holds (a time, until the traveller moves a distance, until they ask), with a recommendation.
+> Done when: with a picked place and a live fix in another town, Home, Weather, Today and Places name the picked place until the owner's rule ends it, and the end of the hold is visible; 375 px, 0 console errors, every guard passes; version, cache and manifest bumped. Out of scope: F8's old-location notes, the other `nearestSpotGlobal` callers (4.4), L2c-3d.
