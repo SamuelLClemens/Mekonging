@@ -3,7 +3,7 @@
 Every open item lives in `docs/PROGRAM.md` section 4. The previous handoff (L2c-3c) is `git show d4132dd:docs/HANDOFF.md`; its L2c-3d prompt still stands after F6.
 
 ## Shipped
-- **Q2**, the 375 px audit driver (tools, scripts and documents only; no version bump): branch `feat/q2-audit-driver`, @@PR@@, on top of `42e5058` (PR 163, F8, `mk-v0.673.0`).
+- **Q2**, the 375 px audit driver (tools, scripts and documents only; no version bump): branch `feat/q2-audit-driver`, [PR 164](https://github.com/SamuelLClemens/Mekonging/pull/164), on top of `42e5058` (PR 163, F8, `mk-v0.673.0`).
   - `python3 tools/audit-375/run.py` prints the headline table and one table per route for both themes; it refuses a `document.hidden` page and keeps the display awake. `tools/cdp/cdp.py` is the one stdlib Chrome client: it absorbed `tools/style-digest/cdp.py`, and `digest.py`, `lang-check.py` and `drive-fix.py` import it. `tools/audit-375/README.md` says how to read the tables and how to compare two runs.
   - `fetch-place-photos.py` exits 1 when a lookup fails. `route-sweep.js` lists the Market (78 routes) and no longer counts a control inside a `display: none` panel as zero-size: Q1 put the 170 on `#weather-th` down to `content-visibility`, and they are the closed day panels of the 10-day forecast.
   - `docs/AUDIT_375.md` has the re-measure of `mk-v0.673.0` beside the 2026-10-19 numbers: 62 of 78 routes with body controls under 44 px (was 66 of 77), contrast on 28 routes in light and 7 in dark (was 27 and 6), and four Market routes that log the closed beta's HTTP 400.
