@@ -15,8 +15,8 @@ relevant section of the docs below, not the whole repo.
   `.claude/launch.json`, never a worktree's: add `bash -c "cd '<worktree>' && python3 scripts/serve.py <port>"` there.
 - The in-app browser pane is always `document.hidden`: timers are clamped, `javascript_tool` times out at 30 s, maps
   never paint and layout reads 0. Measure layout and take screenshots with headless Chrome over CDP, not the pane.
-- `fetch-place-photos.py` (`--suggest`, `--fetch`) exits 0 even when curl cannot resolve Wikipedia. Grep its log for
-  `Could not resolve host` and rerun before reviewing (Laos: 68 of 163 lookups failed on the first pass).
+- `fetch-place-photos.py` (`--suggest`, `--fetch`) exits 1 when a lookup fails (curl cannot resolve Wikipedia; Laos lost 68 of 163 on a
+  first pass) and marks each such `--suggest` row `error`. Rerun before reviewing: a failed lookup is not "no article".
 - `gh` is installed and authenticated. `curl`/Python TLS to some hosts fails here (OSRM, Overpass): use curl with a
   descriptive User-Agent.
 - Overpass is unreliable from this machine: overpass-api.de times out and a mirror returned HTTP 500 on 10 of 12 queries.
@@ -130,16 +130,16 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - For route sweeps, import `scripts/route-sweep.js` (never paste it: the CSP forbids eval) and wait for a
   MutationObserver hit after each navigation before reading the DOM.
 - Route-graph work: test in a brand-new tab loaded directly at `#route` (the graph memoizes on first call).
-- Headless Chrome pages turn `document.hidden` when macOS display sleep starts mid-run, and a hidden pass undercounts controls (`#settings` read 11 against 111). Keep the display awake and assert `document.hidden === false` for every route (Q1, `docs/AUDIT_375.md`).
+- Headless Chrome pages turn `document.hidden` when macOS display sleep starts mid-run, and a hidden pass undercounts controls (`#settings` read 11 against 111). Keep the display awake and assert `document.hidden === false` for every route (Q1, `docs/AUDIT_375.md`); `tools/cdp/cdp.py` (`keep_awake`, `assert_visible`) and `tools/audit-375/run.py` do both, and a new driver imports that client. A deep link boots through three placeholder screens and the entrance animation fades cards in for half a second: measure once the topbar is up and finite animations are finished (`audit375.py` and its page script do; a card read mid-fade has contrast 1.0).
 - Camera screens run end to end in headless Chrome: `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream
   --use-file-for-fake-video-capture=<x>.mjpeg` plays a single JPEG as the camera. Attach to workers too
   (`Target.setAutoAttach`, flatten): a blob worker's requests and CSP errors never reach the page session (M3a).
 - Market screens: `?market=fixture` on 127.0.0.1 answers from `js/market-fixture.js`; Turnstile (test key locally) sits in a
   closed shadow root, so read its token from `input[name=cf-turnstile-response]`.
-- `html` and `body` set `overflow-x: hidden`, so `scrollWidth - clientWidth` is always 0. Measure overflow from box edges, not from scroll width. `route-sweep.js` reports false zero-size controls on `content-visibility` cards until they are scrolled into view.
+- `html` and `body` set `overflow-x: hidden`, so `scrollWidth - clientWidth` is always 0. Measure overflow from box edges, not from scroll width. `route-sweep.js` ignores a control inside a `display: none` ancestor when it looks for zero-size ones (the Weather forecast's closed day panels read 170 until Q2).
 
 ## Docs map (most are history; read only what the task names)
-- `scripts/README.md`: the guards. `DESIGN_SYSTEM.md` and `VISUAL_DIRECTION_PROMPT.md`: theme, all four phases merged.
+- `scripts/README.md`: the guards. `tools/audit-375/README.md`: the one-command 375 px audit. `DESIGN_SYSTEM.md` and `VISUAL_DIRECTION_PROMPT.md`: theme, all four phases merged.
 - `AUDIT_REPORT.md` section 7: the 11 audit slices (all merged). `WORK_ORDER.md`: the 15-item owner list in slices.
 - `BEST_TOOL_PROMPT.md`: the program prompt for session 0. Its output, `docs/PROGRAM.md`, holds the open-item register, the style brief and the feature backlog (T1 to T15); every slice updates it. `MASTER_BUILD_PROMPT.md`, `OVERHAUL.md`, `UX_OVERHAUL_PROMPT.md`, `MEKONGING_REFACTOR_*`: earlier planning, now history.
 

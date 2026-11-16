@@ -8,7 +8,7 @@ Writes one JSON document to stdout and, with SHOT=1, a screenshot per point/rout
 import base64, json, os, shutil, sys, time
 
 BASE, OUT, TREE = sys.argv[1].rstrip('/'), sys.argv[2], sys.argv[3]
-sys.path.insert(0, os.path.join(TREE, 'tools', 'style-digest'))
+sys.path.insert(0, os.path.join(TREE, 'tools', 'cdp'))
 import cdp  # noqa: E402
 
 PAGE_JS = open(os.path.join(TREE, 'tools', 'lang-check', 'page.js'), encoding='utf-8').read()

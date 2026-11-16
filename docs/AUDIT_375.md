@@ -2,6 +2,80 @@
 
 Measured values only. Nothing was fixed. Each number below was read from the rendered page in headless Chrome, not estimated from CSS.
 
+Slice Q2 (2026-11-17) committed the driver as `tools/audit-375/` (`python3 tools/audit-375/run.py`) and measured again on `mk-v0.673.0`: the next section. Everything after it is the 2026-10-19 audit of `mk-v0.640.0` as written, apart from the notes Q2 added to Method and limits and Proposed fix slices and two corrected explanations.
+
+## Re-measured on `mk-v0.673.0` (slice Q2, 2026-11-17)
+
+The audit below measured `mk-v0.640.0` on 2026-10-19. M4b-1 (the Market's browse screens), F1 to F7b (the place lists, the journey on a world map, location from the first open, the post-trip recap, the language check, emergency numbers for the world), L1 and L2 (Talk face to face, 25 interface languages) and F8 (the age of a stored location fix) have merged since, and nothing had been measured again. Q2 committed the driver and ran it on `origin/feat/scaffold-bangkok-slice` at 42e5058 (`mk-v0.673.0`): the same method (Method and limits, below), both themes, every route a cold deep link, in Chrome 157 where the first run used 155. The only files that differ from that commit are Q2's tools, scripts and documents, and none of them ships.
+
+| Item | Value |
+| --- | --- |
+| Routes | 78 (was 77): `#recap` is new, and `scripts/route-sweep.js` now lists `#market` and its four chips itself |
+| Loads | 156 route loads, each a cold deep link; 0 refused for `document.hidden`; 16 minutes, both themes measured at once |
+| Command | `python3 tools/audit-375/run.py --baseline tools/audit-375/baseline-2026-10-19` |
+
+| Measure | Routes affected (of 78) | Before (of 77) | Detail |
+| --- | --- | --- | --- |
+| Horizontal overflow past the 375 px edge | 0 | 0 | none: no unclipped box extends past either edge in either theme |
+| Console errors or exceptions from the app | 0 | 1 | none |
+| Network errors (failed requests) | 4 | 0 | #market, #market-items, #market-rides, #market-rooms |
+| Controls covered by an overlay | 0 | 0 | none; the credits panel is covered separately below |
+| Contrast failures (WCAG AA, rendered colours) | 30 | 28 | 22 distinct selectors |
+| Controls under 44 x 44 px in the screen body | 62 | 66 | 1312 controls in light, 1312 in dark, summed over routes |
+| Map credits panel covering a pin when opened | 2 | 2 | #journey (2 stops), #places |
+| `route-sweep.js` flags other than the zero-size artefact | 0 | 0 | none |
+
+Now (78 routes): contrast fails on 28 routes in light and 7 in dark; 193 of the 1312 controls under 44 px in the light pass are under 24 px.
+
+Before (77 routes): contrast fails on 27 routes in light and 6 in dark; 199 of the 1315 controls under 44 px in the light pass are under 24 px.
+
+Routes measured now and not before (1): #recap.
+
+What moved since 2026-10-19:
+
+- **Layout still holds.** No route overflows 375 px in either theme and the app raises no console error; the intermittent `#map` exception (below) did not recur.
+- **Four Market routes log one failed request each.** `#market`, `#market-items`, `#market-rooms` and `#market-rides` call `rpc/market_search`, and the closed beta answers HTTP 400 `market_closed` on purpose (`docs/EXCHANGE.md`), which the browser logs as a failed resource. It is expected until the market opens (M9) and the audit counts it. The Market's search came with M4b-1, after the first audit.
+- **Tap size: 62 of 78 routes carry body controls under 44 px (was 66 of 77), 1312 controls (was 1315), 193 of them under 24 px (was 199).** The Market screens are clean now: `#market` and its four chips each had 1 to 3 controls under 44 px and have none (M4b-1 redesigned them). `#journey` came in with 11 (the world map's controls and pins, F2). Nothing else changed in kind: buttons are 772 as before (Identify's star is still the largest selector, 385 controls on 5 routes), disclosure summaries are 294 on 59 routes (301 on 62), the topbar icons are still 31 x 44 px at the hit area (Search 36 x 44).
+- **Contrast fails on 28 routes in light and 7 in dark (30 routes, 22 selectors; was 28 routes, 27 and 6, 19 selectors).** The old failures stand: the browser-default placeholder, the weather heat cells, the etiquette badges, the small `.lbl` text and the dark calendar's selected day at 1.21:1. New selectors: the location search placeholder on Welcome (`#757575` on `#fbf7ee`, 4.31:1; F3's picker, the same default as the rest), the journey's dark route toggle (white on `#f3e8d2`, 1.21:1; Q1 measured the same toggle only in its journey-with-stops pass, and it is now drawn without stops) and the air-quality line on Weather (`#c86a1f`, 3.55:1; it depends on the day's reading).
+- **The credits plate is still open as loaded.** It covers 16.6% of the journey map and its first pin, and 10.5% of `#places` (pins 13 and 115) and of `#map`. `#weather-th` shows it in some loads and not in others: open in the light pass of the reproduction below and of two earlier runs on `mk-v0.672.0` (285 x 60 px, 11.2% of the map, over a map marker and the km/mi toggle), collapsed in the run above, in a third run on `mk-v0.672.0` and in the first audit. Its state depends on timing. Q7 starts the plate collapsed everywhere.
+- **`#recap`, the new route,** shows its empty state with no control under 44 px and no contrast failure.
+
+### The driver reproduces the first audit
+
+At `1aa5876`, the commit this document names, in a detached worktree, the committed driver measured the same 77 routes in both themes (17 minutes, 0 loads refused): `python3 tools/audit-375/run.py --repo <worktree> --routes tools/audit-375/baseline-2026-10-19/routes.txt --baseline tools/audit-375/baseline-2026-10-19`.
+
+| Measure | Recorded 2026-10-19 | Reproduced |
+| --- | --- | --- |
+| Routes with horizontal overflow | 0 | 0 |
+| Routes with a console error | 1 (`#map`) | 0 |
+| Routes with a failed request | 0 | 0 |
+| Routes with a covered control | 0 | 1 (`#weather-th`) |
+| Routes with a contrast failure | 28 (27 light, 6 dark; 19 selectors) | 28 (27 light, 6 dark; 20 selectors) |
+| Routes with body controls under 44 px | 66 | 66 |
+| Controls under 44 px, light and dark each | 1315 | 1314 |
+| of which under 24 px | 199 | 198 |
+| Routes where the credits plate covers a pin | 2 (`#journey` with two stops, `#places`) | 3 (`#journey (2 stops)`, `#places`, `#weather-th`) |
+| `route-sweep.js` flags other than the zero-size one | 0 | 0 |
+| Journey with two stops | 38 controls, 15 under 44 px, plate 285 x 60 px (16.6%) over "1. Bangkok" | identical |
+| Legacy Market hashes | 7 landings and pressed chips | identical |
+
+Every difference has a cause outside the driver:
+
+- `#map`: the console exception is intermittent (1 of 4 loads in the first audit; neither Q2 run saw it).
+- `#weather-th`: the forecast and the air-quality reading are live data. It has one unit toggle fewer (1315 to 1314 controls, 199 to 198 under 24 px), its heat cells and air-quality line change colour with the day (contrast selectors 19 to 20), and the credits plate was open in the light pass of this run (over a marker and the km/mi toggle) where the first audit saw it collapsed.
+- `#home`, `#calendar`, `#today-th`, `#trip`: the date, the hour and live data. Home's title carries the date and its forecast cells follow the weather (its contrast count moves with them), November has 30 days (`#calendar`), `#today-th` lists what is open now (the reproduction ran after midnight: 57 controls to 39, none of them under 44 px) and `#trip` proposes dates from today. None of these moves a count under 44 px.
+- A first pass of this reproduction, before the driver checked that a screen had mounted, measured dark `#search` as the 51-character "Opening..." card under a machine load average of 400 and moved dark contrast to 7 routes. The check (Method and limits, 8) removed it.
+
+### How to run it
+
+```bash
+python3 tools/audit-375/run.py                                      # this checkout, both themes, every route
+python3 tools/audit-375/run.py --baseline tools/audit-375/baseline-2026-10-19
+python3 tools/audit-375/run.py --only '#home,#sos' --brief          # a quick look
+```
+
+It serves the tree, keeps the display awake (`caffeinate -d`), runs the positive controls (a planted overflow, low contrast, 20 px button, covered button, 404, console error and exception must each be reported), measures both themes at once, and prints the headline table, the severity table, the findings that repeat and one table per route. `tools/audit-375/README.md` has the options, the run folder and how to compare two runs. A fix slice (Q3 to Q7) runs it before the change with `--out-dir` and after it with `--baseline` pointing at that folder.
+
 ## Setup
 
 | Item | Value |
@@ -294,7 +368,7 @@ _from Plan & travel › Weather; 109 controls in light, 109 in dark._
 | Under 44 | `div.maplibregl-ctrl.maplibregl-ctrl-group > button.maplibregl-ctrl-geolocate` "Find my location" | 30 x 30 hit (29 x 29 visual) | same |
 | Under 44 | `div.maplibregl-ctrl.maplibregl-ctrl-scale > span.u-tap` "km, switch to imperial" | 15 x 12 hit (13.7 x 12 visual) | same |
 | Under 44 | `details.maplibregl-ctrl.maplibregl-ctrl-attrib.maplibregl-compact > summary.maplibregl-ctrl-attrib-…` "Toggle attribution" | 24 x 24 hit (24 x 24 visual) | same |
-| route-sweep (artefact) | 170 ZERO-SIZE CONTROL(S), °C, switch to °F, °C, switch to °F, mm, switch to im…: `content-visibility` skips the cards until scrolled; the same controls measure 12 to 20 px here | flagged | flagged |
+| route-sweep (artefact) | 170 ZERO-SIZE CONTROL(S), °C, switch to °F, °C, switch to °F, mm, switch to im…: these controls sit in closed `display: none` panels (the 10-day forecast's day rows), which have no box; `route-sweep.js` has not counted them since Q2 | flagged | flagged |
 
 ### `#map`: Full offline map
 
@@ -1022,6 +1096,8 @@ _from a separate profile with trip stops Bangkok and Chiang Mai; 38 controls in 
 5. **Covered controls.** After the same scroll, a 3 x 3 grid of points inside each control is hit-tested; a control is covered when any point returns an element that is not the control, its descendant or its label. A link that wraps lines is tested on its largest line box. Map pins under another pin or outside the visible map, and the map canvas under its own markers, are by design and are listed separately or skipped.
 6. **Contrast** is computed from rendered colours for every element with its own text: foreground alpha and every ancestor's opacity composited over the stack of backgrounds that overlap the text box (`background-size`, position and repeat respected). A gradient is graded against its worst stop. Text over a `url()` image would be unmeasured; none was found. Large text (24 px, or 18.66 px and bold) needs 3:1, everything else 4.5:1. Disabled controls are skipped. Placeholders are graded from `::placeholder`. Two findings were confirmed by eye in screenshots (the dark calendar's selected day, and the journey credits panel).
 7. **Console errors** are `Runtime.exceptionThrown`, `console.error` and browser error logs (`Log.entryAdded`) from navigation to the end of the route-sweep pass. `scripts/route-sweep.js` is then imported and run for the route by hash navigation from another route. Its flags are listed per route; `very short`, `NEVER SETTLED`, `NO TOPBAR` and `DISABLED ON ARRIVAL` are informational (an empty state, a busy page, onboarding, and a button that waits for a selection).
+8. **A route is measured only once its screen has mounted (Q2).** A deep link boots through the splash, a "Loading <flags>" card while the country data loads and an "Opening..." card, none of which has a topbar. The driver waits for the topbar (Welcome, the one route without one, is named in `NO_TOPBAR`), up to 15 s, and loads the route again, up to three times, if it never appears; a route that never mounts is reported as incomplete with the reason. The first Q2 run on the tip measured `#search` as the 137-character loading card in both themes before this check read the placeholders right.
+9. **Finite animations are finished before each scan (Q2).** The app's entrance motion (`riseIn`, 380 ms with a stagger, and `pageIn`) leaves cards at a fraction of their opacity for up to half a second after they first render, and a screen that mounts twice restarts it. Read mid-fade, `#saved`, `#recap` and `#search` reported 24, 5 and 2 contrast failures at 1.0 to 1.3:1. The page script now jumps every finite animation to its end state before each scan; a looping shimmer or spinner has no end state and is left alone.
 
 What this audit does **not** cover:
 
@@ -1029,23 +1105,23 @@ What this audit does **not** cover:
 - **Thailand only for `{cc}` routes.** Prices, food, scams, visa and the rest were loaded for `th`. `vi`, `kh` and `la` have different data and may overflow differently.
 - **Detail screens** (one place, one dish, one species, a thread, a collection), sheets, dialogs and anything behind a tap are not loaded.
 - **Network.** The machine had internet, so map tiles, weather and rates were fetched. A cold offline start was not tested here (`scripts/check-offline-boot.py` covers that).
-- **A hidden page undercounts.** The first pass ran while macOS display sleep had flipped the headless pages to `document.hidden` (51 routes per theme). Re-measured visible, 33 of those 51 routes changed: `#settings` went from 11 controls to 111 and `#streetfood` from 20 to 338. Only visible measurements are in this document.
+- **A hidden page undercounts.** The first pass ran while macOS display sleep had flipped the headless pages to `document.hidden` (51 routes per theme). Re-measured visible, 33 of those 51 routes changed: `#settings` went from 11 controls to 111 and `#streetfood` from 20 to 338. Only visible measurements are in this document. Since Q2 the driver keeps the display awake (`caffeinate -d`) and refuses any load whose page reports `document.hidden`: it loads the route again up to three times and, if the page stays hidden, leaves it out of every table and names it.
 - **A transient hit is not a finding.** `#everything` reported one control touched by a door tile in the first pass in both themes; two re-measures and a direct probe found no overlap, so it is not reported.
-- **`route-sweep.js` has no Market tab.** Its `EXTRA` list holds five tab routes and omits `#market`; the audit added `#market` and its four chips itself.
-- **Tool caveat.** `scripts/route-sweep.js` reports 170 zero-size controls on `#weather-th`. They are `.u-tap` unit toggles inside `content-visibility` cards: 170 of 224 measure 0 x 0 before the page is scrolled and 12 to 20 px after. The flag is an artefact of `content-visibility`, not a defect, and its own comment 4 describes the same trap for `innerText`.
-- **`#map` exception is intermittent.** In the first light pass leaving `#map` raised `TypeError: Cannot read properties of undefined (reading 'getSource')` eight times (`js/map.js:1450`, inside `setWeather`: the `.then` runs after the map is removed). Two more light loads and three dark loads did not raise it.
+- **`route-sweep.js` had no Market tab (fixed in Q2).** Its `EXTRA` list held five tab routes and omitted `#market`; this audit added `#market` and its four chips itself. `EXTRA` now lists them, so the sweep visits 78 routes, and the driver still adds them when it audits an older tree.
+- **Tool caveat (corrected and fixed in Q2).** `scripts/route-sweep.js` reported 170 zero-size controls on `#weather-th`, and this audit put them down to `content-visibility` cards. That was wrong. They are the unit toggles in the closed day panels of the 10-day forecast, a hand-rolled accordion (a button and a `display: none` panel per day) that the sweep's `openEveryFold`, which opens `<details>`, cannot open. They have no layout box at all, scrolling changes nothing (170 before and after, on four kinds of wait), and a control inside a `display: none` ancestor is properly hidden, as the sweep's own comment says of a control that is `display: none` itself. The sweep now skips a control with no layout box (`getClientRects()` is empty): `#weather-th` reports none, and a planted rendered zero-size button is still reported.
+- **`#map` exception is intermittent.** In the first light pass leaving `#map` raised `TypeError: Cannot read properties of undefined (reading 'getSource')` eight times (`js/map.js:1450`, inside `setWeather`: the `.then` runs after the map is removed). Two more light loads and three dark loads did not raise it. Neither Q2 run (the reproduction at `1aa5876` and the run on the tip) saw it.
 
 ## Proposed fix slices
 
 Each slice is one change on its own branch. None is started. Slices that change a shipped file bump the version.
 
-1. **Q2: commit the audit driver.** Add the driver, the in-page measurement script and the report generator under `tools/audit-375/` (tools only, no version bump), so every later slice can print its own before and after. It was left out of this change to keep the pull request documents-only. Done when one command reproduces the headline table of this document in both themes on a clean worktree, and `docs/AUDIT_375.md` says how to run it.
+1. **Q2: commit the audit driver.** Add the driver, the in-page measurement script and the report generator under `tools/audit-375/` (tools only, no version bump), so every later slice can print its own before and after. It was left out of this change to keep the pull request documents-only. Done when one command reproduces the headline table of this document in both themes on a clean worktree, and `docs/AUDIT_375.md` says how to run it. **Built 2026-11-17, [PR 164](https://github.com/SamuelLClemens/Mekonging/pull/164):** `python3 tools/audit-375/run.py` prints the headline table and one table per route for both themes and refuses hidden pages; it reproduced this document's headline at `1aa5876` and re-measured `mk-v0.673.0` (the section at the top); `tools/audit-375/README.md` says how to run it.
 2. **Q3: disclosure targets.** Give every `summary` a 44 px minimum height and keep the hit area full width. Measured now: 301 summary controls under 44 px on 62 routes, 74 of them under 24 px. By selector: `details.route-ops > summary` 283 x 21 to 22 px (66, all on `#transport-th`); `summary.foldcard-sum` 307 to 343 x 22 to 42 px (156 on 45 routes); `details.screen-hint > summary` 104 to 143 x 25 to 26 px (28 on 28 routes); `details.filters-collapse > summary` 149 to 328 x 36 to 40 px (23 on 5 routes). Done when the audit shows 0 summaries under 44 px at 375 px.
 3. **Q4: topbar and form fields.** The topbar icons have a 44 px tall hit area but only 30 to 36 px wide (Language, Settings and Saved 30 px, Search 35 px; the icons sit 31 px apart and each neighbour's 44 px `::before` paints over the next). Form fields: 8 inputs and selects are 18 to 22 px high (`details.card.foldcard.autofold > input`, `div.card > input`, `label.prices-in > select`, `div.row-between > select`), 12 are 36 to 37 px high (`div.fx-line > input`, `select`); 21 native checkboxes and radios are 13 to 18 px boxes inside labels that hit 48 to 54 x 24 to 42 px. Done when no field is under 44 px high and the topbar's narrowest hit area is 44 px, or the spacing is recorded as an accepted trade-off.
 4. **Q5: buttons, chips, toggles, links and map controls.** By selector: `button.id-star` 28 x 33 px (385 on 5 identify routes); `button.id-play` 26 x 31 (52); Phrasebook `button.speak.pin` and `.hide` 34 x 34 to 35 (205); Trip `button.plan-step` and `plan-drop` 36 x 36 to 37 (84); `div.chips > button.chip` 36 to 41 x 45 (51) and the month strip 32 to 40 x 44 (11); map layer toggles 90 to 198 x 38 (17); Places `pqr-compare` 20 x 22 and `pqr-star` 24 x 24 (36); standalone links on `#transport-th` 84 to 155 x 18 to 19 (28); map pins 22 to 39 x 22 to 23 on Places. MapLibre's own zoom, compass, locate and style buttons are 30 x 29. Unit toggles (`span.u-tap`, 13 to 20 px high, 54, on 1 route) sit inside a sentence, which WCAG 2.5.8 exempts: decide whether to enlarge them or record the exemption. Done when the audit lists none under 44 px, or each exception is named in `docs/` with its reason.
 5. **Q6: contrast.** Light: placeholders are the browser default `#757575` on `#fbf7ee` at 4.31:1 on 22 routes (one `::placeholder` rule fixes all); the weather heat cells set `#1e1e1e` on a red `#de3535` at 3.7:1 (10 to 11 px bold; the same in dark); the air-quality line is `#b08900` at 3.06:1; the etiquette badges are white on `#c89b2a` (Rude, 2.57:1), on `#e0663a` (Never, 3.43:1) and on `#2f8f5b` (Do this, 4.04:1) in both themes; small grey `.lbl` labels are 3.26 to 3.45:1 (4.30:1 in dark, `#898889` on `#1c2541`). Dark only: today's selected calendar day is white on cream `#f3e8d2` at 1.21:1 (confirmed in a screenshot). Done when `check-contrast.py` is extended to cover these composed colours (it grades tokens, not these selectors) and the audit lists 0 contrast failures in both themes.
 6. **Q7: map credits panel and the `#map` exception.** Start MapLibre's attribution collapsed (it is open as loaded and `maplibregl-compact-show` is set): the plate covers 16.6% of the 343 x 300 px journey map and sits on the pin for stop 1, and 10.5% of the Places and offline maps, where it covers the pins `19. Yaowarat (Chinatown) street food` and `120. Wat Traimit (the Golden Buddha)` once opened. Separately, guard `setWeather` in `js/map.js` (line 1450) so its `.then` does nothing after the map is removed. Done when the audit shows the plate closed as loaded and no `getSource` exception over 5 light and 5 dark loads of `#map` with a navigation away in between.
-7. **Q8: widen the audit.** Add what this one did not cover: populated states (journal entries, saved places, expenses, a long display name), the other three countries for the `{cc}` routes, detail screens and open sheets. The driver must refuse any load where `document.hidden` is true: macOS display sleep flips headless pages to hidden mid-run, and a hidden page undercounts controls (this audit discarded and repeated every such load). Done when the same command prints the new tables for both themes.
+7. **Q8: widen the audit.** Add what this one did not cover: populated states (journal entries, saved places, expenses, a long display name), the other three countries for the `{cc}` routes, detail screens and open sheets. The driver refuses any load where `document.hidden` is true (done in Q2): macOS display sleep flips headless pages to hidden mid-run, and a hidden page undercounts controls (this audit discarded and repeated every such load). Done when the same command prints the new tables for both themes.
 
 Every slice that changes a shipped file bumps `APP_VERSION` and `CACHE_VERSION`, so Q3 to Q7 are stacked, not parallel. Q3 to Q6 are CSS or token edits; Q7 edits `js/map.js` and the map style. Q2 and Q8 change `tools/` only and can run beside any of them. Q2 goes first: Q3 to Q7 each need it to show their result.
 

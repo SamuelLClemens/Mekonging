@@ -105,6 +105,13 @@ def credit_name(who):
     return who
 
 
+# Lookups that FAILED (the network, or a reply that is not JSON), as (place id, reason). A failed lookup looks
+# exactly like "this place has no article of its own", so a run that swallows them reads as a clean result
+# (Laos, D5: 68 of 163 lookups failed on the first pass and the run still exited 0). main() exits 1 when this
+# is not empty, and --suggest marks each affected row with an `error` key.
+FAILED = []
+
+
 # ---- transport ----------------------------------------------------------------------------
 
 def get(url, binary=False, tries=3):
@@ -237,6 +244,7 @@ def suggest(cc, dest):
     rows = []
     for i, p in enumerate(todo, 1):
         cands = {}
+        err = None
         try:
             for t, v in article_info(p['wiki']).items():
                 v['via'] = 'source'
@@ -249,12 +257,16 @@ def suggest(cc, dest):
                     cands.setdefault(t, v)
         except Exception as e:                              # noqa: BLE001
             print('  ! %s: %s' % (p['id'], e))
+            err = str(e)
+            FAILED.append((p['id'], err))
         ranked = []
         for t, v in cands.items():
             ranked.append({'title': t, 'km': km(p['lat'], p['lng'], v['lat'], v['lng']),
                            'image': v['image'], 'desc': v['desc'], 'via': v['via']})
         ranked.sort(key=lambda r: (r['via'] != 'source', r['km'] is None, r['km'] or 0))
         rows.append({'id': p['id'], 'name': p['name'], 'city': p['city'], 'cats': p['cats'], 'cands': ranked[:6]})
+        if err:
+            rows[-1]['error'] = err      # not "no article": the lookup did not complete
         best = ranked[0] if ranked else None
         print('[%d/%d] %-44s %s' % (i, len(todo), p['id'][:44],
                                     '%s (%s km)' % (best['title'], best['km']) if best else '-'))
@@ -353,6 +365,7 @@ def fetch(cc, stage):
             jpg, (w, h, q) = shrink(open(raw_path, 'rb').read())
         except Exception as e:                              # noqa: BLE001
             skipped.append((pid, title, 'error: %s' % e))
+            FAILED.append((pid, str(e)))
             continue
         with open(os.path.join(stage, pid + '.jpg'), 'wb') as fh:
             fh.write(jpg)
@@ -459,6 +472,13 @@ def main():
         sheets(a.sheet)
     else:
         install(a.install)
+    if FAILED:
+        print('\n%d lookup(s) FAILED, which is not the same as "no article of its own": %s (first: %s: %s).\n'
+              'Those places are NOT reviewed. Check the network (curl "Could not resolve host" means it was down) and '
+              'rerun before reviewing anything. Exiting 1.' % (len(FAILED), ', '.join(i for i, _ in FAILED[:5]) +
+                                                               (' ...' if len(FAILED) > 5 else ''), FAILED[0][0], FAILED[0][1]),
+              file=sys.stderr)
+        return 1
     return 0
 
 
