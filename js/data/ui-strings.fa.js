@@ -1060,5 +1060,15 @@ export const STRINGS = {
     'Refresh to use face to face': 'برای استفاده از گفتگوی رودررو، برنامه را تازه‌سازی کنید',
     'Updating…': 'در حال به‌روزرسانی…',
     'Camera unavailable — allow camera access in your browser, or type the text in below yourself.': 'دوربین در دسترس نیست — دسترسی به دوربین را در مرورگر خود مجاز کنید یا متن را در پایین خودتان بنویسید.',
+    '📍 Old location, from {0} ({1}).': null, '📍 Old location, time not known.': null,
+    'Showing {0}, near {1}, from it.': null, 'Showing {0}, from it.': null,
+    '📍 Showing {0}, near {1}, from your location {2}.': null, '📍 Showing {0}, from your location {1}.': null,
+    'Within {0} km of {1}.': null, 'Wrong country? Pick yours:': null, 'Update my location': null,
+    'Near your old location:': null, 'Could not update: location is turned off for this app.': null,
+    'Could not update: your phone could not find your position.': null,
+    'Could not update: it took too long. Try again in the open.': null,
+    '📍 Your location is {0} old ({1}). Tap to update.': null, '📍 Your location is old. Tap to update.': null,
+    '{0} min': null, '1 hour': null, '{0} hours': null, '1 day': null, '{0} days': null, '{0} ago': null,
+    'just now': null, 'Old coordinates, from {0}:': null, 'Location status': null, 'Check again': null,
     // ---- end F5 harvest ----
 };

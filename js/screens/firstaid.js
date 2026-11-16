@@ -18,7 +18,8 @@ import { EMERGENCY_NUMBERS } from '../data/emergency-numbers.js';
 import { infoTip, foldable, readAloudBar } from '../ui-widgets.js';
 import { sourcesNote } from '../render-utils.js';
 import { FIRSTAID_SECTIONS, FIRSTAID_TOPICS, FIRSTAID_SOURCES } from '../data/firstaid.js';
-import { go, mount, topbar, countryChips } from '../main.js';
+import { go, mount, topbar, countryChips, render } from '../main.js';
+import { oldFixNote, oldCoordsLabel } from '../fix-age.js';
 import { getActiveCountry, setActiveCountry } from '../app-state.js';
 
 const VIEWS = [
@@ -107,7 +108,9 @@ export function firstaidScreen(arg) {
   else call.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
   if (fix && fix.lat != null) {
     const coordStr = `${fix.lat.toFixed(5)}, ${fix.lng.toFixed(5)}`;
-    call.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, 'Your coordinates, to read out to a dispatcher:'));
+    const oldNote = oldFixNote({ fix, after: render });   // F8: a position read out to a dispatcher must not be a stale one
+    if (oldNote) call.append(oldNote);
+    call.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, oldCoordsLabel(fix) || 'Your coordinates, to read out to a dispatcher:'));
     call.append(h('p', { class: 'sos-num', style: 'margin: var(--sp-0h) 0 0;font-size:1.1rem;user-select:all' }, coordStr));
   }
   wrap.append(call);
