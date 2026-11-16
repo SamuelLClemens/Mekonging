@@ -1,0 +1,290 @@
+[
+ {
+  "hash": "#currency",
+  "from": "Money › Currency converter"
+ },
+ {
+  "hash": "#expenses",
+  "from": "Money › Budget"
+ },
+ {
+  "hash": "#prices-th",
+  "from": "Money › Fair prices"
+ },
+ {
+  "hash": "#bargain",
+  "from": "Money › Bargain helper"
+ },
+ {
+  "hash": "#food-th",
+  "from": "Identify › Identify food"
+ },
+ {
+  "hash": "#produce",
+  "from": "Identify › Market produce"
+ },
+ {
+  "hash": "#pantry",
+  "from": "Identify › Market products"
+ },
+ {
+  "hash": "#nature",
+  "from": "Identify › Identify nature"
+ },
+ {
+  "hash": "#danger",
+  "from": "Identify › Dangerous"
+ },
+ {
+  "hash": "#identified",
+  "from": "Identify › My identifier"
+ },
+ {
+  "hash": "#plans",
+  "from": "Plan & travel › Trip plans"
+ },
+ {
+  "hash": "#trip",
+  "from": "Plan & travel › My trip"
+ },
+ {
+  "hash": "#nextstop",
+  "from": "Plan & travel › Plan your next stop"
+ },
+ {
+  "hash": "#checklist",
+  "from": "Plan & travel › Pre-trip checklist"
+ },
+ {
+  "hash": "#foryou",
+  "from": "Plan & travel › For you"
+ },
+ {
+  "hash": "#weather-th",
+  "from": "Plan & travel › Weather"
+ },
+ {
+  "hash": "#calendar",
+  "from": "Plan & travel › Travel calendar"
+ },
+ {
+  "hash": "#events-th",
+  "from": "Plan & travel › Festivals"
+ },
+ {
+  "hash": "#transport-th",
+  "from": "Transport › Getting around"
+ },
+ {
+  "hash": "#schedules-th",
+  "from": "Transport › Transport schedules"
+ },
+ {
+  "hash": "#crossings",
+  "from": "Transport › Border crossings"
+ },
+ {
+  "hash": "#route",
+  "from": "Transport › Journey planner"
+ },
+ {
+  "hash": "#map",
+  "from": "Transport › Full offline map"
+ },
+ {
+  "hash": "#nearby",
+  "from": "See & do › Near me"
+ },
+ {
+  "hash": "#today-th",
+  "from": "See & do › Things to do"
+ },
+ {
+  "hash": "#bestof-th",
+  "from": "See & do › Best of"
+ },
+ {
+  "hash": "#streetfood",
+  "from": "See & do › Street food"
+ },
+ {
+  "hash": "#pools-th",
+  "from": "See & do › Pools"
+ },
+ {
+  "hash": "#worship-th",
+  "from": "See & do › Places of worship"
+ },
+ {
+  "hash": "#info-th",
+  "from": "Know this country › Country guide"
+ },
+ {
+  "hash": "#visa-th",
+  "from": "Know this country › Entry & visa"
+ },
+ {
+  "hash": "#arrival-th",
+  "from": "Know this country › Just arrived"
+ },
+ {
+  "hash": "#scams-th",
+  "from": "Know this country › Common scams"
+ },
+ {
+  "hash": "#history-th",
+  "from": "Know this country › History & culture"
+ },
+ {
+  "hash": "#access-th",
+  "from": "Know this country › Accessibility"
+ },
+ {
+  "hash": "#baby-th",
+  "from": "Know this country › Travelling with a baby"
+ },
+ {
+  "hash": "#etiquette-th",
+  "from": "Know this country › Culture & etiquette"
+ },
+ {
+  "hash": "#family-th",
+  "from": "Know this country › Travelling with kids"
+ },
+ {
+  "hash": "#journal",
+  "from": "My stuff › Journal"
+ },
+ {
+  "hash": "#scrapbook",
+  "from": "My stuff › Trip scrapbook"
+ },
+ {
+  "hash": "#journey",
+  "from": "My stuff › Your journey"
+ },
+ {
+  "hash": "#sharejourney",
+  "from": "My stuff › Share my journey"
+ },
+ {
+  "hash": "#saved",
+  "from": "My stuff › Saved places"
+ },
+ {
+  "hash": "#dictionary",
+  "from": "My stuff › Your dictionary"
+ },
+ {
+  "hash": "#contributions",
+  "from": "My stuff › Your contributions"
+ },
+ {
+  "hash": "#vault",
+  "from": "My stuff › Documents"
+ },
+ {
+  "hash": "#circle",
+  "from": "People › Travel circle"
+ },
+ {
+  "hash": "#board-th",
+  "from": "People › Local noticeboard"
+ },
+ {
+  "hash": "#inbox",
+  "from": "People › Shared with you"
+ },
+ {
+  "hash": "#donate",
+  "from": "People › Give back"
+ },
+ {
+  "hash": "#settings",
+  "from": "Settings & help › Settings"
+ },
+ {
+  "hash": "#search",
+  "from": "Settings & help › Search everything"
+ },
+ {
+  "hash": "#export",
+  "from": "Settings & help › Export"
+ },
+ {
+  "hash": "#feedback",
+  "from": "Settings & help › Send feedback"
+ },
+ {
+  "hash": "#help",
+  "from": "Settings & help › Help & FAQ"
+ },
+ {
+  "hash": "#hub-money",
+  "from": "hub › Money"
+ },
+ {
+  "hash": "#hub-identify",
+  "from": "hub › Identify"
+ },
+ {
+  "hash": "#hub-plan",
+  "from": "hub › Plan & travel"
+ },
+ {
+  "hash": "#hub-around",
+  "from": "hub › Transport"
+ },
+ {
+  "hash": "#hub-seedo",
+  "from": "hub › See & do"
+ },
+ {
+  "hash": "#hub-country",
+  "from": "hub › Know this country"
+ },
+ {
+  "hash": "#hub-mine",
+  "from": "hub › My stuff"
+ },
+ {
+  "hash": "#hub-people",
+  "from": "hub › People"
+ },
+ {
+  "hash": "#hub-admin",
+  "from": "hub › Settings & help"
+ },
+ {
+  "hash": "#home",
+  "from": "the tab bar"
+ },
+ {
+  "hash": "#me",
+  "from": "the tab bar — the You hub, Settings lives inside it"
+ },
+ {
+  "hash": "#places",
+  "from": "the tab bar"
+ },
+ {
+  "hash": "#explore",
+  "from": "the tab bar"
+ },
+ {
+  "hash": "#phrasebook",
+  "from": "the tab bar"
+ },
+ {
+  "hash": "#everything",
+  "from": "the all-features index"
+ },
+ {
+  "hash": "#sos",
+  "from": "the topbar emergency control"
+ },
+ {
+  "hash": "#welcome",
+  "from": "onboarding, reachable directly and easy to break unnoticed"
+ }
+]

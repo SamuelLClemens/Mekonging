@@ -1,0 +1,60 @@
+[
+ {
+  "from": "#swap",
+  "to": "#market-cash",
+  "title": "Market",
+  "pressed": [
+   "💱 Cash"
+  ]
+ },
+ {
+  "from": "#exchange",
+  "to": "#market",
+  "title": "Market",
+  "pressed": [
+   "📋 All"
+  ]
+ },
+ {
+  "from": "#exchange-ride",
+  "to": "#market-rides",
+  "title": "Market",
+  "pressed": [
+   "🚗 Rides"
+  ]
+ },
+ {
+  "from": "#exchange-house",
+  "to": "#market-rooms",
+  "title": "Market",
+  "pressed": [
+   "🏠 Rooms"
+  ]
+ },
+ {
+  "from": "#exchange-kids",
+  "to": "#market-items",
+  "title": "Market",
+  "pressed": [
+   "🎒 Items",
+   "🎒 Gear & bikes"
+  ]
+ },
+ {
+  "from": "#exchange-swap",
+  "to": "#market-cash",
+  "title": "Market",
+  "pressed": [
+   "💱 Cash"
+  ]
+ },
+ {
+  "from": "#market-gear",
+  "to": "#market-items",
+  "title": "Market",
+  "pressed": [
+   "🎒 Items",
+   "🎒 Gear & bikes"
+  ]
+ }
+]

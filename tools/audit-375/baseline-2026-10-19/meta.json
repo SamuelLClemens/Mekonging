@@ -1,0 +1,10 @@
+{
+ "date": "2026-10-19",
+ "build": "`mk-v0.640.0`, `origin/feat/scaffold-bangkok-slice` at 1aa5876",
+ "browser": "Google Chrome 155.0.8059.80, `--headless=new`, fresh profile per theme, `launch` and `CDP` from `tools/style-tiles/capture.py`",
+ "server": "`python3 scripts/serve.py 8761` on 127.0.0.1 from the audit worktree",
+ "routes_note": "the 72 that `scripts/route-sweep.js` derives from `js/nav-groups.js` (55 features, 9 `#hub-*` doors, the tab bar, `#search`, `#saved`, `#sos`, `#everything`, `#welcome`), plus `#market` and its four chips (`#market-items`, `#market-rooms`, `#market-rides`, `#market-cash`). `{cc}` routes use `th`",
+ "commit": "1aa5876",
+ "version": "mk-v0.640.0",
+ "note": "Slice Q1 (docs/AUDIT_375.md). The raw results of the first audit, kept so a later run can print its headline beside this one (run.py --baseline). Contact addresses and phone numbers from the app data are redacted."
+}
