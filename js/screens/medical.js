@@ -15,7 +15,7 @@
 //   5. the referral and evacuation chain out, which for Laos crosses into Thailand.
 // Every one of those steps except (3)'s map links renders and functions fully offline.
 import { h } from '../util.js';
-import { store, save, getLastFix } from '../state.js';
+import { store, save, getLastFix, isFixOld } from '../state.js';
 import { getCountry } from '../data/regions.js';
 import { getLanguage } from '../lazy-data.js';
 import { haversineKm } from '../util.js';
@@ -33,6 +33,8 @@ import {
 } from '../data/medical.js';
 import { HOSP_TAG } from '../data/emergency.js';
 import { fixSureness, farCard, outsideScreen } from './emergency-outside.js';
+import { oldFixNote } from '../fix-age.js';
+import { freshen } from '../fix-refresh.js';
 import { EMERGENCY_NUMBERS } from '../data/emergency-numbers.js';
 import { loadIslands, islandsLoaded, islandAt, sameLand } from '../data/islands.js';
 import { islandCareFor, ISLAND_CARE_SOURCES } from '../data/island-care.js';
@@ -40,7 +42,7 @@ import {
   loadHospitals, isHospitalsLoaded, nearestCare, nearestAnywhere, careCount, KIND_LABEL,
 } from '../data/hospitals.js';
 import {
-  go, mount, topbar, countryChips, mapsSearch, kmLabel, whereAmI, countryOfFix, ensureRegionSet,
+  go, mount, topbar, countryChips, mapsSearch, kmLabel, whereAmI, countryOfFix, ensureRegionSet, render,
 } from '../main.js';
 import { getActiveCountry, setActiveCountry } from '../app-state.js';
 
@@ -201,6 +203,10 @@ export function hospitalScreen(cc) {
     ? `📍 ${localName}${provName && provName !== localName ? `, ${provName}` : ''} — ${c.flag} ${c.name}`
     : [`${c.flag} ${c.name}`, ' — turn on location for distances, or pick your country:'];   // two text nodes (F5b): the sentence is a dictionary key
   wrap.append(h('p', { class: 'sos-loc' }, whereLine));
+  // F8: the distances below are from the stored fix; when it is old, say so and offer an update (js/fix-age.js).
+  const oldNote = oldFixNote({ fix, after: render });
+  if (oldNote) wrap.append(oldNote);
+  if (isFixOld(fix)) freshen('hospital');
   if (sure && sure.kind === 'far') wrap.append(farCard(sure.near, c.name));
   wrap.append(countryChips((id) => go(`#hospital-${id}`), active));
 

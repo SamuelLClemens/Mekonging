@@ -27,7 +27,7 @@
 // access row, the next-stop card) is written directly in this file instead, since it belongs
 // to Home alone.
 
-import { store, save, daysSinceFirstUse, getPlaceData } from '../state.js';
+import { store, save, daysSinceFirstUse, getPlaceData, getLastFix } from '../state.js';
 import { h, money } from '../util.js';
 import { getCountry, getPlace, loadCountry, isCountryLoaded, loadAllCountries } from '../data/regions.js';
 import { spendTotal } from '../recap-spend.js';
@@ -39,6 +39,8 @@ import { confirmAction, netMode, setNetMode, online, collapsibleCard } from '../
 import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
 import { locationAsk } from '../location-ask.js';
+import { homeFixLine } from '../fix-age.js';
+import { freshen } from '../fix-refresh.js';
 import { packState, onPackChange, deferPack, resumePack, PACK_BYTES } from '../offline-pack.js';
 import { seedWeatherKey } from '../weather-ui.js';
 // setupRecapCard moved to js/screens/welcome.js with the onboarding flow it belongs to
@@ -146,9 +148,13 @@ export function homeScreen() {
   // normal (they have not left yet), so the hint stays silent until phase is actually 'traveling'.
   // F3: a traveller who was never asked, or refused, gets the card or banner from js/location-ask.js
   // here instead; the stale-location hint below stays for a traveller whose permission is granted.
-  const ask = locationAsk();
+  // F8: a stored location past the limit says so, and when it was taken, in place of the card and the hint below, neither of which said
+  // anything about an old fix. While the permission is held, opening Home also reads a new one (js/fix-refresh.js).
+  const oldFix = onGround ? homeFixLine(getLastFix(), render) : null;
+  if (oldFix) { wrap.append(oldFix); freshen('home'); }
+  const ask = oldFix ? null : locationAsk();
   if (ask) wrap.append(ask);
-  else if (onGround && focus.source !== 'gps') {
+  else if (!oldFix && onGround && focus.source !== 'gps') {
     wrap.append(h('button', { class: 'btn ghost block location-stale-hint', onclick: () => locationSheet() },
       focus.source === 'focus'
         ? `📍 Showing ${focus.displayCity} from earlier — moved on? Tap to update`

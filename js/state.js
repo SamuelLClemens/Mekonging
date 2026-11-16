@@ -985,6 +985,24 @@ export function setLastFix(coords) {
   return store.profile.prefs.lastFix;
 }
 
+// F8 (owner, 2026-11-16): how old a stored fix may be before it stops passing for "where you are". One hour: a bus or a van can
+// leave the area in that time. Past it, Emergency, the hospital screen and Home say the fix is old and when it was taken
+// (js/fix-age.js), and the app reads a new one wherever permission is held (js/fix-refresh.js). `getLastFix` still returns an old
+// fix, because the callers that only measure a distance cannot tell what to do without one; a caller that DECIDES asks `isFixOld`.
+export const FIX_MAX_AGE_MS = 60 * 60 * 1000;
+// The age of a fix in milliseconds, or null when it cannot be known: no `at`, or an `at` more than five minutes ahead of this
+// phone's clock (a clock set back would otherwise make a very old fix look new).
+export function fixAgeMs(f = getLastFix(), now = Date.now()) {
+  if (!f || typeof f.at !== 'number' || !(f.at > 0) || f.at > now + 300000) return null;
+  return Math.max(0, now - f.at);
+}
+// True for a stored fix past the limit, or one whose age is unknown (nothing proves it is current). False when there is no fix.
+export function isFixOld(f = getLastFix(), now = Date.now()) {
+  if (!f) return false;
+  const age = fixAgeMs(f, now);
+  return age == null || age > FIX_MAX_AGE_MS;
+}
+
 // --- saved offline map areas (named tile packs) ------------------------------
 export function getSavedAreas() { return Array.isArray(store.savedAreas) ? store.savedAreas : (store.savedAreas = []); }
 export function addSavedArea({ name, center, bounds, z, count }) {

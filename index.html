@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="css/refined.css">
 
   <!-- Module preload graph. The app is native ES modules with no bundler, so without these the
-       browser cannot discover a single dependency until it has downloaded AND parsed main.js —
+       browser cannot discover a single dependency until it has downloaded AND parsed main.js, 
        making first paint a two-round-trip chain: html, then main.js in full, then everything
        else. These hints let all eager modules download in parallel with main.js instead of
        after it. Every entry is a module the app statically imports, so nothing here is
@@ -41,10 +41,10 @@
   <link rel="modulepreload" href="js/main.js">
   <link rel="modulepreload" href="js/state.js">
   <link rel="modulepreload" href="js/weather.js">
-  <link rel="modulepreload" href="js/render-utils.js">
-  <link rel="modulepreload" href="js/screens/home.js">
-  <link rel="modulepreload" href="js/data/hospitals.curated.js">
   <link rel="modulepreload" href="js/i18n.js">
+  <link rel="modulepreload" href="js/screens/home.js">
+  <link rel="modulepreload" href="js/render-utils.js">
+  <link rel="modulepreload" href="js/data/hospitals.curated.js">
   <link rel="modulepreload" href="js/data/checklist.js">
   <link rel="modulepreload" href="js/ui-widgets.js">
   <link rel="modulepreload" href="js/weather-ui.js">
@@ -63,15 +63,16 @@
   <link rel="modulepreload" href="js/place-search.js">
   <link rel="modulepreload" href="js/trail.js">
   <link rel="modulepreload" href="js/data/history.js">
+  <link rel="modulepreload" href="js/fix-age.js">
   <link rel="modulepreload" href="js/social.js">
   <link rel="modulepreload" href="js/journey.js">
   <link rel="modulepreload" href="js/lazy-data.js">
+  <link rel="modulepreload" href="js/screens/emergency-outside.js">
   <link rel="modulepreload" href="js/data/place-months.js">
   <link rel="modulepreload" href="js/data/diet.js">
   <link rel="modulepreload" href="js/currency.js">
-  <link rel="modulepreload" href="js/screens/emergency-outside.js">
-  <link rel="modulepreload" href="js/data/essentials.js">
   <link rel="modulepreload" href="js/emergency-world.js">
+  <link rel="modulepreload" href="js/data/essentials.js">
   <link rel="modulepreload" href="js/reminders.js">
   <link rel="modulepreload" href="js/visits.js">
   <link rel="modulepreload" href="js/gamify.js">
@@ -80,6 +81,7 @@
   <link rel="modulepreload" href="js/phrase-ui.js">
   <link rel="modulepreload" href="js/data/ui-strings.js">
   <link rel="modulepreload" href="js/audio-control.js">
+  <link rel="modulepreload" href="js/fix-refresh.js">
   <link rel="modulepreload" href="js/idb.js">
   <link rel="modulepreload" href="js/location-ask.js">
   <link rel="modulepreload" href="js/app-state.js">

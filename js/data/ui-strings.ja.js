@@ -914,6 +914,15 @@ export const STRINGS = {
     '🔊 Has a call ({0})': '🔊 音声あり（{0}）', '🔤 Every feature, A–Z · {0}': '🔤 すべての機能 A〜Z ・ {0}',
     '🗺 Not seeing it? Search near {0} on Google Maps →': '🗺 見つかりませんか?Googleマップで{0}の近くを検索 →',
     '🚌 Where next, from {0}': '🚌 {0}からの次の行き先', '🚤 across the water — no road link': '🚤 水上移動 — 道路でのアクセスなし',
-    '🛒 Cheapest essentials in {0}': '🛒 {0}の最安の生活必需品',
+    '🛒 Cheapest essentials in {0}': '🛒 {0}の最安の生活必需品', '📍 Old location, from {0} ({1}).': null,
+    '📍 Old location, time not known.': null, 'Showing {0}, near {1}, from it.': null, 'Showing {0}, from it.': null,
+    '📍 Showing {0}, near {1}, from your location {2}.': null, '📍 Showing {0}, from your location {1}.': null,
+    'Within {0} km of {1}.': null, 'Wrong country? Pick yours:': null, 'Update my location': null,
+    'Near your old location:': null, 'Could not update: location is turned off for this app.': null,
+    'Could not update: your phone could not find your position.': null,
+    'Could not update: it took too long. Try again in the open.': null,
+    '📍 Your location is {0} old ({1}). Tap to update.': null, '📍 Your location is old. Tap to update.': null,
+    '{0} min': null, '1 hour': null, '{0} hours': null, '1 day': null, '{0} days': null, '{0} ago': null,
+    'just now': null, 'Old coordinates, from {0}:': null, 'Location status': null, 'Check again': null,
     // ---- end F5 harvest ----
 };

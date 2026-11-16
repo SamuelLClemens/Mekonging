@@ -13,7 +13,7 @@ import {
   addStop, removeStop, moveStop, updateStop, addBudgetItem, deleteBudgetItem, updateBudgetItem, addWithdrawal, deleteWithdrawal, updateWithdrawal,
   addPlaceVisit, removePlaceVisit, updatePlaceVisit, visitsForStop, unscheduledVisits,
   setMyStay, getMyStay, clearMyStay,
-  getLastFix, setLastFix,
+  getLastFix, setLastFix, isFixOld,
   getSavedAreas, addSavedArea, removeSavedArea,
   ensureMe, setMe, getContacts, getContact, addContact, removeContact,
   getInbox, addInboxItem, markInboxRead, deleteInboxItem, unreadInboxCount,
@@ -42,6 +42,8 @@ import { takeSigninLink } from './market-link.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
 import { OUTSIDE_KM, ANCHOR_KM, fixPlaceFor, resolveFixPlace } from './fix-place.js';
+import { emergencyLocationNote, noteLocationError, noteLocationOk } from './fix-age.js';
+import { initFixRefresh, freshen } from './fix-refresh.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
 import { EMERGENCY_NUMBERS } from './data/emergency-numbers.js';
 import { fixSureness, farCard, outsideScreen } from './screens/emergency-outside.js';
@@ -827,7 +829,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.672.0';
+export const APP_VERSION = 'mk-v0.673.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1253,7 +1255,7 @@ export function locationFixCard(opts = {}) {
       ? 'Location is on, so the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'
       : 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
   if (typeof navigator !== 'undefined' && navigator.geolocation) {
-    const lb = h('button', { class: 'btn block' }, getLastFix() ? '📍 Location is on' : (granted ? '📍 Find me now' : '📍 Use my location'));
+    const lb = h('button', { class: 'btn block' }, (getLastFix() && !isFixOld()) ? '📍 Location is on' : (granted ? '📍 Find me now' : '📍 Use my location'));
     lb.onclick = async () => {
       lb.textContent = 'Locating…'; lb.disabled = true;
       try { await refreshLocation(); lb.textContent = '📍 Location is on'; if (onChange) onChange(); }
@@ -6351,35 +6353,46 @@ export function whereAmI(fix) {
 // track the traveller. Denial degrades silently to the manual city picker. The fix
 // never leaves the device.
 let _geoWatchId = null;
+export function locationWatching() { return _geoWatchId != null; }
+// A new position, from the watch or from a foreground refresh (js/fix-refresh.js): store it, adopt it, and redraw a screen that showed
+// an old one. F8: only the watch could do this before, and nothing asked for a position when the app came back to the foreground.
+function takeFix(next) {
+  const prev = getLastFix();
+  const wasOld = !prev || isFixOld(prev);
+  setLastFix(next);
+  noteLocationOk();
+  const moved = !prev || (haversineKm(prev, next) || 0) > 0.4;
+  // Bug fix: this used to only cache the coordinate — activeCountry/the remembered
+  // focus city never followed a real move, so a traveller who crossed into a new
+  // country kept seeing the old one everywhere (dictionary language, places, map)
+  // until they happened to hit an explicit "use my location" button that itself
+  // re-derived the country. Resolving+applying the nearest spot here means the whole
+  // app's notion of "where I am" now actually tracks GPS continuously, in the background.
+  const named = (p) => logTrail(next, p);
+  if (moved) adoptFix(next, named); else ensureFixPlace(next, nearestSpotGlobal(next), named);
+  // First fix of the session is the one that means "opened here" — see logOpenLocation.
+  logOpenLocation();
+  // The journey trail records EVERY fix, unlike the visit pin above which is once per
+  // session: that is what lets the map fill itself in as somebody actually travels
+  // through a day rather than only where they happened to launch the app. noteTrail()
+  // is cheap and self-deduplicating — a fix within 2 km of a point it already holds
+  // just touches that point's date — so calling it on every callback is correct.
+  logTrail(next);
+  const hash = location.hash || '';
+  // F8: a screen that showed an old location (or none) must show the new one even when the traveller has not moved. Emergency and the
+  // hospital screen are redrawn for that case only, never on a plain move, so a screen being read in an emergency is not rebuilt
+  // under a finger.
+  const fixScreen = hash === '' || hash === '#' || hash === '#home' || hash === '#sos' || hash === '#hospital';
+  if ((moved && (hash === '' || hash === '#' || hash === '#home' || hash === '#nearby' || hash === '#explore' || hash.startsWith('#places'))) || (wasOld && fixScreen)) render();
+}
 function startLocationWatch() {
   if (typeof navigator === 'undefined' || !navigator.geolocation || _geoWatchId != null) return;
   try {
     _geoWatchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const prev = getLastFix();
-        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
-        setLastFix(next);
-        const moved = !prev || (haversineKm(prev, next) || 0) > 0.4;
-        // Bug fix: this used to only cache the coordinate — activeCountry/the remembered
-        // focus city never followed a real move, so a traveller who crossed into a new
-        // country kept seeing the old one everywhere (dictionary language, places, map)
-        // until they happened to hit an explicit "use my location" button that itself
-        // re-derived the country. Resolving+applying the nearest spot here means the whole
-        // app's notion of "where I am" now actually tracks GPS continuously, in the background.
-        const named = (p) => logTrail(next, p);
-        if (moved) adoptFix(next, named); else ensureFixPlace(next, nearestSpotGlobal(next), named);
-        // First fix of the session is the one that means "opened here" — see logOpenLocation.
-        logOpenLocation();
-        // The journey trail records EVERY fix, unlike the visit pin above which is once per
-        // session: that is what lets the map fill itself in as somebody actually travels
-        // through a day rather than only where they happened to launch the app. noteTrail()
-        // is cheap and self-deduplicating — a fix within 2 km of a point it already holds
-        // just touches that point's date — so calling it on every callback is correct.
-        logTrail(next);
-        const hash = location.hash || '';
-        if (moved && (hash === '' || hash === '#' || hash === '#home' || hash === '#nearby' || hash === '#explore' || hash.startsWith('#places'))) render();
-      },
-      () => { /* denied / unavailable — the manual picker path remains */ },
+      (pos) => takeFix({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+      // F8: this callback was empty. The failure is remembered (js/fix-age.js) and shown beside an old location; a repeat of the
+      // same failure, which a phone standing still produces every few seconds, redraws nothing.
+      (err) => { if (noteLocationError(err) && isFixOld(getLastFix())) redrawFixNotes(); },
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 15000 },
     );
   } catch { /* noop */ }
@@ -6437,6 +6450,8 @@ function logOpenLocation() {
 let _geoPerm = 'unknown';
 export function geoPermission() { return _geoPerm; }
 function redrawHome() { const hh = location.hash || ''; if (hh === '' || hh === '#' || hh === '#home') render(); }
+// F8: a new failure, or a fresh fix after an old one, changes what Home, Emergency and the hospital screen say. Only those redraw.
+function redrawFixNotes() { const hh = location.hash || ''; if (hh === '' || hh === '#' || hh === '#home' || hh === '#sos' || hh === '#hospital') render(); }
 
 function initLocation() {
   if (typeof navigator === 'undefined' || !navigator.geolocation) return;
@@ -6510,12 +6525,13 @@ function sosScreen(cc) {
     // Name a locality only when it is in the country shown: near a border the nearest listed
     // place can be across it, and "near Preah Rumkel — Laos" contradicts itself.
     const wai = whereAmI(fix);
-    const where = wai && wai.country === c.id ? ` near ${wai.name}` : '';
+    const where = wai && wai.country === c.id ? wai.name : '';
     const other = countriesNearFix(fix).filter((x) => x !== c.id).map((x) => getCountry(x).name);
-    const border = other.length ? ` — within ${BAND_KM} km of ${other.join(' and ')}` : '';
-    wrap.append(h('p', { class: 'sos-loc' }, `📍 Showing ${c.name},${where || ' from your location'}${border}. Wrong country? Pick yours:`));
+    // F8: the box says how old the fix is and, for an old one, when it was taken, with a button to update it (js/fix-age.js).
+    wrap.append(emergencyLocationNote({ fix, country: c.name, place: where, nearNames: other, bandKm: BAND_KM, after: render }));
     if (sure && sure.kind === 'far') wrap.append(farCard(sure.near, c.name));
   }
+  if (isFixOld(fix)) freshen('sos');   // F8: where the permission is held, an old fix is replaced without a tap
   wrap.append(countryChips((id) => go(`#sos-${id}`)));
 
   // ORDER OF OPERATIONS. If something happens the traveller needs, in this order:
@@ -6564,7 +6580,7 @@ function sosScreen(cc) {
     hospSlot.replaceChildren();
     if (!picks.length) return;
     const label = (text) => h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, text);
-    hospSlot.append(label(fix && fix.lat != null ? 'Near you:' : `In ${c.name}:`));
+    hospSlot.append(label(fix && fix.lat != null ? (isFixOld(fix) ? 'Near your old location:' : 'Near you:') : `In ${c.name}:`));
     // A "N km away" figure is straight-line, and on an island that can quietly mean "across
     // open water, no road under it at all" — the same fact js/screens/medical.js's driveLabel
     // fix exists for. This screen never showed a walk/drive time to begin with, so there is no
@@ -7486,6 +7502,8 @@ else ensureUiStrings().then(firstRender, firstRender);
 // Location on from the start: request a live fix immediately (browser permission still
 // gates it) and keep it current; denial degrades to the manual city picker.
 try { initLocation(); } catch { /* best-effort */ }
+// F8: read a position when the app returns to the foreground (js/fix-refresh.js; a held permission only, never the dialog).
+try { initFixRefresh({ takeFix, startWatch: startLocationWatch, redraw: redrawFixNotes }); } catch { /* best-effort */ }
 
 // Durability, best-effort: request evict-resistant storage, and if localStorage came back
 // empty (cleared/blocked) recover the whole store from the IndexedDB mirror, then re-render.

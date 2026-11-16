@@ -189,7 +189,7 @@ export function geolocate(opts = { enableHighAccuracy: true, timeout: 10000 }) {
     if (typeof navigator === 'undefined' || !navigator.geolocation) { reject(new Error('Geolocation unavailable')); return; }
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-      (err) => reject(new Error(err.message || 'No location')), opts);
+      (err) => { const e = new Error(err.message || 'No location'); e.code = err.code; reject(e); }, opts);   // F8: the code says denied, unavailable or timed out
   });
 }
 

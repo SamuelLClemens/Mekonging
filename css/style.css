@@ -1540,6 +1540,12 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .plan-leg { border-left: 3px solid var(--teal); padding: var(--sp-2) 0 var(--sp-2) var(--sp-3); margin-top: var(--sp-3); }
 .plan-leg-head { font-weight: 800; margin-bottom: 2px; }
 .sos-loc { background: var(--card); border-left: 3px solid var(--magenta); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); font-weight: 600; margin: 0 0 var(--sp-3); }
+/* F8: the lines of a location note (Emergency, hospital, Home) and the Settings readout */
+.sos-loc .fix-line { margin: 0 0 var(--sp-1); }
+.sos-loc .fix-line:last-child { margin-bottom: 0; }
+.sos-loc .fix-fail, .fix-home .fix-fail { margin: var(--sp-1) 0; font-weight: 600; }
+.sos-loc .fix-fail:empty, .fix-home .fix-fail:empty { display: none; }
+.loc-status { white-space: pre-wrap; margin: var(--sp-1h) 0; }
 /* --- context-aware "right now" home feed --- */
 .net-status { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 10px; padding: 8px 12px; border-radius: var(--r-md, 12px); background: var(--card); border: 1px solid var(--line); }
 .welcome .card h2 { margin-top: 0; }

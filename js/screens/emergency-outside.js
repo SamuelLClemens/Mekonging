@@ -23,7 +23,9 @@
 import { h } from '../util.js';
 import { OUTSIDE_KM } from '../fix-place.js';
 import { uiLang } from '../i18n.js';
-import { go, mount, topbar, countryChips, countriesNearFix, nearestSpotGlobal } from '../main.js';
+import { go, mount, topbar, countryChips, countriesNearFix, nearestSpotGlobal, render } from '../main.js';
+import { oldFixNote, oldCoordsLabel } from '../fix-age.js';
+import { freshen } from '../fix-refresh.js';
 import { worldCountryOf, worldDecides, appCountryOf, emergencyFor, sourceHost, telHref, COAST_KM } from '../emergency-world.js';
 
 // Past this from every curated city, with no region outline within 10 km, the named country may be wrong.
@@ -96,6 +98,9 @@ export function farCard(near, countryName) {
 export function outsideScreen(route, fix, near, world) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(route === 'hospital' ? 'Get to a hospital' : 'Emergency', route === 'hospital' ? '#sos' : '#home'));
+  // F8: the country and the coordinates below come from the stored fix; when it is old, say so and offer an update.
+  const oldNote = oldFixNote({ fix, after: render });
+  if (oldNote) { wrap.append(oldNote); freshen(route); }
   const km = near ? Math.round(near.km) : null;
   const entry = world ? emergencyFor(world.id) : null;
   const offshore = world && world.km > COAST_KM;
@@ -109,7 +114,7 @@ export function outsideScreen(route, fix, near, world) {
   const gap = world && !entry ? `This app has no checked emergency number for ${countryName(world)} yet.` : 'This app has no emergency numbers for where you are yet: pick one of the four countries below to see its numbers.';
   wrap.append(h('div', { class: 'card sos-card', 'data-nofold': '', 'data-outside': '' }, [
     ...head,
-    h('p', { 'data-no-mt': '', style: 'margin: var(--sp-1h) 0' }, [h('strong', {}, 'Your coordinates: '), coordsLabel(fix)]),
+    h('p', { 'data-no-mt': '', style: 'margin: var(--sp-1h) 0' }, [h('strong', {}, oldCoordsLabel(fix) ? `${oldCoordsLabel(fix)} ` : 'Your coordinates: '), coordsLabel(fix)]),
     h('p', { class: 'muted tiny', style: 'margin: 0' }, entry ? 'Read these to a dispatcher.' : ['Read these to a dispatcher. ', gap]),   // two text nodes: each sentence is a key
   ]));
   wrap.append(callCard(world, entry));

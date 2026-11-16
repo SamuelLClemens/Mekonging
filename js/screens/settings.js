@@ -42,8 +42,9 @@ import { CURRENCY_CODES, currencyFlag, currencySymbol } from '../currency.js';
 import {
   go, mount, topbar, render, focusSpot, daysUntilISO, todayISO, applyTheme, dietPicker,
   PHASE_ORDER, PHASES, blobToDataURL, getDeferredInstallPrompt, clearDeferredInstallPrompt,
-  QUICK_CHIPS, QUICK_CHIPS_DEFAULT, quickChipKeys, ratesOnConsent, isStandalone,
+  QUICK_CHIPS, QUICK_CHIPS_DEFAULT, quickChipKeys, ratesOnConsent, isStandalone, geoPermission, locationWatching, APP_VERSION,
 } from '../main.js';
+import { locationStatusCard } from '../fix-age.js';
 import { audioPacksCard } from '../audio-packs.js';
 import { offlineReadyCard } from '../offline-ready.js';
 import { signOut as marketSignOut } from '../market-api.js';
@@ -543,6 +544,9 @@ export function settingsScreen() {
   // transmitted, and on by default so a map of their trip exists without them opting into
   // anything. Which means the off switch has to be easy to find — hence its own card, said
   // plainly, next to the erase button.
+  // F8: what this phone reports about location (the permission as the browser says it now, the stored fix, the last failure).
+  wrap.append(locationStatusCard({ permission: geoPermission(), watching: locationWatching, standalone: isStandalone(), version: APP_VERSION }));
+
   const ts = trailStats();
   wrap.append(h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
