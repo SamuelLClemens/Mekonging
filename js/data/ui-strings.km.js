@@ -1100,5 +1100,9 @@ export const STRINGS = {
     '{0} min': '{0} នាទី', '1 hour': '1 ម៉ោង', '{0} hours': '{0} ម៉ោង', '1 day': '1 ថ្ងៃ', '{0} days': '{0} ថ្ងៃ',
     '{0} ago': '{0} មុន', 'just now': 'អម្បាញ់មិញ', 'Old coordinates, from {0}:': 'កូអរដោនេចាស់ ពី {0}៖',
     'Location status': 'ស្ថានភាពទីតាំង', 'Check again': 'ពិនិត្យម្តងទៀត',
+    '📍 Showing {0}, your pick.': '📍 កំពុងបង្ហាញ {0} ដែលអ្នកបានជ្រើសរើស។', 'You are near {0}.': 'អ្នកនៅជិត {0}។',
+    'Holds until you close the app.': 'រក្សារហូតដល់អ្នកបិទកម្មវិធី។',
+    'Your pick of {0} ended. Showing {1}.': 'ការជ្រើសរើស {0} របស់អ្នកបានបញ្ចប់។ កំពុងបង្ហាញ {1}។',
+    'Not right, or GPS unavailable? Pick a place instead. It holds until you close the app or tap Use my location:': 'មិនត្រឹមត្រូវ ឬមិនមាន GPS? សូមជ្រើសរើសកន្លែងមួយជំនួសវិញ។ វានឹងនៅរហូតដល់អ្នកបិទកម្មវិធី ឬចុច ប្រើទីតាំងរបស់ខ្ញុំ៖',
     // ---- end F5 harvest ----
 };

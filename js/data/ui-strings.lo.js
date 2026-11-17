@@ -1075,6 +1075,9 @@ export const STRINGS = {
     '📍 Your location is old. Tap to update.': '📍 ທີ່ຕັ້ງຂອງທ່ານເກົ່າແລ້ວ. ແຕະເພື່ອອັບເດດ.', '{0} min': '{0} ນາທີ',
     '1 hour': '1 ຊົ່ວໂມງ', '{0} hours': '{0} ຊົ່ວໂມງ', '1 day': '1 ມື້', '{0} days': '{0} ມື້', '{0} ago': '{0} ກ່ອນ',
     'just now': 'ຫາກໍ່ນີ້', 'Old coordinates, from {0}:': 'ພິກັດເກົ່າ ຈາກ {0}:', 'Location status': 'ສະຖານະທີ່ຕັ້ງ',
-    'Check again': 'ກວດເບິ່ງອີກຄັ້ງ',
+    'Check again': 'ກວດເບິ່ງອີກຄັ້ງ', '📍 Showing {0}, your pick.': '📍 ກຳລັງສະແດງ {0} ທີ່ທ່ານເລືອກ.',
+    'You are near {0}.': 'ທ່ານຢູ່ໃກ້ {0}.', 'Holds until you close the app.': 'ຄົງໄວ້ຈົນກວ່າທ່ານຈະປິດແອັບ.',
+    'Your pick of {0} ended. Showing {1}.': 'ການເລືອກ {0} ຂອງທ່ານສິ້ນສຸດແລ້ວ. ກຳລັງສະແດງ {1}.',
+    'Not right, or GPS unavailable? Pick a place instead. It holds until you close the app or tap Use my location:': 'ບໍ່ຖືກຕ້ອງ ຫຼື ໃຊ້ GPS ບໍ່ໄດ້ບໍ? ເລືອກບ່ອນອື່ນແທນ. ຈະຄົງໄວ້ຈົນກວ່າທ່ານຈະປິດແອັບ ຫຼື ແຕະ ໃຊ້ຕຳແໜ່ງຂອງຂ້ອຍ:',
     // ---- end F5 harvest ----
 };

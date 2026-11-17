@@ -43,6 +43,7 @@ import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
 import { OUTSIDE_KM, ANCHOR_KM, fixPlaceFor, resolveFixPlace } from './fix-place.js';
 import { emergencyLocationNote, noteLocationError, noteLocationOk } from './fix-age.js';
+import { heldPick, startPickHold, clearPickHold, earlierHoldPending, settleEarlierHold, endedPick, dismissEndedPick, holdNote, endedLine } from './pick-hold.js';
 import { initFixRefresh, freshen } from './fix-refresh.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
 import { EMERGENCY_NUMBERS } from './data/emergency-numbers.js';
@@ -829,7 +830,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.673.0';
+export const APP_VERSION = 'mk-v0.674.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1267,11 +1268,11 @@ export function locationFixCard(opts = {}) {
     card.append(h('p', { class: 'muted' }, 'Location is not available on this device — set it manually below.'));
   }
   card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' },
-    'Not right, or GPS unavailable? Set your city instead — used for weather and distances until GPS updates it:'));
+    'Not right, or GPS unavailable? Pick a place instead. It holds until you close the app or tap Use my location:'));
   const cur = focusSpot();
   card.append(locationSelect(spotKey(cur.place || cur.spot), (key) => {
     const s = spotForKey(key);
-    if (s) { setFocusSpot(s); if (onChange) onChange(); }
+    if (s) { setFocusSpot(s, { pick: true }); if (onChange) onChange(); }
   }));
   return card;
 }
@@ -1716,7 +1717,8 @@ export function hoursStatusLabel(hours, hour = regionNow().hour) {
 }
 
 export function contextNow() {
-  const { gps, near: gnear } = regionFix();
+  const held = heldFocus();   // F6: a held pick, not the fix, says where "right now" is
+  const { gps, near: gnear } = held ? { gps: null, near: null } : regionFix();
   let near = gnear;
   // F-05: only a REAL gps-proximity pick can mislabel (see satelliteDisplayCity above) — the two
   // fallbacks below deliberately choose a specific spot, not a geometric nearest search, so they
@@ -1727,8 +1729,8 @@ export function contextNow() {
   if (!near) {
     // No GPS: fall back to the city the traveller is focused on (last scoped or planned),
     // so "right now" reflects where they are actually looking — never a blank capital default.
-    const fs = focusCitySpot();
-    const pl = focusPlace(fs);
+    const fs = held ? held.spot : focusCitySpot();
+    const pl = held ? held.place : focusPlace(fs);
     if (fs) { near = { spot: fs, km: 0, displayCity: pl ? pl.city : fs.city, place: pl }; fix = pl ? { lat: pl.lat, lng: pl.lng } : { lat: fs.lat, lng: fs.lng }; approx = true; }
   }
   if (!near) {
@@ -1924,18 +1926,26 @@ function focusPlace(anchor) {
   const p = store.profile.prefs.focusPlace;
   return p && anchor && p.anchor === spotKey(anchor) ? p : null;
 }
-export function setFocusSpot(spot) {
+// opts.pick: the traveller chose this place by hand in a location picker (F6). It holds for the session, over a live fix, until the app
+// is closed or they tap "Use my location" (js/pick-hold.js). Every other caller (a fix choosing a city, a browsed city page, a tapped
+// stop) only moves the remembered focus, and while a pick holds it leaves the active country alone.
+export function setFocusSpot(spot, opts) {
   if (!spot) return;
   const prefs = store.profile.prefs;
   const anchor = spot.gz ? nearestAnchor(spot) : spot;
   const k = spotKey(anchor);
   const place = spot.gz ? { gz: true, country: spot.country, city: spot.city, lat: spot.lat, lng: spot.lng,
     local: spot.local || '', prov: spot.prov || '', kind: spot.kind || '', anchor: k } : null;
+  const pick = !!(opts && opts.pick);
+  if (pick) {
+    startPickHold({ key: k, place, name: place ? place.city : anchor.city });
+    seedWeatherKey(spotKey(place || anchor));   // Weather opens on the pick, not on a city viewed earlier
+  }
   const same = (prefs.focusPlace ? spotKey(prefs.focusPlace) : '') === (place ? spotKey(place) : '');
   if (prefs.focusSpotKey === k && getActiveCountry() === anchor.country && same) return;
   prefs.focusSpotKey = k;
   prefs.focusPlace = place;
-  if (anchor.country) setActiveCountry(anchor.country);
+  if (anchor.country && (pick || !heldPick())) setActiveCountry(anchor.country);
   save();
 }
 // F-05 — DISPLAY LABEL ONLY, never the anchor. A `satelliteOf` entry (a small river-island/
@@ -1978,10 +1988,29 @@ function gpsFocus(gps, near) {
   const place = near.km > ANCHOR_KM ? fixPlaceFor(gps) : null;
   return { spot: near.spot, source: 'gps', km: near.km, displayCity: place ? place.city : satelliteDisplayCity(gps, near), place };
 }
+// F6: the place a hand pick holds this session (js/pick-hold.js), shaped like a focus: the anchor, the list place beside it, the name.
+// Null when nothing holds. The first call of a page load also settles the hold of an earlier session, which has ended by itself.
+function heldFocus() {
+  if (earlierHoldPending()) { const lf = liveFocus(); settleEarlierHold(lf ? lf.displayCity : ''); }
+  const ph = heldPick();
+  if (!ph) return null;
+  const spot = WEATHER_SPOTS.find((s) => spotKey(s) === ph.key);
+  if (!spot) return null;
+  const place = ph.place && ph.place.anchor === ph.key ? ph.place : null;
+  return { spot, source: 'focus', displayCity: place ? place.city : spot.city, place, held: true };
+}
+// What the live fix alone names (the answer focusSpot() gives with no pick), or null with no fix inside the region.
+function liveFocus() {
+  const { gps, near } = regionFix();
+  return near ? gpsFocus(gps, near) : null;
+}
 export function focusSpot(explicitCountry) {
   const { gps, near } = regionFix();
   const focus = focusCitySpot();
+  const held = heldFocus();   // F6: a place picked by hand holds over the live fix, for the session
   if (explicitCountry && getCountry(explicitCountry)) {
+    // F6: a country asked for by name still gets the pick when the pick is in it; a pick elsewhere cannot answer, so the rest follows.
+    if (held && held.spot.country === explicitCountry) return held;
     // A country was explicitly requested (e.g. "Today in Vietnam"): a live GPS fix inside
     // that country wins first — the traveller is actually there right now, which always
     // outranks whatever city they last browsed/set (bug fix: this used to check `focus`
@@ -1996,6 +2025,7 @@ export function focusSpot(explicitCountry) {
     const ds = defaultSpot(explicitCountry);
     return { spot: ds, source: 'default', displayCity: ds.city };
   }
+  if (held) return held;
   if (near && near.spot) return gpsFocus(gps, near);
   if (focus) {
     const place = focusPlace(focus);
@@ -2016,10 +2046,47 @@ export async function refreshLocation() {
   // F3: this is also where "the browser's dialog was raised by a tap" is recorded
   // (prefs.geoPrompted, read by Home's location card and banner in js/location-ask.js).
   store.profile.prefs.geoPrompted = true; save();
+  endPickHold();
   const pos = await geolocate();
   setLastFix(pos);
   return { pos, nearest: adoptFix(pos) };
 }
+// F6: asking for the phone's own position is choosing to go back to it, so it ends a hold, even if the phone then cannot answer (the
+// stored fix, or the remembered focus, speaks again). Weather opened on the pick, so it follows the place again unless the traveller
+// has moved it since.
+function endPickHold() {
+  const ph = heldPick();
+  if (!clearPickHold() || !ph) return;
+  const pickKey = ph.place ? spotKey(ph.place) : ph.key;
+  if (currentWeatherKey() === pickKey) { const f = focusSpot(); seedWeatherKey(spotKey(f.place || f.spot)); }
+}
+// F6: the note a hand pick leaves on a screen that names it (Home, Weather, Today, Places), or null when nothing holds or the pick is
+// the place the phone is in. opts.focus: the focusSpot() the screen used, so a screen about another country or city (it asked for one by
+// name) shows no note. opts.showing: only while the screen shows this spot key (Weather can browse other cities). opts.button false:
+// the screen has its own "Use my location" beside the place's name.
+export function pickHoldNote(opts = {}) {
+  if (opts.focus && !opts.focus.held) return null;
+  const held = heldFocus();
+  const live = held ? liveFocus() : null;
+  if (!held || !live || live.displayCity === held.displayCity) return null;
+  if (opts.showing && opts.showing !== spotKey(held.place || held.spot)) return null;
+  return holdNote({
+    name: held.displayCity,
+    live: isFixOld(getLastFix()) ? '' : live.displayCity,   // an old fix does not say where the traveller is (F8)
+    button: opts.button !== false,
+    onBack: async () => { try { await refreshLocation(); } catch { /* refused or unavailable: the hold has ended all the same */ } render(); },
+  });
+}
+// Home: "Your pick of Pai ended. Showing Chiang Mai.", once, in the session after a hold ended by itself (the app was closed).
+export function pickEndedLine() {
+  heldFocus();   // settles the hold of an earlier session first
+  const e = endedPick();
+  const live = e ? liveFocus() : null;
+  if (!e || !live) return null;
+  return endedLine({ name: e.name, live: live.displayCity, onClose: () => { dismissEndedPick(); render(); } });
+}
+// F6: the country of the place a hand pick holds, or ''. Places opens on it when no country was asked for by name.
+export function heldCountry() { const f = heldFocus(); return f ? f.spot.country : ''; }
 // A fix becomes the app's notion of where the traveller is: the nearest curated city becomes the
 // focus (not for a fix outside the region), and for a remote fix the place-list entry is resolved
 // in the background, then the screens that read it are redrawn and `then(place)` runs.
@@ -2653,7 +2720,7 @@ export function whereAmICard(cc) {
   return h('div', { class: 'card' }, [
     h('h2', {}, '📍 Where are you?'),
     h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, `Set your city so distances, weather and “near me” match where you are${c ? ' in ' + c.name : ''}. Works offline — no GPS needed.`),
-    field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s); render(); } })),
+    field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s, { pick: true }); render(); } })),
   ]);
 }
 
@@ -5063,7 +5130,7 @@ export function idPinButton(type, id) {
 
 // weatherScreen is the #weather route handler and loads on demand; these three render a
 // forecast away from that route. js/weather.js (the data service) is a different module.
-import { wxVizCard, seedWeatherKey, wxDiffDays } from './weather-ui.js';
+import { wxVizCard, seedWeatherKey, currentWeatherKey, wxDiffDays } from './weather-ui.js';
 
 
 // ---- TRANSPORT SCHEDULES (curated reference, ships with the app) -------------

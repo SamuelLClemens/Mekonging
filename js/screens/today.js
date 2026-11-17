@@ -30,6 +30,7 @@ import {
   moodLine,
   mount,
   openStateNow,
+  pickHoldNote,
   placeFitReason,
   refreshLocation,
   todoCard,
@@ -82,6 +83,10 @@ export function daySuggestScreen(country) {
         b.textContent = 'Location off'; b.disabled = false;
       } }, gps ? 'Update' : '📍 Use my location'),
     ]));
+
+    // F6: a place picked by hand holds over the fix for the session; the chip above is the way back, so the note has no button.
+    const holding = pickHoldNote({ button: false, focus: fs });
+    if (holding) header.append(holding);
 
     // --- Conditions now: one glanceable chip row (weather · time · UV · air). ---
     const cond = [];

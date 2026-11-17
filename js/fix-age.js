@@ -15,6 +15,7 @@
 import { h } from './util.js';
 import { t, dateLocale } from './i18n.js';
 import { getLastFix, fixAgeMs, isFixOld } from './state.js';
+import { pickStatusLines } from './pick-hold.js';
 
 const tf = (key, ...v) => t(key).replace(/\{(\d)\}/g, (_, n) => (v[+n] === undefined ? '' : v[+n]));
 
@@ -188,6 +189,7 @@ export function locationStatusCard(info) {
       `Stored location: ${fix ? `${age == null ? 'age unknown' : `${Math.round(age / 60000)} min old`}, ${isFixOld(fix) ? 'old' : 'inside the limit'}${typeof fix.at === 'number' ? `, taken ${new Date(fix.at).toISOString()}` : ''}` : 'none'}`,
       `Last failure: ${e ? `${e.kind}, ${Math.round((Date.now() - e.at) / 1000)} s ago` : 'none'}`,
       `Release: ${info.version}`,
+      ...pickStatusLines(),
     ].join('\n');
   };
   const again = h('button', { class: 'btn ghost block' }, 'Check again');
