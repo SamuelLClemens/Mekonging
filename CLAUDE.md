@@ -84,7 +84,7 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - `js/nav-groups.js` is the single manifest for feature navigation; every feature has one label and one home.
 - Emergency outside the four countries: `js/emergency-world.js`, `js/data/emergency-world.<region>.js` (rebuild: `tools/emergency-world/`); outline `vi` = US Virgin Is., Vietnam = `vn`.
 - The offline place list (`js/data/gazetteer.<cc>.js`, built by `scripts/build-gazetteer.py`, searched by `js/place-search.js`)
-  is never added to `WEATHER_SPOTS`. A picked list place, or a live fix more than 15 km from an anchor (`js/fix-place.js`), rides beside its nearest anchor as `focusSpot().place`.
+  is never added to `WEATHER_SPOTS`. A picked list place, or a live fix more than 15 km from an anchor (`js/fix-place.js`), rides beside its nearest anchor as `focusSpot().place`. A place picked by hand holds for the session over a live fix (`js/pick-hold.js`, F6): only the four pickers pass `setFocusSpot(s, { pick: true })`.
 - `js/state.js` is the on-device store. Schema changes bump its version. Deleting or merging a place record also needs a
   line in `js/data/place-merges.js` in the same commit, or travellers' saved data is lost.
 - The journey screen builds its stops from trail points, journal entries and trip stops. A change to an entry's or trip stop's stop is
