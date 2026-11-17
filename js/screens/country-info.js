@@ -42,7 +42,7 @@ function setCityScreen(cc) {
   const f = focusSpot(cc && getCountry(cc) ? cc : undefined);
   const cur = f.place || f.spot;
   wrap.append(h('div', { class: 'card' }, [
-    field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s); go(`#country-${s.country}`); } })),
+    field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s, { pick: true }); go(`#country-${s.country}`); } })),
     h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, `Currently: ${cur.city}. Works offline — no GPS needed.`),
   ]));
   mount(wrap, '#home');

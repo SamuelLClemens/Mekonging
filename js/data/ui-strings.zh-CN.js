@@ -887,5 +887,8 @@ export const STRINGS = {
     '📍 Your location is {0} old ({1}). Tap to update.': null, '📍 Your location is old. Tap to update.': null,
     '{0} min': null, '1 hour': null, '{0} hours': null, '1 day': null, '{0} days': null, '{0} ago': null,
     'just now': null, 'Old coordinates, from {0}:': null, 'Location status': null, 'Check again': null,
+    '📍 Showing {0}, your pick.': null, 'You are near {0}.': null, 'Holds until you close the app.': null,
+    'Your pick of {0} ended. Showing {1}.': null,
+    'Not right, or GPS unavailable? Pick a place instead. It holds until you close the app or tap Use my location:': null,
     // ---- end F5 harvest ----
 };

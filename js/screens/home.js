@@ -51,7 +51,7 @@ import { seedWeatherKey } from '../weather-ui.js';
 let _recap = null;
 import {
   go, mount, topbar, contextNow, render,
-  inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard, plannedStopsOutlook,
+  inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard, plannedStopsOutlook, pickHoldNote, pickEndedLine,
   ensureHomeWeather, prefetchForecasts, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
@@ -151,9 +151,16 @@ export function homeScreen() {
   // F8: a stored location past the limit says so, and when it was taken, in place of the card and the hint below, neither of which said
   // anything about an old fix. While the permission is held, opening Home also reads a new one (js/fix-refresh.js).
   const oldFix = onGround ? homeFixLine(getLastFix(), render) : null;
-  if (oldFix) { wrap.append(oldFix); freshen('home'); }
-  const ask = oldFix ? null : locationAsk();
-  if (ask) wrap.append(ask);
+  // F6: a place picked by hand holds over the fix for the session (js/pick-hold.js). While it does, Home's headline names the pick, so
+  // the note about the pick stands in place of the old-location line, the location card and the hint, none of which is about that place;
+  // an old fix is still refreshed. After a session in which a hold ended by itself, one line says so.
+  const ended = pickEndedLine();
+  if (ended) wrap.append(ended);
+  const holding = pickHoldNote({ focus });
+  if (oldFix) { if (!holding) wrap.append(oldFix); freshen('home'); }
+  const ask = oldFix || holding ? null : locationAsk();
+  if (holding) wrap.append(holding);
+  else if (ask) wrap.append(ask);
   else if (!oldFix && onGround && focus.source !== 'gps') {
     wrap.append(h('button', { class: 'btn ghost block location-stale-hint', onclick: () => locationSheet() },
       focus.source === 'focus'

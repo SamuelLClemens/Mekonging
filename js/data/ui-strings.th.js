@@ -1079,5 +1079,9 @@ export const STRINGS = {
     '1 hour': '1 ชั่วโมง', '{0} hours': '{0} ชั่วโมง', '1 day': '1 วัน', '{0} days': '{0} วัน',
     '{0} ago': '{0}ที่แล้ว', 'just now': 'เมื่อสักครู่', 'Old coordinates, from {0}:': 'พิกัดเก่า จาก {0}:',
     'Location status': 'สถานะตำแหน่ง', 'Check again': 'ตรวจสอบอีกครั้ง',
+    '📍 Showing {0}, your pick.': '📍 กำลังแสดง{0} ที่คุณเลือก', 'You are near {0}.': 'คุณอยู่ใกล้ {0}',
+    'Holds until you close the app.': 'คงไว้จนกว่าคุณจะปิดแอป',
+    'Your pick of {0} ended. Showing {1}.': 'การเลือก {0} ของคุณสิ้นสุดแล้ว กำลังแสดง {1}',
+    'Not right, or GPS unavailable? Pick a place instead. It holds until you close the app or tap Use my location:': 'ไม่ถูกต้อง หรือ GPS ใช้ไม่ได้ใช่ไหม เลือกสถานที่แทน ที่เลือกจะคงไว้จนกว่าคุณจะปิดแอปหรือแตะ ใช้ตำแหน่งของฉัน:',
     // ---- end F5 harvest ----
 };

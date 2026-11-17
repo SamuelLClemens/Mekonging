@@ -49,7 +49,7 @@ import { nearestSpot, spotKey, wmo, getCachedWeather, getCachedMarine, maybeRefr
 import { seedWeatherKey } from '../weather-ui.js';
 import { shareUrl, encodeShare } from '../social.js';
 import {
-  go, mount, topbar, render, focusSpot, setFocusSpot, spotForCity,
+  go, mount, topbar, render, focusSpot, setFocusSpot, spotForCity, pickHoldNote, heldCountry,
   travellingAsLine, countryChips, cityAboutCard, cityEssentials, placeFamily, placePhotoSrc,
   priceLine, approxHome, stopDateLabel, shareButton, profileFitCard, exportOnePlaceReviewHtml,
   setBlobThumb, mapsSearch, kmLabel, daysUntilISO, chipIcon, refreshLocation,
@@ -94,7 +94,7 @@ function openLocationPicker() {
   const f = focusSpot(getActiveCountry());
   sheet.append(field('Your location', locationSelect(spotKey(f.place || f.spot), (key) => {
     const s = spotForKey(key);
-    if (s) { close(); setFocusSpot(s); render(); }
+    if (s) { close(); setFocusSpot(s, { pick: true }); render(); }
   })));
   backdrop.append(sheet);
   close = openModal(backdrop);
@@ -110,7 +110,9 @@ let hidePoorMonths = false;
 export function placesScreen(arg) {
   // arg is "<cc>" or "<cc>-<citySlug>" (e.g. "th" or "th-chiang-mai").
   const parts = String(arg || '').split('-');
-  const cc = parts.shift() || getActiveCountry();
+  // F6: with no country in the route, a place picked by hand holding this session decides the country (a visit to a screen about the
+  // phone's own country, Nearby or Emergency, moves the active one).
+  const cc = parts.shift() || heldCountry() || getActiveCountry();
   const scopeSlug = parts.join('-');
   if (cc) setActiveCountry(cc);
   const wrap = h('div', { class: 'screen' });
@@ -144,7 +146,7 @@ export function placesScreen(arg) {
       cityEssentials(getActiveCountry(), scopeCity, scopeSlug),
     ]));
   }
-  let anchor, anchorLabel, usingGps = false, pinPlace = null;
+  let anchor, anchorLabel, usingGps = false, pinPlace = null, heldNote = null;
   if (scopeCity && cSpot) {
     anchor = { lat: cSpot.lat, lng: cSpot.lng };
     anchorLabel = scopeCity;
@@ -157,8 +159,13 @@ export function placesScreen(arg) {
     const at = fsAnchor.place || fsAnchor.spot;
     anchor = usingGps ? gpsFix : { lat: at.lat, lng: at.lng };
     if (fsAnchor.source === 'focus') pinPlace = at;
+    // F6: a place picked by hand holds over the fix for the session and anchors the list; a "Places in X" scope or a country asked for
+    // by name has its own anchor and shows no note. The "Use my location" chip beside the place's name is the way back, so the note has no button.
+    heldNote = pickHoldNote({ focus: fsAnchor, button: false });
     anchorLabel = scopeCity || at.city;
   }
+
+  if (heldNote) wrap.append(heldNote);
 
   // The living map sits at the very top of the section (below any city context) and is the
   // one thing on this whole screen that never collapses — Places is a map-first browse, so it

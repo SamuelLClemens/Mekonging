@@ -84,7 +84,7 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - `js/nav-groups.js` is the single manifest for feature navigation; every feature has one label and one home.
 - Emergency outside the four countries: `js/emergency-world.js`, `js/data/emergency-world.<region>.js` (rebuild: `tools/emergency-world/`); outline `vi` = US Virgin Is., Vietnam = `vn`.
 - The offline place list (`js/data/gazetteer.<cc>.js`, built by `scripts/build-gazetteer.py`, searched by `js/place-search.js`)
-  is never added to `WEATHER_SPOTS`. A picked list place, or a live fix more than 15 km from an anchor (`js/fix-place.js`), rides beside its nearest anchor as `focusSpot().place`.
+  is never added to `WEATHER_SPOTS`. A picked list place, or a live fix more than 15 km from an anchor (`js/fix-place.js`), rides beside its nearest anchor as `focusSpot().place`. A place picked by hand holds for the session over a live fix (`js/pick-hold.js`, F6): only the four pickers pass `setFocusSpot(s, { pick: true })`.
 - `js/state.js` is the on-device store. Schema changes bump its version. Deleting or merging a place record also needs a
   line in `js/data/place-merges.js` in the same commit, or travellers' saved data is lost.
 - The journey screen builds its stops from trail points, journal entries and trip stops. A change to an entry's or trip stop's stop is
@@ -133,7 +133,7 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - Headless Chrome pages turn `document.hidden` when macOS display sleep starts mid-run, and a hidden pass undercounts controls (`#settings` read 11 against 111). Keep the display awake and assert `document.hidden === false` for every route (Q1, `docs/AUDIT_375.md`); `tools/cdp/cdp.py` (`keep_awake`, `assert_visible`) and `tools/audit-375/run.py` do both, and a new driver imports that client. A deep link boots through three placeholder screens and the entrance animation fades cards in for half a second: measure once the topbar is up and finite animations are finished (`audit375.py` and its page script do; a card read mid-fade has contrast 1.0).
 - Camera screens run end to end in headless Chrome: `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream
   --use-file-for-fake-video-capture=<x>.mjpeg` plays a single JPEG as the camera. Attach to workers too
-  (`Target.setAutoAttach`, flatten): a blob worker's requests and CSP errors never reach the page session (M3a).
+  (`Target.setAutoAttach`, flatten): a blob worker's requests and CSP errors never reach the page session (M3a). Geolocation: after `Browser.grantPermissions` and `Emulation.setGeolocationOverride`, `getCurrentPosition` answers only with `maximumAge > 0`; a request with `maximumAge: 0`, as `refreshLocation()` sends, times out after its 10 s, so the driver wraps it (F6).
 - Market screens: `?market=fixture` on 127.0.0.1 answers from `js/market-fixture.js`; Turnstile (test key locally) sits in a
   closed shadow root, so read its token from `input[name=cf-turnstile-response]`.
 - `html` and `body` set `overflow-x: hidden`, so `scrollWidth - clientWidth` is always 0. Measure overflow from box edges, not from scroll width. `route-sweep.js` ignores a control inside a `display: none` ancestor when it looks for zero-size ones (the Weather forecast's closed day panels read 170 until Q2).

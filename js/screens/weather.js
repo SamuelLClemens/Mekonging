@@ -20,7 +20,7 @@ import { getCountry } from '../data/regions.js';
 // Circular import back into main.js — same accepted pattern js/screens/home.js already uses
 // (see home.js's own header comment): every one of these is only read inside a function body,
 // never at module-evaluation time, so the cycle is safe.
-import { topbar, mount, focusSpot, fmtClock, spotForCity, render } from '../main.js';
+import { topbar, mount, focusSpot, fmtClock, spotForCity, render, pickHoldNote } from '../main.js';
 import { dateLocale, retranslate } from '../i18n.js';
 
 // Shared with the modules that stay in the launch graph; see js/weather-ui.js. These moved out so
@@ -575,6 +575,9 @@ export function weatherScreen(country) {
   if (!currentWeatherKey()) seedWeatherKey(focusKey(focusSpot()));
   let spot = spotForKey(currentWeatherKey());
   if (!spot) { spot = defaultSpot('th'); seedWeatherKey(spotKey(spot)); }
+  // F6: a place picked by hand holds over the fix for the session; say so while this screen shows that place (it can browse others).
+  const holding = pickHoldNote({ showing: currentWeatherKey() });
+  if (holding) wrap.append(holding);
 
   // Units switch where they are printed — tap °C, km/h, mm, m or hPa anywhere below (tapUnits,
   // above). How to use the screen lives behind the ⓘ, not in front of the forecast.

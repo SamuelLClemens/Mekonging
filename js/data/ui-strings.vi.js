@@ -1095,5 +1095,9 @@ export const STRINGS = {
     '1 hour': '1 giờ', '{0} hours': '{0} giờ', '1 day': '1 ngày', '{0} days': '{0} ngày', '{0} ago': '{0} trước',
     'just now': 'vừa xong', 'Old coordinates, from {0}:': 'Tọa độ cũ, từ {0}:',
     'Location status': 'Trạng thái vị trí', 'Check again': 'Kiểm tra lại',
+    '📍 Showing {0}, your pick.': '📍 Đang hiển thị {0}, nơi bạn đã chọn.', 'You are near {0}.': 'Bạn đang ở gần {0}.',
+    'Holds until you close the app.': 'Giữ cho đến khi bạn đóng ứng dụng.',
+    'Your pick of {0} ended. Showing {1}.': 'Lựa chọn {0} của bạn đã kết thúc. Đang hiển thị {1}.',
+    'Not right, or GPS unavailable? Pick a place instead. It holds until you close the app or tap Use my location:': 'Không đúng, hoặc không có GPS? Hãy chọn một nơi khác. Lựa chọn được giữ cho đến khi bạn đóng ứng dụng hoặc chạm Dùng vị trí của tôi:',
     // ---- end F5 harvest ----
 };
