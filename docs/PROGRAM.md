@@ -151,7 +151,7 @@ dropped silently: dropped items are listed in 4.7 with their evidence, and items
 | From the first real email: do `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has | M4b-2 | open |
 | A second tester for the Market's live checks (`docs/EXCHANGE.md` §16) | M4b-2, M4c, M5, L5 | open |
 | Legal, for Omer Hanegbi or Omri Siri (decision 8): `docs/EXCHANGE.md` §14, the terms of use and privacy policy (listings are public; L5 stores conversation text), the dispensary question | M9 (terms, privacy), M10 (cash swap), any dispensary record | open |
-| M7: GitHub secret-scanning push protection; the publishable key as a repository variable for the keep-awake workflow | M7 | open |
+| M7: GitHub secret-scanning push protection | M7 | open |
 | M8: generate the VAPID key pair; the private half stored as a secret only | M8 | open |
 | Native-speaker review of "Market" (decision 6; least sure: Korean, Polish, Turkish, Filipino, Chinese, Japanese) and the Thai, Vietnamese, Khmer and Lao block terms | none; quality | open; no native speaker available (owner, 2026-10-19) |
 | F3, Xcode: the live Xcode project is not in the repo (its `project.pbxproj` was removed from git in `4f06543`, 2026-07-17; no `Info.plist`, entitlements or `.xcconfig` is tracked), so the current tree declares no location usage description. Its last committed version did: `INFOPLIST_KEY_NSLocationWhenInUseUsageDescription` = "Mekonging uses your location to show places near you and to stamp journal entries." Confirm the owner's local project still has it. If it does not, the WKWebView never shows the location dialog | none | **owner check**, read only; F3 edited nothing |

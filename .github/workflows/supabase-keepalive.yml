@@ -1,0 +1,54 @@
+# Keeps the Market's Supabase project from being paused for inactivity.
+#
+# Supabase pauses a Free-plan project that gets too little database activity over seven days
+# (https://supabase.com/docs/guides/platform/free-project-pausing: "a few user requests to the
+# database each day"). The project was found paused on 2026-11-24 after a week with no visitor, and
+# the owner restored it by hand. This workflow calls the two read functions a visitor's browser
+# calls, three times, twice a day, through the public URL and publishable key that
+# js/market-config.js already ships to every browser. It needs no secret and has no write access.
+#
+# It also fails, and GitHub emails the account that last edited the schedule, when the project does
+# not answer, so a pause is noticed within a day. Restore a paused project from the Supabase
+# dashboard (Restore project, free), then run this workflow by hand to confirm.
+#
+# GitHub runs a schedule only from the default branch (feat/scaffold-bangkok-slice), and disables
+# the schedule of a public repository after 60 days without repository activity: any push resets
+# the clock, and the Actions tab offers Enable workflow if it ever stops.
+#
+# The odd minutes avoid the top of the hour, when GitHub delays or drops scheduled runs. Two runs
+# a day mean one dropped run does not leave a day without requests.
+#
+# scripts/check-keepalive.py (a guard in guards.yml) fails when this file, the script or the
+# config's URL and key stop fitting together.
+
+name: supabase-keepalive
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+    - cron: '43 17 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Only the script and the config it reads, so a run takes seconds, not a full checkout.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            scripts/supabase_keepalive.py
+            js/market-config.js
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Call the Market project as an anonymous visitor
+        run: python3 scripts/supabase_keepalive.py
