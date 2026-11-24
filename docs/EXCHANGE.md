@@ -616,7 +616,7 @@ Every key and password stays in a dashboard or a password manager. None goes in 
 | M3 | Apply the Auth settings and email templates in §5 |
 | M3 | Send the project URL and the publishable key (both public) for `js/market-config.js` |
 | M3 onward | Run each slice's migration and RLS test in the SQL editor; add your own account to `private.admins` and `private.testers` |
-| M7 | Turn on GitHub secret-scanning push protection; add the publishable key as a repository variable for the keep-awake workflow |
+| M7 | Turn on GitHub secret-scanning push protection |
 | M8 | Generate a VAPID key pair; store the private key and a push-trigger secret as Edge Function secrets and in Vault; send the public key; deploy `market-push` |
 | M9 | Get legal sign-off on the terms and privacy policy; then set `market_open = true` |
 | M10 | Get legal's written answer on cash swap; then set `cash_open = true` |
@@ -769,12 +769,11 @@ The original M4 done-when still holds across the three: the RLS tests show a str
 - **Scope.**
   - Migration 005: admin RPCs, `sanctions`, review of users, and the `pg_cron` retention jobs.
   - The `#market-review` screen.
-  - A weekly keep-awake workflow. It first confirms which request Supabase counts as activity; the candidate is an RPC `market_ping()`.
+  - The keep-awake workflow was built early, after the project was found paused on 2026-11-24: `.github/workflows/supabase-keepalive.yml` and `scripts/supabase_keepalive.py` send three anonymous reads (`market_search` and `market_listing`) twice a day. Supabase's documentation describes a few database requests a day as typically enough, and a weekly call is far below that. Still open: Supabase publishes no activity threshold. If a second warning arrives, add the RPC `market_ping()` (a migration the owner runs).
 - **Done when:**
   - On fixtures, 3 eligible reports hide a listing, and the owner restores it from the queue at 375 px.
   - The RLS test shows a non-admin gets nothing from the review RPCs.
   - A dry run of each retention job lists the rows it would delete.
-  - The keep-awake workflow's first run succeeds.
 
 ### M8: Web Push
 - **Scope.**

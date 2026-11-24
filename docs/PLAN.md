@@ -385,7 +385,7 @@ Sources: supabase.com/pricing, supabase.com/docs/guides/auth/auth-smtp, resend.c
   - 500 MB database, 50,000 monthly active users, 5 GB egress.
   - Realtime: 200 concurrent connections and 2 million messages a month.
   - 500,000 Edge Function calls.
-  - The project pauses after one week without activity. A weekly GitHub Action keeps it awake.
+  - The project pauses after a week with too little database activity. Supabase's documentation says a few requests a day are enough (read 2026-11-24, the day it was found paused). `.github/workflows/supabase-keepalive.yml` sends three anonymous reads twice a day.
 - **Supabase's built-in email:** sends only to team-member addresses, at about 2 an hour. That is why Resend is needed.
 - **Resend Free:** 100 emails a day, 3,000 a month, 3 domains. This caps new sign-ins at 100 a day; existing sessions persist.
 - **Firebase Spark:** rejected, because email-link sign-in is limited to 5 emails a day without billing.

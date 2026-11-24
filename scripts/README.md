@@ -5,11 +5,11 @@ Python 3 (no dependencies, run it directly) or a browser module you import in th
 
 ## Before every commit
 
-Twenty-two guards, plus the content validator below. Each one exists because the failure it catches actually shipped. Run all of
+Twenty-three guards, plus the content validator below. Each one exists because the failure it catches actually shipped. Run all of
 them; each prints one line and exits non-zero on failure.
 
 ```bash
-for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot font-sizes icons emergency-world; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets market-sql offline-boot font-sizes icons emergency-world keepalive; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
@@ -18,7 +18,7 @@ python3 tools/style-tiles/derive-viz.py --check
 python3 scripts/check-cache-version.py --base feat/scaffold-bangkok-slice
 ```
 
-The same twenty-two also run in CI, from `.github/workflows/guards.yml`, on every pull request into
+The same twenty-three also run in CI, from `.github/workflows/guards.yml`, on every pull request into
 `feat/scaffold-bangkok-slice` and on every push to it. CI runs every guard even after one
 fails, prints the full output of each failure, and fails the check if any guard does. On a
 pull request `check-cache-version` compares against `origin/feat/scaffold-bangkok-slice`; on a
@@ -51,6 +51,7 @@ list above, so a new guard goes in both places.
 | `check-cache-version` | `APP_VERSION`/`CACHE_VERSION` not moved when a shipped asset changed | the service worker is cache-first, so a stale version means nobody gets the fix |
 | `check-secrets` | a whole secret key in any file git would commit: a Supabase secret key, a service-role JWT, a Resend key, a PEM private key, a literal assigned to a `SERVICE_ROLE`, `VAPID_PRIVATE` or `TURNSTILE_SECRET` name, or a publishable key outside `js/market-config.js` | the site deploys from this repository, so a committed secret is published (docs/EXCHANGE.md §2, added in M3a before any sign-in code). It matches whole keys, not prefixes, so the design docs pass; it prints file, line and kind but never the value; and it self-tests on planted fakes first, so it cannot pass without checking. If it fires, rotate the key before removing it |
 | `check-market-sql` | a Supabase SQL file (`supabase/**/*.sql`) that is not pure ASCII (from 002 on), has unbalanced quotes, dollar quotes or brackets, an unmatched `begin` and `end;`, a migration without `begin;` and `commit;`, a table without `enable row level security`, a function without `set search_path = ''` or never named in a `revoke execute`, or a `private.contact_hit` pattern that lets a phone number, email, link or handle through (or refuses an ordinary price or date) | there is no Postgres on this machine and the owner runs the SQL by hand, so a typo costs a round trip. Migration 001 reached the database garbled by a clipboard (001b repaired it), which is why the files stay ASCII. It runs the contact-detail patterns in Python, read out of the SQL, so it proves the logic and not Postgres's regex engine; the owner's run of `supabase/tests/002_rls.sql` proves that. It self-tests on broken samples first, so it cannot pass without checking |
+| `check-keepalive` | the Supabase keep-alive (`.github/workflows/supabase-keepalive.yml`, `scripts/supabase_keepalive.py`) no longer fitting together: the script counting a dead answer (a 521, another 400, no answer) as healthy, sending a token, printing the key, or accepting a host or key it should refuse; `js/market-config.js` holding a URL or key the script will not send; a workflow with fewer than two runs a day, a run on the hour, no manual trigger, write access, a secret, or a sparse checkout that misses a file the script reads | the Market's Supabase project was found paused on 2026-11-24 after a week with no visitor (Supabase pauses a Free project that sees too little database activity over seven days), and a keep-alive that stops quietly would end the same way a week later. It runs the script's `check()` against a throwaway local server in six situations, three of them failing ones, then plants four broken copies of the workflow, so it cannot pass without checking. No network beyond 127.0.0.1 |
 
 `check-spacing.py --update` lowers a file's ceiling after you have removed declarations.
 `check-place-fields.py` and `check-lazy-data.py` both take `--report` for the derived data.
